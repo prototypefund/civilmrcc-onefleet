@@ -19,7 +19,7 @@ var service = new function(){
         }
       };
       this.itemDB = new PouchDB(config.db_remote_url+'/items', this.dbConfig);
-      this.locationsDB = new PouchDB(config.db_remote_url+'/locations', this.dbConfig);
+      this.locationsDB = new PouchDB(config.db_remote_url+'/positions', this.dbConfig);
 
       //SQLITE is used for long term storage
       this.sqlite =  new sqlite3.Database('./locations.db');
