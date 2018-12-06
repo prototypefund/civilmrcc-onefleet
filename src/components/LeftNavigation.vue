@@ -2,7 +2,18 @@
    <nav>
       <ul>
         <li><h3>Vehicles</h3></li>
-        <li v-for="vehicle in vehicles">{{vehicle.doc.properties.name}}</li>
+        <li v-for="vehicle in vehicles">
+          <el-switch
+            v-model="vehicle.visibility"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            active-value="true"
+            inactive-value="false">
+          </el-switch>
+          <span>{{vehicle.doc.properties.name}}</span>
+          <span>{{vehicle.visibility}}</span>
+          <!--<span>{{vehicle.positions}}</span>-->
+        </li>
       </ul>
    </nav>
 </template>
@@ -18,8 +29,15 @@ export default {
   },
   mounted: function() {
     var self = this;
-    this.$db.getVehicles(function(result){
+    this.$db.getVehicles(function(err,result){
         self.$data.vehicles = result.rows;
+    });
+    this.$db.setOnChange('items',function(){
+      console.log('change detected, rerender vehicles!');
+        self.$db.getVehicles(function(err,result){
+
+              self.$data.vehicles = result.rows;
+        });
     });
   }
 }

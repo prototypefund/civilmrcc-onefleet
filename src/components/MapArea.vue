@@ -11,6 +11,7 @@ export default {
   },
   mounted:function(){
     this.$map.init('mapArea');
+    this.$db.appendItemsToMap(this.$map);
   }
 }
 </script>
