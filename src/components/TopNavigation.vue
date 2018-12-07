@@ -3,7 +3,7 @@
       <ul id="nav-left">
         <li v-on:click="changeModus('map')">Map</li>
         <li v-on:click="changeModus('cases')">Cases</li>
-        <li>Create New Case</li>
+        <li v-on:click="changeModus('createItem')">Create New Case</li>
       </ul>
       <ul id="nav-right">
         <li class="dropdown">

@@ -166,9 +166,8 @@ var app_db = new function(){
             return 'http://localhost:5984/';
     }
     this.getPositionsForItem = function(identifier,cb){
-        var positions = this.getDB('positions');
         var self = this;
-        positions.allDocs({
+        this.getDB('positions').allDocs({
           include_docs: true,
           attachments: true,
           startkey: identifier,
@@ -176,7 +175,6 @@ var app_db = new function(){
         }).then(function (result) {
             if(result.error)
                 return self.fetchError(result);
-
             cb(result);
           // handle result
         }).catch(function (err) {
@@ -214,6 +212,27 @@ var app_db = new function(){
           cb(err);
         });
     }
+    this.createItem = function(obj,cb){
+      var itemDB = this.getDB('items');
+      itemDB.put(obj).then(function (response) {
+        console.log('item created');
+        console.log(response)
+        cb(null,response)
+      }).catch(function (err) {
+        cb(err);
+        console.log(err);
+      });
+    };
+    this.createPosition = function(obj,cb){
+      this.getDB('positions').put(obj).then(function (response) {
+        console.log('position created');
+        console.log(response)
+        cb(null,response)
+      }).catch(function (err) {
+        cb(err);
+        console.log(err);
+      });
+    };
     this.getVehicles = function(cb){
         var items = this.getDB('items');
         var self = this;

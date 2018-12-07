@@ -1,11 +1,14 @@
 <template>
   <div id="app">
+
+      <CreateItem v-if="modus == 'createItem'"></CreateItem>
+
       <TopNavigation></TopNavigation>
 
       <LeftNavigation></LeftNavigation>
       <div id="mainWindow" >
         <MapArea v-if="modus == 'map'"></MapArea>
-        <ListView v-else></ListView>
+        <ListView v-if="modus == 'cases'"></ListView>
       </div>
       <div id="chat">
         chat
@@ -16,6 +19,7 @@
 
 <script>
 import TopNavigation from './components/TopNavigation.vue'
+import CreateItem from './components/items/CreateItem.vue'
 import LeftNavigation from './components/LeftNavigation.vue'
 import MapArea from './components/MapArea.vue'
 import ListView from './components/ListView.vue'
@@ -28,6 +32,7 @@ export default {
     TopNavigation,
     LeftNavigation,
     MapArea,
+    CreateItem,
     ListView
   },
   data: function () {
