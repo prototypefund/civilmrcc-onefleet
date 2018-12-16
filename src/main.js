@@ -228,13 +228,12 @@ var app_db = new function(){
         cb(err);
       });
     };
-    this.getVehicles = function(cb){
-        var items = this.getDB('items');
+    this.getItemsByTemplate = function(template,cb){
         var self = this;
-        items.allDocs({
+        this.getDB('items').allDocs({
           include_docs: true,
           attachments: true,
-          startkey: 'VEHICLE',
+          startkey: template,
         }).then(function (result) {
             if(result.error)
                 return self.fetchError(result);
@@ -254,6 +253,9 @@ var app_db = new function(){
 
           cb(err)
         });
+    }
+    this.getVehicles = function(cb){
+        this.getItemsByTemplate('VEHICLE',cb);
     }
     this.appendItemsToMap = function(map, options){
       console.log('append items to map');
