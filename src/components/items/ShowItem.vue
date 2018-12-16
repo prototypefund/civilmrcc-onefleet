@@ -1,26 +1,12 @@
 <template>
-   <div class="background" v-on:click.self="closeModal">
+   <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
       <div class="form-style-6">
         <h1>Show Item</h1>
-        <form @submit="createItem">
-          <span>Template</span>
-          <select v-model="form_data.template" @change="loadTemplate()">
-            <option>case</option>
-            <option>vehicle</option>
-          </select>
-
 
           <span>Identifier</span>
           <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
 
 
-          <div id="position" v-if="template_data.add_initial_position">
-            <span>Latitude</span>
-            <input type="number" step="any" name="lat" placeholder="Latitude" v-model="position_data.positions[0].lat">
-
-            <span>Longitude</span>
-            <input type="number" step="any" name="lon" placeholder="Longitude" v-model="position_data.positions[0].lon">
-          </div>
 
           <div v-for="field in template_data.fields">
             <span>{{field.name}}</span>
@@ -30,81 +16,77 @@
             </select>
 
           </div>
+          <span>Last Position</span>
+          <p>
+           {{last_position}}
+          </p>
+          
+          </v-container>
           <input type="submit" value="Send" />
-        </form>
       </div>
    </div>
 </template>
 <script>
 
-import templates from './templates.js'
+import templates from './templates.js';
 import {serverBus}  from '../../main';
+
 export default {
-  name: 'CreateItem',
+  name: 'ShowItem',
+  props: ['itemId'],
   data: function () {
     return {
-      twmplate: '',
+      template: '',
       vehicles: [],
       template_data: '',
+      last_position: {},
       form_data:{properties:{}},
       position_data:{
         positions:[{}]
       }
     }
   },
-  methods: {
-    createItem:function(e){
+  watch: { 
+        itemId: function(newVal, oldVal) { // watch it
+          var self = this;
 
-      var self = this;
+          //load doc
+          this.$db.getItem(newVal,function(doc){
+            //load template for doc
+            self.loadTemplate(doc.template);
 
-      this.form_data._id = String(this.form_data.template+'_'+this.form_data.identifier).toUpperCase();
-      this.$db.createItem(this.form_data,function(err,result){
+            //load doc into form_data
+            self.form_data = doc;
 
-        if(err){
-          if(err.name == 'conflict')
-            alert('The id is already taken, please choose another one');
-          else
-            alert('An unknown error occured while creating the item');
+            //load last position
+            console.log(doc.positions);
+            doc.positions.forEach(function(v,i){
 
-            console.log(err.name);
-        }else{
-          if(result.ok == true)
-            alert('everything is ok!');
+              //last position
+              if(i == doc.positions.length-1){
 
-            var position = {
-              "_id": self.form_data.identifier+"_"+new Date().toISOString(),
-              "lat": self.position_data.positions[0].lat,
-              "lon": self.position_data.positions[0].lon,
-              "item_identifier":self.form_data.identifier,
-               "source":"sar_app",
-               "timestamp":new Date().toISOString()
-            }
-            self.$db.createPosition(position,function(err,result){
-              if(err){
-                alert('error!')
-              }else{
-                if(result.ok)
-                  alert('everything is ok')
+                self.last_position = v.doc;
+
               }
-            })
+            });
+          });
         }
-
-      });
-      e.preventDefault();
-    },
-    loadTemplate: function (event) {
-      console.log(this.form_data.template);
-      var template = templates.get(this.form_data.template);
+  },
+  methods: {
+    
+    loadTemplate: function (template_name) {
+      var template = templates.get(template_name);
       this.template_data = template;
       this.$nextTick();
     },
     closeModal: function () {
      // Using the service bus
-     serverBus.$emit('modal_modus', '');
+     serverBus.$emit('itemId', false);
     }
   },
-  mounted: function() {
-    var self = this;
+  mounted:function(){
+    console.log('show item mounted:');
+    console.log(this.itemid);
   }
 }
 </script>

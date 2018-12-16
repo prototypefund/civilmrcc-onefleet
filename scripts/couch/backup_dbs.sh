@@ -1,0 +1,2 @@
+curl -X GET http://127.0.0.1:5984/items/_all_docs\?include_docs\=true > ../../data/backup/couch/items.json
+curl -X GET http://127.0.0.1:5984/positions/_all_docs\?include_docs\=true > ../../data/backup/couch/positions.json

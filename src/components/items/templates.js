@@ -3,6 +3,7 @@ module.exports = {
 get:function(name){
     var template = {
         'case':{
+            add_initial_position:true,
             fields:[
               {
                 'name':'status',
@@ -48,8 +49,8 @@ get:function(name){
             ]
         },
         'vehicle':{
-
-            fields:[
+            add_initial_position:false,
+            fields : [
                 {
                     'name':'name',
                     'title':'title',

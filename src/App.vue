@@ -1,8 +1,9 @@
 <template>
   <div id="app">
 
-      <CreateItem v-if="modus == 'createItem'"></CreateItem>
-
+      <CreateItem v-if="modal == 'createItem'"></CreateItem>
+      <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
+      <Login v-if="modal == 'login'"></Login>
       <TopNavigation></TopNavigation>
 
       <LeftNavigation></LeftNavigation>
@@ -20,9 +21,11 @@
 <script>
 import TopNavigation from './components/TopNavigation.vue'
 import CreateItem from './components/items/CreateItem.vue'
+import ShowItem from './components/items/ShowItem.vue'
 import LeftNavigation from './components/LeftNavigation.vue'
 import MapArea from './components/MapArea.vue'
 import ListView from './components/ListView.vue'
+import Login from './components/Login.vue'
 
 import { serverBus } from './main';
 
@@ -33,18 +36,34 @@ export default {
     LeftNavigation,
     MapArea,
     CreateItem,
-    ListView
+    ShowItem,
+    ListView,
+    Login
   },
   data: function () {
     return {
-      modus: 'map'
+      modus: 'map',
+      modal: '',
+      itemId: false
     }
-  }, 
+  },
+  methods:{
+    showItemDetails:function(item_id){
+      console.log('show item with item',item_id)
+      this.itemid = 3;
+    }
+  },
   created: function() {
-      // Send all documents to the remote database, and stream changes in real-time
       serverBus.$on('app_modus', (app_modus) => {
         console.log(app_modus);
         this.$data.modus = app_modus;
+      });
+
+      serverBus.$on('modal_modus', (modal_modus) => {
+        this.$data.modal = modal_modus;
+      });
+      serverBus.$on('itemId', (itemId) => {
+        this.$data.itemId = itemId;
       });
   }
 
@@ -68,7 +87,7 @@ export default {
   left:20vw;
   top:60px;
   bottom:0;
-  background:red;
+  background:#FFF;
 }
 #chat{
   position:absolute;
@@ -76,7 +95,6 @@ export default {
   right:0;
   top:60px;
   bottom:0;
-  background:yellow;
   z-index:999;
 }
 

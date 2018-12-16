@@ -5,13 +5,30 @@
 </template>
 
 <script>
+
+import { serverBus } from '../main';
 export default {
   name: 'MapArea',
   props: {
   },
   mounted:function(){
+
+    var self = this;
     this.$map.init('mapArea');
-    this.$db.appendItemsToMap(this.$map);
+    console.log('serverbus.shown_items');
+    console.log(serverBus.shown_items);
+    this.$db.appendItemsToMap(this.$map,{
+      onClick:function(itemId){
+        console.log(itemId);
+        serverBus.$emit('itemId', itemId);
+      }
+    });
+
+    serverBus.$on('shown_items', (shown_items) => {
+      self.$db.updateShownItemsOnMap(this.$map,{
+        shown_items: shown_items
+      });
+    });
   }
 }
 </script>

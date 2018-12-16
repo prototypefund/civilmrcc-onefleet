@@ -6,6 +6,7 @@ import BootstrapVue from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import App from './App.vue'
+export const serverBus = new Vue();
 
 
 
@@ -19,6 +20,7 @@ PouchDB.plugin(PouchDBAuthentication);
 
 var map = new function(){
   this.map;
+  this.loaded_items = {};
   this.init = function(mapId){
     this.map = L.map(mapId).setView([38.575655,10.710734], 5);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -46,7 +48,10 @@ var map = new function(){
       break;
     }
     return item;
-  }
+  };
+  this.showItem = function(){
+
+  };
   this.addItemToMap = function(item){
     //console.log('append item to map'+item.positions[0].doc.lat,item.positions[1].doc.lon);
     item = this.loadTemplatedItem(item);
@@ -56,25 +61,22 @@ var map = new function(){
       if(i == 0){
 
       }
+
+      //last position
       if(i == item.positions.length-1){
-        var greenIcon = L.icon({
-            iconUrl: '/gfx/icons/cursor.png',           
-            iconSize:     [32, 32], // size of the icon
-            shadowSize:   [50, 64], // size of the shadow
-            iconAnchor:   [16, 16], // point of the icon which will correspond to marker's location
-            shadowAnchor: [4, 62],  // the same for the shadow
-            popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-        });
+
         var width = 32;
         var height = 32;
         var rotation = v.doc.heading;
         var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
         var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
-        if(typeof item.onClick == 'function')
-          L.marker([v.doc.lat,v.doc.lon], {icon: icon,rotationAngle: 100}).addTo(self.map).on('click',onClick)
-        else
-          L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
-        
+
+        var marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
+        if(typeof item.onClick == 'function'){
+          marker.on('click',L.bind(item.onClick, null,item.id));
+          self.loaded_items[item.id] = marker;
+        }
+
       }
     });
    
@@ -117,20 +119,6 @@ var app_db = new function(){
       this.setOnChange = function(db_name,method){
         this.databases[db_name].onChange = method;
       }
-
-      /*localDB.sync(remoteDB, {
-        live: true,
-        retry: true
-      }).on('change', function (change) {
-        // yo, something changed!
-      }).on('paused', function (info) {
-        // replication was paused, usually because of a lost connection
-      }).on('active', function (info) {
-        // replication was resumed
-      }).on('error', function (err) {
-        // totally unhandled error (shouldn't happen)
-      });*/
-
     }
     this.getDB = function(db_name){
         if(typeof this.databases[db_name] == 'undefined'){
@@ -140,7 +128,8 @@ var app_db = new function(){
     };
     this.showLogin = function(){
         alert('Show Login NOW!');
-        this.login('sw3','password',this.getDB('items'))
+        serverBus.$emit('modal_modus', 'login');
+        //this.login('sw3','password',this.getDB('items'))
     };
     this.login = function(username, password, db){
         db.login(username, password).then(function(res) {
@@ -148,7 +137,7 @@ var app_db = new function(){
           localStorage.username = username;
           localStorage.password = password;
         }).then(function(docs) {
-          console.log(docs);
+
         }).catch(function(error) {
           console.error(error);
         });
@@ -183,6 +172,17 @@ var app_db = new function(){
         });
 
     }
+    this.getItem = function(itemId,cb){
+      var self = this;
+      this.getDB('items').get(itemId).then(function (doc) {
+        self.getPositionsForItem(doc.identifier,function(positions){
+          doc.positions = positions.rows;
+          cb(doc);
+        });
+      }).catch(function (err) {
+        console.log(err);
+      });
+    }
     this.getItems = function(cb){
         var items = this.getDB('items');
         var self = this;
@@ -194,10 +194,7 @@ var app_db = new function(){
                 return self.fetchError(result);
 
             result.rows.forEach(function(v,i){
-              console.log('getting positions for item: ',v.doc.identifier)
               self.getPositionsForItem(v.doc.identifier,function(positions){
-                console.log('positions received for item '+v.doc.identifier+':');
-                console.log(positions);
 
                 //append positions to vehicles:
                 result.rows[i].positions = positions.rows;
@@ -220,7 +217,6 @@ var app_db = new function(){
         cb(null,response)
       }).catch(function (err) {
         cb(err);
-        console.log(err);
       });
     };
     this.createPosition = function(obj,cb){
@@ -230,7 +226,6 @@ var app_db = new function(){
         cb(null,response)
       }).catch(function (err) {
         cb(err);
-        console.log(err);
       });
     };
     this.getVehicles = function(cb){
@@ -245,10 +240,7 @@ var app_db = new function(){
                 return self.fetchError(result);
 
             result.rows.forEach(function(v,i){
-              console.log('getting positions for: ',v.doc.identifier)
               self.getPositionsForItem(v.doc.identifier,function(positions){
-                console.log('positions received for '+v.doc.identifier+':');
-                console.log(positions);
 
                 //append positions to vehicles:
                 result.rows[i].positions = positions.rows;
@@ -263,21 +255,46 @@ var app_db = new function(){
           cb(err)
         });
     }
-    this.appendItemsToMap = function(map){
+    this.appendItemsToMap = function(map, options){
       console.log('append items to map');
       this.getItems(function(err,result){
         console.log('got items',err,result);
-        result.rows.forEach(function(v,i){
-          console.log('append item',v,i);
-          map.addItemToMap(v);
+        result.rows.forEach(function(item,i){
+          console.log('append item',item,i);
+
+          //add onclick option to itemobject
+          if(typeof options.onClick == 'function'){
+            item.onClick = function(itemId){
+              options.onClick(itemId);
+            }
+          }
+
+          map.addItemToMap(item);
         });
       });
     }
+    this.updateShownItemsOnMap = function(map,options){
+      console.log(options);
+      //item is here not the same as an item in the database
+      //it could be a L.marker, L.polygon etc
+      for(var identifier in map.loaded_items){
+
+        if(options.shown_items.indexOf(identifier) > -1){
+          //show item
+          console.log(map.loaded_items[identifier].options.opacity = 0);
+
+        }else{
+          //hide item
+          console.log(map.loaded_items[identifier].options.opacity = 1);
+
+        }
+        console.log(map.loaded_items[identifier]);
+      }
+    };
 }
 Vue.prototype.$db = app_db;
 Vue.prototype.$map = map;
 Vue.use(ElementUI);
-export const serverBus = new Vue();
 
 new Vue({
   render: h => h(App)

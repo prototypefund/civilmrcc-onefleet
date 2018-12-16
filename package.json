@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
+    "start-db": "cd database && pouchdb-server -p 5984 .",
+    "start-location-service": "node scripts/ais_location_service.js",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
