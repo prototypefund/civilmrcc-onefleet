@@ -151,9 +151,9 @@ var app_db = new function(){
     this.getDBURL = function(){
         if(localStorage.username && localStorage.username.length > 0)
 
-            return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_post+'/';
+            return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
         else    
-            return 'http://'+config.db_remote_host+':'+config.db_remote_post+'/';
+            return 'http://'+config.db_remote_host+':'+config.db_remote_port+'/';
     }
     this.getPositionsForItem = function(identifier,cb){
         var self = this;
