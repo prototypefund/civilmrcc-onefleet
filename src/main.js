@@ -14,6 +14,7 @@ import PouchDB from 'pouchdb-browser'
 import PouchDBAuthentication from 'pouchdb-authentication'
 
 
+import config from '../config/config.js';
 
 PouchDB.plugin(PouchDBAuthentication);
 
@@ -148,9 +149,9 @@ var app_db = new function(){
     this.getDBURL = function(){
         if(localStorage.username && localStorage.username.length > 0)
 
-            return 'http://'+localStorage.username+':'+localStorage.password+'@localhost:5984/';
+            return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
         else    
-            return 'http://localhost:5984/';
+            return 'http://'+config.db_remote_host+':'+config.db_remote_port+'/';
     }
     this.getPositionsForItem = function(identifier,cb){
         var self = this;
