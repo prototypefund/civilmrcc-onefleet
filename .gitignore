@@ -2,6 +2,9 @@ scripts/locations.db
 data
 database
 
+config/config.js
+scripts/config.js
+
 
 .DS_Store
 node_modules
