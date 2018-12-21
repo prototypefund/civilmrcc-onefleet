@@ -1,0 +1,3 @@
+[submodule "ais-api"]
+	path = ais-api
+	url = https://github.com/transparency-everywhere/ais-api
