@@ -53,7 +53,6 @@ var map = new function(){
 
   };
   this.addItemToMap = function(item){
-    //console.log('append item to map'+item.positions[0].doc.lat,item.positions[1].doc.lon);
     item = this.loadTemplatedItem(item);
     var self = this;
     item.positions.forEach(function(v,i){
@@ -61,7 +60,6 @@ var map = new function(){
       if(i == 0){
 
       }
-
       //last position
       if(i == item.positions.length-1){
 
@@ -172,6 +170,25 @@ var app_db = new function(){
         });
 
     }
+    this.createPosition = function(obj,cb){
+      this.getDB('positions').put(obj).then(function (response) {
+        console.log('position created');
+        console.log(response)
+        cb(null,response)
+      }).catch(function (err) {
+        cb(err);
+      });
+    };
+    this.createItem = function(obj,cb){
+      var itemDB = this.getDB('items');
+      itemDB.put(obj).then(function (response) {
+        console.log('item created');
+        console.log(response)
+        cb(null,response)
+      }).catch(function (err) {
+        cb(err);
+      });
+    };
     this.getItem = function(itemId,cb){
       var self = this;
       this.getDB('items').get(itemId).then(function (doc) {
@@ -209,25 +226,6 @@ var app_db = new function(){
           cb(err);
         });
     }
-    this.createItem = function(obj,cb){
-      var itemDB = this.getDB('items');
-      itemDB.put(obj).then(function (response) {
-        console.log('item created');
-        console.log(response)
-        cb(null,response)
-      }).catch(function (err) {
-        cb(err);
-      });
-    };
-    this.createPosition = function(obj,cb){
-      this.getDB('positions').put(obj).then(function (response) {
-        console.log('position created');
-        console.log(response)
-        cb(null,response)
-      }).catch(function (err) {
-        cb(err);
-      });
-    };
     this.getItemsByTemplate = function(template,cb){
         var self = this;
         this.getDB('items').allDocs({
@@ -239,6 +237,8 @@ var app_db = new function(){
                 return self.fetchError(result);
 
             result.rows.forEach(function(v,i){
+
+              //HAS TO BE REPLACED WITH PROMISE!
               self.getPositionsForItem(v.doc.identifier,function(positions){
 
                 //append positions to vehicles:

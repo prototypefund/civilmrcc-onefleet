@@ -1,8 +1,10 @@
 module.exports = {
 
 get:function(name){
-    var template = {
+    var templates = {
         'case':{
+            plural:'Cases',
+            pouch_identifier:'CASE',
             add_initial_position:true,
             fields:[
               {
@@ -49,6 +51,8 @@ get:function(name){
             ]
         },
         'vehicle':{
+            plural:'Vehicles',
+            pouch_identifier:'VEHICLE',
             add_initial_position:false,
             fields : [
                 {
@@ -73,7 +77,9 @@ get:function(name){
             ]
         }
     }
-    return template[name];
+    if(name == 'all')
+      return templates;
+    return templates[name];
 }
 
 

@@ -14,12 +14,17 @@
           <span>{{vehicle.doc.properties.name}}</span>
           <!--<span>{{vehicle.positions}}</span>-->
         </li>
+        <li v-for="category in categories">
+          <span>{{category.title}}</span>
+          <!--<span>{{vehicle.positions}}</span>-->
+        </li>
       </ul>
    </nav>
 </template>
 
 <script>
 
+import templates from './items/templates.js'
 import { serverBus } from '../main';
 export default {
   name: 'LeftNavigation',
@@ -27,7 +32,8 @@ export default {
   data: function () {
     return {
       vehicles: [],
-      shown_items:[]
+      shown_items:[],
+      categories:[]
     }
   },
   methods:{
@@ -44,6 +50,24 @@ export default {
   },
   mounted: function() {
     var self = this;
+    console.log('templates.get(');
+    console.log(templates.get('all'));
+    var all_templates = templates.get('all');
+    for(var template in all_templates){
+      console.log('get items for template: '+template);
+      this.$db.getItemsByTemplate(all_templates[template].pouch_identifier,function(error, result){
+        if(error)
+          return alert('an error occured!');
+
+        self.categories.push({
+          title:template,
+          plural:all_templates[template].plural,
+          items: result
+        });
+
+      });
+    }
+
     this.$db.getVehicles(function(err,result){
         self.$data.vehicles = result.rows;
     });
