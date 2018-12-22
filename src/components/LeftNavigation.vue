@@ -1,21 +1,23 @@
 <template>
    <nav>
       <ul>
-        <li><h3>Vehicles</h3></li>
-        <li v-for="vehicle in vehicles">
-          <el-switch
-            v-model="vehicle.visibility"
-            active-color="#13ce66"
-            inactive-color="#ff4949"
-            active-value="true"
-            inactive-value="false"
-            @change="toggleItem(vehicle.id)">
-          </el-switch>
-          <span>{{vehicle.doc.properties.name}}</span>
-          <!--<span>{{vehicle.positions}}</span>-->
-        </li>
         <li v-for="category in categories">
-          <span>{{category.title}}</span>
+          <ul>
+            <li><h3>{{category.plural}}</h3></li>
+
+            <li v-for="vehicle in category.items.rows">
+              <el-switch
+                v-model="vehicle.visibility"
+                active-color="#13ce66"
+                inactive-color="#ff4949"
+                active-value="true"
+                inactive-value="false"
+                @change="toggleItem(vehicle.id)">
+              </el-switch>
+              <span>{{vehicle.doc.properties.name}}</span>
+              <!--<span>{{vehicle.positions}}</span>-->
+            </li>
+          </ul>
           <!--<span>{{vehicle.positions}}</span>-->
         </li>
       </ul>
@@ -49,23 +51,32 @@ export default {
 
   },
   mounted: function() {
+
+
+    //load templates to append them as categories to the left navigation
     var self = this;
-    console.log('templates.get(');
-    console.log(templates.get('all'));
     var all_templates = templates.get('all');
     for(var template in all_templates){
-      console.log('get items for template: '+template);
-      this.$db.getItemsByTemplate(all_templates[template].pouch_identifier,function(error, result){
-        if(error)
-          return alert('an error occured!');
+      var all_templates = all_templates;
 
-        self.categories.push({
-          title:template,
-          plural:all_templates[template].plural,
-          items: result
-        });
+      //i actually like js, but sometimes...
+      (function(template_index) {
+              self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
+                if(error)
+                  return alert('an error occured reading the template!');
 
-      });
+                console.log('templated icons',result);
+                self.categories.push({
+                  title:template_index,
+                  plural:all_templates[template_index].plural,
+                  items: result
+                });
+
+              });
+      })(template);
+
+
+      
     }
 
     this.$db.getVehicles(function(err,result){

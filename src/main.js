@@ -40,10 +40,14 @@ var map = new function(){
     //polygon: series of points
 
 
-
     switch(item.doc.template){
       case 'vehicle':
-        item.doc.template = 'track';
+        item.doc.template = 'line';
+        if(typeof item.doc.properties.icon !== 'undefined')
+          item.doc.properties.icon = './vehicle.png';
+      break;
+      case 'case':
+        item.doc.template = 'line';
         if(typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
       break;
@@ -56,33 +60,89 @@ var map = new function(){
   this.addItemToMap = function(item){
     item = this.loadTemplatedItem(item);
     var self = this;
-    item.positions.forEach(function(v,i){
-      //first position
-      if(i == 0){
 
-      }
-      //last position
-      if(i == item.positions.length-1){
+    if(item.positions)
 
-        var width = 32;
-        var height = 32;
-        var rotation = v.doc.heading;
-        var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
-        var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
-        var marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
-        if(typeof item.onClick == 'function'){
-          marker.on('click',L.bind(item.onClick, null,item.id));
-          self.loaded_items[item.id] = marker;
+        console.log('HERE SHOULT BE LINE NOW:');
+        console.log(item.doc.template);
+
+
+
+
+
+
+
+        if(item.doc.template == 'line'){
+
+            var pointA = new L.LatLng(0, 0);
+            var pointB = new L.LatLng(28.984461, 77.70641);
+            var pointList = [];
+
+            item.positions.forEach(function(v,i){
+              pointList.push(new L.LatLng(v.doc.lat, v.doc.lon));
+              //pointList.push()
+            });
+
+            var firstpolyline = new L.Polyline(pointList, {
+                color: 'red',
+                weight: 3,
+                opacity: 0.5,
+                smoothFactor: 1
+            });
+            firstpolyline.addTo(self.map);
+
+            //add item add the end
+            item.doc.template = 'point'
+
+        }
+        if(item.doc.template == 'point'){
+
+
+            item.positions.forEach(function(v,i){
+              //first position
+              if(i == 0){
+
+              }
+              //last position
+              if(i == item.positions.length-1){
+
+                var width = 32;
+                var height = 32;
+                var rotation = v.doc.heading;
+                var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
+                var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
+
+                var marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
+                if(typeof item.onClick == 'function'){
+                  marker.on('click',L.bind(item.onClick, null,item.id));
+                  self.loaded_items[item.id] = marker;
+                }
+
+              }
+            });
+
+
+
+
+
+
         }
 
-      }
-    });
-   
 
 
 
-  }
+
+
+
+
+
+
+     
+
+
+
+    }
 }
 
 
@@ -142,7 +202,7 @@ var app_db = new function(){
         });
     }
     this.fetchError = function(err){
-        console.log(err.error);
+        console.log(err);
         if(err.error == "unauthorized")
             this.showLogin();
     }
@@ -228,14 +288,19 @@ var app_db = new function(){
         });
     }
     this.getItemsByTemplate = function(template,cb){
+      console.log('whoat',template);
         var self = this;
         this.getDB('items').allDocs({
           include_docs: true,
           attachments: true,
           startkey: template,
+          endkey: template+'\uffff'
         }).then(function (result) {
             if(result.error)
                 return self.fetchError(result);
+
+            if(result.rows.length == 0)
+              return cb(null,[]); 
 
             result.rows.forEach(function(v,i){
 
@@ -243,12 +308,18 @@ var app_db = new function(){
               self.getPositionsForItem(v.doc.identifier,function(positions){
 
                 //append positions to vehicles:
-                result.rows[i].positions = positions.rows;
+                console.log('check here nic',positions);
+                if(positions.rows)
+                  result.rows[i].positions = positions.rows;
+
                 
-                cb(null,result);
+                if(i >= result.rows.length-1)
+                  cb(null,result);
               });
             
             });
+
+
           // handle result
         }).catch(function (err) {
 

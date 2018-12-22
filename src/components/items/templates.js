@@ -6,6 +6,7 @@ get:function(name){
             plural:'Cases',
             pouch_identifier:'CASE',
             add_initial_position:true,
+            type:'line',
             fields:[
               {
                 'name':'status',
@@ -54,6 +55,7 @@ get:function(name){
             plural:'Vehicles',
             pouch_identifier:'VEHICLE',
             add_initial_position:false,
+            type:'line',
             fields : [
                 {
                     'name':'name',

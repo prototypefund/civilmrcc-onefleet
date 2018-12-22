@@ -6,7 +6,7 @@ the marinetraffic_api_key needs to be set inside the config.js!
 
 const PouchDB = require('pouchdb');
 const request = require('request');
-const config = require('../config/config.js');
+const config = require('./config.js');
 const sqlite3 = require('sqlite3').verbose();
 
 var service = new function(){
