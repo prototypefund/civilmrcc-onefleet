@@ -63,20 +63,7 @@ var map = new function(){
 
     if(item.positions)
 
-
-        console.log('HERE SHOULT BE LINE NOW:');
-        console.log(item.doc.template);
-
-
-
-
-
-
-
         if(item.doc.template == 'line'){
-
-            var pointA = new L.LatLng(0, 0);
-            var pointB = new L.LatLng(28.984461, 77.70641);
             var pointList = [];
 
             item.positions.forEach(function(v,i){
@@ -98,7 +85,6 @@ var map = new function(){
         }
         if(item.doc.template == 'point'){
 
-
             item.positions.forEach(function(v,i){
               //first position
               if(i == 0){
@@ -107,8 +93,8 @@ var map = new function(){
               //last position
               if(i == item.positions.length-1){
 
-                var width = 32;
-                var height = 32;
+                var width = 16;
+                var height = 16;
                 var rotation = v.doc.heading;
                 var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
                 var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
