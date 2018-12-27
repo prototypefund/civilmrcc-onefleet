@@ -67,6 +67,7 @@ var map = new function(){
             var pointList = [];
 
             item.positions.forEach(function(v,i){
+              if(v.doc.lat&&v.doc.lon)
               pointList.push(new L.LatLng(v.doc.lat, v.doc.lon));
               //pointList.push()
             });

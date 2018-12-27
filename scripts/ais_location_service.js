@@ -109,7 +109,8 @@ var service = new function(){
             case 'AIS':
               console.log('get position from AISs for vehicle '+v.doc.properties.name);
               self.getPositionFromAIS(v.doc.properties.MMSI,function(Position){
-
+                                  console.log('got position from AIS:'+v.doc.identifier);
+                                  console.log(Position);
                                   self.insertLocation(v.doc.identifier,Position);
                                   
               });
