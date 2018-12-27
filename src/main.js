@@ -294,7 +294,6 @@ var app_db = new function(){
               self.getPositionsForItem(v.doc.identifier,function(positions){
 
                 //append positions to vehicles:
-                console.log('check here nic',positions);
                 if(positions.rows)
                   result.rows[i].positions = positions.rows;
 
@@ -318,9 +317,7 @@ var app_db = new function(){
     this.appendItemsToMap = function(map, options){
       console.log('append items to map');
       this.getItems(function(err,result){
-        console.log('got items',err,result);
         result.rows.forEach(function(item,i){
-          console.log('append item',item,i);
 
           //add onclick option to itemobject
           if(typeof options.onClick == 'function'){
@@ -334,21 +331,19 @@ var app_db = new function(){
       });
     }
     this.updateShownItemsOnMap = function(map,options){
-      console.log(options);
       //item is here not the same as an item in the database
       //it could be a L.marker, L.polygon etc
       for(var identifier in map.loaded_items){
 
         if(options.shown_items.indexOf(identifier) > -1){
           //show item
-          console.log(map.loaded_items[identifier].options.opacity = 0);
+          map.loaded_items[identifier].options.opacity = 0;
 
         }else{
           //hide item
-          console.log(map.loaded_items[identifier].options.opacity = 1);
+          map.loaded_items[identifier].options.opacity = 1;
 
         }
-        console.log(map.loaded_items[identifier]);
       }
     };
 }
