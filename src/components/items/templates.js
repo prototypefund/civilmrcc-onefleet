@@ -44,7 +44,7 @@ get:function(name){
                   }
               },
               {
-                'name':'people_on_board',
+                'name':'people_on_baoard',
                 'title':'People On Board',
                 'type':'number',
                 'step':1
@@ -74,6 +74,11 @@ get:function(name){
                 {
                     'name':'MMSI',
                     'title':'MMSI',
+                    'type':'text'
+                },
+                {
+                    'name':'color',
+                    'title':'Color',
                     'type':'text'
                 }
             ]

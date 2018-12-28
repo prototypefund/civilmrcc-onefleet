@@ -59,34 +59,41 @@ var map = new function(){
   };
   this.addItemToMap = function(item){
     item = this.loadTemplatedItem(item);
+    this.loaded_items[item.id] = {};
+
     var self = this;
+    var line = false;
+    var marker = false;
+    if(typeof item.positions != 'undefined' && item.positions.length > 0)
 
-    if(item.positions)
-
+        item.doc.template = 'line';
         if(item.doc.template == 'line'){
             var pointList = [];
+            if(item.positions.length > 0){
 
-            item.positions.forEach(function(v,i){
-              if(v.doc.lat&&v.doc.lon)
-              pointList.push(new L.LatLng(v.doc.lat, v.doc.lon));
-              //pointList.push()
-            });
+              for(var i in item.positions){
+                var v = item.positions[i];
+                if(v.doc.lat&&v.doc.lon)
+                pointList.push([v.doc.lat, v.doc.lon]);
+                //pointList.push()
+              };
 
-            var firstpolyline = new L.Polyline(pointList, {
-                color: 'red',
-                weight: 3,
-                opacity: 0.5,
-                smoothFactor: 1
-            });
-            firstpolyline.addTo(self.map);
-
+              line = new L.Polyline(pointList, {
+                  color: ['red','yellow','blue'][Math.floor(Math.random()*2)],
+                  weight: 3,
+                  opacity: 0.5,
+                  smoothFactor: 1
+              });
+            
+            }
             //add item add the end
             item.doc.template = 'point'
 
         }
         if(item.doc.template == 'point'){
 
-            item.positions.forEach(function(v,i){
+            for(var i in item.positions){
+              var v = item.positions[i];
               //first position
               if(i == 0){
 
@@ -100,33 +107,19 @@ var map = new function(){
                 var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
                 var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
-                var marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
+                marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
                 if(typeof item.onClick == 'function'){
                   marker.on('click',L.bind(item.onClick, null,item.id));
-                  self.loaded_items[item.id] = marker;
                 }
-
               }
-            });
-
-
-
-
-
-
+            };
         }
-
-
-
-
-
-
-
-
-
-
-     
-
+        if(marker)
+          this.loaded_items[item.id].marker = marker;
+        if(line){
+          this.loaded_items[item.id].line = line;
+          this.loaded_items[item.id].line.addTo(this.map);
+        }
 
 
     }
@@ -241,8 +234,12 @@ var app_db = new function(){
       var self = this;
       this.getDB('items').get(itemId).then(function (doc) {
         self.getPositionsForItem(doc.identifier,function(positions){
-          doc.positions = positions.rows;
-          cb(doc);
+          var item = {
+            id:doc._id,
+            doc:doc,
+            positions:positions.rows
+          }
+          cb(item);
         });
       }).catch(function (err) {
         console.log(err);
@@ -259,6 +256,8 @@ var app_db = new function(){
                 return self.fetchError(result);
 
             result.rows.forEach(function(v,i){
+
+              result.rows[i]['positions'] = [];
               self.getPositionsForItem(v.doc.identifier,function(positions){
 
                 //append positions to vehicles:
@@ -275,7 +274,6 @@ var app_db = new function(){
         });
     }
     this.getItemsByTemplate = function(template,cb){
-      console.log('whoat',template);
         var self = this;
         this.getDB('items').allDocs({
           include_docs: true,
@@ -316,10 +314,9 @@ var app_db = new function(){
         this.getItemsByTemplate('VEHICLE',cb);
     }
     this.appendItemsToMap = function(map, options){
-      console.log('append items to map');
       this.getItems(function(err,result){
-        result.rows.forEach(function(item,i){
-
+        for(var i in result.rows){
+          var item = result.rows[i];
           //add onclick option to itemobject
           if(typeof options.onClick == 'function'){
             item.onClick = function(itemId){
@@ -328,25 +325,30 @@ var app_db = new function(){
           }
 
           map.addItemToMap(item);
-        });
+        };
       });
     }
+
     this.updateShownItemsOnMap = function(map,options){
-      //item is here not the same as an item in the database
-      //it could be a L.marker, L.polygon etc
-      for(var identifier in map.loaded_items){
+        //item is here not the same as an item in the database
+        //it could be a L.marker, L.polygon etc
+        var i = 0;
+        var self = this;
+        map.map.eachLayer(function (layer) {
+            if(i > 0)
+              map.map.removeLayer(layer);
+            i++;
+        });
 
-        if(options.shown_items.indexOf(identifier) > -1){
-          //show item
-          map.loaded_items[identifier].options.opacity = 0;
-
-        }else{
-          //hide item
-          map.loaded_items[identifier].options.opacity = 1;
-
+        for(var identifier in options.shown_items){
+          if(options.shown_items[identifier] == 'true')
+            self.getItem(identifier,function(result){
+              options.map.addItemToMap(result);
+            });
         }
-      }
-    };
+
+        
+    }
 }
 Vue.prototype.$db = app_db;
 Vue.prototype.$map = map;

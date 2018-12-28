@@ -7,12 +7,13 @@
 
             <li v-for="vehicle in category.items.rows">
               <el-switch
-                v-model="vehicle.visibility"
+                v-model="shown_items[vehicle.id]"
                 active-color="#13ce66"
                 inactive-color="#ff4949"
                 active-value="true"
                 inactive-value="false"
-                @change="toggleItem(vehicle.id)">
+                @change="toggleItem(vehicle.id);"
+                >
               </el-switch>
               <span>{{vehicle.doc.properties.name}}</span>
               <!--<span>{{vehicle.positions}}</span>-->
@@ -38,13 +39,24 @@ export default {
       categories:[]
     }
   },
-  methods:{
-    toggleItem: function(identifier){
-        if(this.shown_items.indexOf(identifier) == -1)
-          this.shown_items.push(identifier)
-        else
-          this.shown_items.filter(e => e !== identifier) //remove item from array
+  computed: {
+    searcher() {  
 
+    }
+  },
+  methods:{
+    isShown: function(identifier){
+      return this.shown_items[identifier];
+    },
+    initItem: function(identifier){
+        if(!this.shown_items[identifier])
+            this.shown_items[identifier] = true
+
+        serverBus.$emit('shown_items', this.shown_items);
+
+    },
+    toggleItem: function(identifier,event){
+       
 
         serverBus.$emit('shown_items', this.shown_items);
     }
@@ -52,6 +64,9 @@ export default {
   },
   mounted: function() {
 
+    serverBus.$on('shown_items', (shown_items) => {
+
+    });
 
     //load templates to append them as categories to the left navigation
     var self = this;
@@ -81,6 +96,13 @@ export default {
 
     this.$db.getVehicles(function(err,result){
         self.$data.vehicles = result.rows;
+        for(var category_index in self.$data.categories){
+          console.log('category');
+          console.log(self.$data.categories[category_index]);
+          for(var item in self.$data.categories[category_index].items.rows){
+            self.initItem(self.$data.categories[category_index].items.rows[item].id);
+          }
+        }
     });
     this.$db.setOnChange('items',function(){
       console.log('change detected, rerender vehicles!');
@@ -100,9 +122,12 @@ export default {
 nav{
   position:absolute;
   left:0;
-  width:20vw;
+  width:15vw;
   top:60px;
   bottom:0;
   padding: 20px;
+}
+el-switch{
+  margin-right:5px;
 }
 </style>
