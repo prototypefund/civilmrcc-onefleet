@@ -1,7 +1,13 @@
 # sar-app
 
-## Project setup
+## Clone the Repo
+
 ```
+git clone --recursive https://gitlab.com/niczem/onefleet.git
+cd onefleet
+npm install
+
+cd ais-api
 npm install
 ```
 
