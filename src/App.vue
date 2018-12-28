@@ -84,7 +84,7 @@ export default {
   position:absolute;
   width:60vw;
   right:20vw;
-  left:20vw;
+  left:15vw;
   top:60px;
   bottom:0;
   background:#FFF;
