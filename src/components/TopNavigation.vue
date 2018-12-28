@@ -6,8 +6,8 @@
       </div>
       <ul id="nav-left">
         <li v-on:click="changeModus('map')"> <a>Map</a></li>
-        <li v-on:click="changeModus('cases')"> <a>Cases</a></li>
-        <li v-on:click="openModal('createItem')"> <a>Create New Case</a></li>
+        <li v-on:click="changeModus('cases')"> <a>List</a></li>
+        <li v-on:click="openModal('createItem')"> <a>Create New Item</a></li>
       </ul>
       <ul id="nav-right">
         <li class="dropdown">
