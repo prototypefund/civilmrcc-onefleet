@@ -1,0 +1,13 @@
+FROM node:10-alpine
+
+ENV PATH=/app/node_modules/.bin:${PATH}
+
+RUN mkdir -p /app
+
+WORKDIR /app
+
+COPY ./ais-api ./
+
+RUN npm install
+
+CMD ["npm", "run", "start"]

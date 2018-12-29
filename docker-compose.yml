@@ -1,0 +1,50 @@
+version: '3'
+
+volumes:
+  data:
+
+services:
+  database:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.database
+    ports:
+      - "5984:5984" # fauxton UI
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+      - data:/database
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.app
+    ports:
+      - "8080:8080" # vue serve
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+    links:
+      - location
+
+  ais:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.ais
+    environment:
+      - PORT=5000
+
+  location:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.location
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+    environment:
+      - AIS_API=http://ais:5000/
+      - DB_URL=http://database:5984/
+      - DEVELOPMENT=true
+    links:
+      - ais
+      - database

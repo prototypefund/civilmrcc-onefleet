@@ -5,6 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "db": "cd database && pouchdb-server -p 5984 -o 0.0.0.0 .",
+    "dev": "npm install && npm run serve",
+    "dev-database": "pouchdb-server -p 5984 -o 0.0.0.0 --in-memory",
+    "dev-location": "npm install && npm run start-location-service",
     "start-location-service": "node scripts/ais_location_service.js",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
