@@ -7,11 +7,14 @@ services:
   database:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.database
+      dockerfile: ./services/database/Dockerfile
     ports:
       - "5984:5984" # fauxton UI
+    command: npm run dev
+    environment:
+      - PORT=5984
     volumes:
-      - ./:/app:cached
+      - ./services/database/:/app:cached
       - /app/node_modules
       - data:/database
 

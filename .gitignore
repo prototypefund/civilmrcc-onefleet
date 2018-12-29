@@ -1,6 +1,6 @@
 scripts/locations.db
-data
-database
+/data
+/database
 
 config/config.js
 scripts/config.js
