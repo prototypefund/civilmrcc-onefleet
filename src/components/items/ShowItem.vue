@@ -8,7 +8,7 @@
 
 
 
-          <div v-for="field in template_data.fields">
+          <div v-for="field in template_data.properties">
             <span>{{field.name}}</span>
             <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
             <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
@@ -38,7 +38,7 @@ export default {
     return {
       template: '',
       vehicles: [],
-      template_data: '',
+      template_data: {},
       last_position: {},
       form_data:{properties:{}},
       position_data:{
@@ -59,7 +59,6 @@ export default {
             self.form_data = doc;
 
             //load last position
-            console.log(doc.positions);
             doc.positions.forEach(function(v,i){
 
               //last position
@@ -75,7 +74,11 @@ export default {
   methods: {
     
     loadTemplate: function (template_name) {
+
+      if(typeof template_name === 'undefined')
+        template_name = 'case';
       var template = templates.get(template_name);
+      console.log(template);
       this.template_data = template;
       this.$nextTick();
     },

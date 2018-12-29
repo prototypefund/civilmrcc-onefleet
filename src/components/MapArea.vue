@@ -15,11 +15,11 @@ export default {
 
     var self = this;
     this.$map.init('mapArea');
-    this.$db.appendItemsToMap(this.$map,{
-      onClick:function(itemId){
+    this.$map.clickItem = function(itemId){
+        console.log(itemId);
         serverBus.$emit('itemId', itemId);
-      }
-    });
+    }
+    this.$db.appendItemsToMap(this.$map);
 
     serverBus.$on('shown_items', (shown_items) => {
       self.$db.updateShownItemsOnMap(this.$map,{

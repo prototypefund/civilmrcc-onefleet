@@ -38,8 +38,6 @@ var map = new function(){
     //line: a series of n points
     //track: series of n points with a main point
     //polygon: series of points
-
-
     switch(item.doc.template){
       case 'vehicle':
         item.doc.template = 'line';
@@ -55,6 +53,9 @@ var map = new function(){
     return item;
   };
   this.showItem = function(){
+
+  };
+  this.clickItem = function(){
 
   };
   this.addItemToMap = function(item){
@@ -108,9 +109,9 @@ var map = new function(){
                 var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
                 marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
-                if(typeof item.onClick == 'function'){
-                  marker.on('click',L.bind(item.onClick, null,item.id));
-                }
+                console.log(self.clickItem);
+                marker.on('click',L.bind(self.clickItem, null,item.id));
+                
               }
             };
         }
@@ -130,10 +131,6 @@ var map = new function(){
 var app_db = new function(){
     this.databases = {};
     this.logged_in;
-
-
-
-
 
     this.initDB = function(db_name){
       var self = this;
@@ -318,11 +315,6 @@ var app_db = new function(){
         for(var i in result.rows){
           var item = result.rows[i];
           //add onclick option to itemobject
-          if(typeof options.onClick == 'function'){
-            item.onClick = function(itemId){
-              options.onClick(itemId);
-            }
-          }
 
           map.addItemToMap(item);
         };
@@ -343,6 +335,7 @@ var app_db = new function(){
         for(var identifier in options.shown_items){
           if(options.shown_items[identifier] == 'true')
             self.getItem(identifier,function(result){
+
               options.map.addItemToMap(result);
             });
         }

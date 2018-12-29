@@ -1,6 +1,7 @@
 module.exports = {
 
 get:function(name){
+
     var templates = {
         'case':{
             plural:'Cases',
@@ -84,6 +85,9 @@ get:function(name){
             ]
         }
     }
+
+    console.log(templates);
+    console.log(name);
     if(name == 'all')
       return templates;
     return templates[name];
