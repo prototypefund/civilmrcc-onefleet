@@ -53,15 +53,15 @@ services:
   location:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.location
+      dockerfile: ./services/location/Dockerfile
+    command: dockerize -wait tcp://database:5984 -timeout 5m npm run dev
     volumes:
-      - ./:/app:cached
+      - ./services/location:/app:cached
       - /app/node_modules
     environment:
-      - AIS_API=http://ais:5000/
-      - DB_URL=http://database:5984/
+      - AIS_API=http://ais:5000
+      - DB_URL=http://database:5984
       - DEVELOPMENT=true
     links:
       - ais
       - bootstrap
-      - database

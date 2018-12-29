@@ -1,28 +1,25 @@
-/*
-This script calls the marinetraffic api and checks if any of the returned ships is inside the database.
-the marinetraffic_api_key needs to be set inside the config.js!
-*/
-
-
 const PouchDB = require('pouchdb');
 const request = require('request');
-const config = require('./config.js');
 const sqlite3 = require('sqlite3').verbose();
 
-const aisApi = process.env.AIS_API || config.ais_api;
-const dbUrl = process.env.DB_URL || config.db_remote_url;
+const config = {
+  aisUrl: process.env.AIS_API,
+  dbUrl: process.env.DB_URL,
+  dbUser: process.env.DB_USER || null,
+  dbPassword: process.env.DB_PASSWORD || null,
+};
 
 var service = new function(){
 
   this.initDBs = function(){
       this.dbConfig = process.env.DEVELOPMENT ? {} : {
         auth: {
-          username: config.db_username,
-          password: config.db_password
+          username: config.dbUser,
+          password: config.dbPassword,
         }
       };
-      this.itemDB = new PouchDB(dbUrl + '/items', this.dbConfig);
-      this.locationsDB = new PouchDB(dbUrl + '/positions', this.dbConfig);
+      this.itemDB = new PouchDB(`${config.dbUrl}/items`, this.dbConfig);
+      this.locationsDB = new PouchDB(`${config.dbUrl}/positions`, this.dbConfig);
 
       //SQLITE is used for long term storage
       this.sqlite =  new sqlite3.Database('./locations.db');
@@ -132,7 +129,7 @@ var service = new function(){
     };
     this.getPositionFromAIS = function(mmsi,cb){
       console.log()
-      request(aisApi + 'getLastPosition/' + mmsi, { json: true }, (err, res, body) => {
+      request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
         if (err) { return console.log(err); }
         if (body.error != null) return console.log(body.error);
 

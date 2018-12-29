@@ -1,0 +1,13 @@
+{
+  "name": "sar-location",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm install && npm run start",
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "pouchdb": "^7.0.0",
+    "sqlite3": "^4.0.4"
+  }
+}
