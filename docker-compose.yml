@@ -4,6 +4,19 @@ volumes:
   data:
 
 services:
+  bootstrap:
+    build:
+      context: .
+      dockerfile: ./services/bootstrap/Dockerfile
+    command: dockerize -wait tcp://database:5984 -timeout 5m npm run start
+    environment:
+      - DB_URL=http://database:5984
+    volumes:
+      - ./services/bootstrap/:/app:cached
+      - /app/node_modules
+    links:
+      - database
+
   database:
     build:
       context: .
@@ -50,4 +63,5 @@ services:
       - DEVELOPMENT=true
     links:
       - ais
+      - bootstrap
       - database

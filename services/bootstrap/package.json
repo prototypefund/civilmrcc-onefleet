@@ -1,0 +1,11 @@
+{
+  "name": "sar-bootstrap",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npm install && node seed.js"
+  },
+  "dependencies": {
+    "pouchdb": "^7.0.0"
+  }
+}
