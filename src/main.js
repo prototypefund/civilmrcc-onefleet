@@ -45,7 +45,7 @@ var map = new function(){
           item.doc.properties.icon = './vehicle.png';
       break;
       case 'case':
-        item.doc.template = 'line';
+        item.doc.template = 'point';
         if(typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
       break;
