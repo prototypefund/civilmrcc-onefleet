@@ -46,7 +46,11 @@ services:
   ais:
     build:
       context: .
-      dockerfile: ./docker/Dockerfile.ais
+      dockerfile: ./services/ais/Dockerfile
+    command: npm run dev
+    volumes:
+      - ./services/ais:/app:cached
+      - /app/node_modules
     environment:
       - PORT=5000
 
@@ -54,7 +58,7 @@ services:
     build:
       context: .
       dockerfile: ./services/location/Dockerfile
-    command: dockerize -wait tcp://database:5984 -timeout 5m npm run dev
+    command: dockerize -wait tcp://database:5984 -wait tcp://ais:5000 -timeout 5m npm run dev
     volumes:
       - ./services/location:/app:cached
       - /app/node_modules
