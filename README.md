@@ -3,32 +3,28 @@
 ## Clone the Repo
 
 ```
-git clone --recursive https://gitlab.com/niczem/onefleet.git
+git clone https://gitlab.com/niczem/onefleet.git
 cd onefleet
-npm install
-
-cd ais-api
-npm install
 ```
 
-### Compiles and hot-reloads for development
+### Run development environment
 ```
-npm run serve
+docker-compose up
 ```
 
 ### Compiles and minifies for production
 ```
-npm run build
+docker-compose exec app npm run build
 ```
 
 ### Run your tests
 ```
-npm run test
+docker-compose exec app npm run test
 ```
 
 ### Lints and fixes files
 ```
-npm run lint
+docker-compose exec app npm run lint
 ```
 
 ### Customize configuration
