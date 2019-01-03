@@ -81,7 +81,17 @@ get:function(name){
                     'name':'color',
                     'title':'Color',
                     'type':'text'
-                }
+                },
+                {
+                    'name':'active',
+                    'title':'Active',
+                    'type':'select',
+                    'options':
+                      {
+                        'true':'true',
+                        'false':'false'
+                      }
+                },
             ]
         }
     }

@@ -30,6 +30,8 @@ var map = new function(){
     id: 'mapbox.streets',
     accessToken: 'your.mapbox.access.token'
     }).addTo(this.map);
+
+    L.control.scale({imperial: false}).addTo(this.map);
   };
   this.loadTemplatedItem = function(item){
     //every item is based on one of the following
