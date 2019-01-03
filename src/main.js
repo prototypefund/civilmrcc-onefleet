@@ -227,6 +227,11 @@ var app_db = new function(){
         cb(err);
       });
     };
+    this.updateItem = function(obj,cb){
+      //in pouch create and update actually is the same function
+      //an item will be updated if the id and a rev already exists
+      return this.createItem(obj,cb);
+    }
     this.getItem = function(itemId,cb){
       var self = this;
       this.getDB('items').get(itemId).then(function (doc) {
