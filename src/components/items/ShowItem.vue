@@ -1,30 +1,30 @@
 <template>
-   <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
-      <div class="form-style-6">
-        <h1>Show Item</h1>
+    <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
+        <div class="form-style-6"  v-if="template_data&&template_data.fields">
+          <h1>Show Item</h1>
+          <form @submit="storeItem">
 
-          <span>Identifier</span>
-          <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
+            <span>Identifier</span>
+            <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
+            <div v-for="field in template_data.fields">
+              <span>{{field.name}}</span>
+              <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
+              <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
+                <option v-for="option in field.options">{{option}}</option>
+              </select>
 
+            </div>
+            <span>Last Position</span>
+            <p>
+             {{last_position}}
+            </p>
+            
+            </v-container>
+            <input type="submit" value="Save" />
 
-
-          <div v-for="field in template_data.properties">
-            <span>{{field.name}}</span>
-            <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
-            <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
-              <option v-for="option in field.options">{{option}}</option>
-            </select>
-
-          </div>
-          <span>Last Position</span>
-          <p>
-           {{last_position}}
-          </p>
-          
-          </v-container>
-          <input type="submit" value="Send" />
-      </div>
-   </div>
+          </form>
+        </div>
+    </div>
 </template>
 <script>
 
@@ -49,9 +49,9 @@ export default {
   watch: { 
         itemId: function(newVal, oldVal) { // watch it
           var self = this;
-
           //load doc
-          this.$db.getItem(newVal,function(doc){
+          this.$db.getItem(newVal,function(item){
+            var doc = item.doc
             //load template for doc
             self.loadTemplate(doc.template);
 
@@ -59,10 +59,10 @@ export default {
             self.form_data = doc;
 
             //load last position
-            doc.positions.forEach(function(v,i){
+            item.positions.forEach(function(v,i){
 
               //last position
-              if(i == doc.positions.length-1){
+              if(i == item.positions.length-1){
 
                 self.last_position = v.doc;
 
@@ -74,22 +74,38 @@ export default {
   methods: {
     
     loadTemplate: function (template_name) {
-
-      if(typeof template_name === 'undefined')
-        template_name = 'case';
-      var template = templates.get(template_name);
-      console.log(template);
-      this.template_data = template;
+      this.template_data = templates.get(template_name);
       this.$nextTick();
     },
     closeModal: function () {
      // Using the service bus
      serverBus.$emit('itemId', false);
+    },
+    storeItem: function(e){
+      e.preventDefault();
+      var self = this;
+      this.$db.createItem(this.form_data,function(err,result){
+
+        if(err){
+          if(err.name == 'conflict')
+            alert('The id is already taken, please choose another one');
+          else
+            alert('An unknown error occured while creating the item');
+
+            console.log(err.name);
+            console.log(err);
+        }else{
+          if(result.ok == true)
+            self.itemId = false;
+            alert('The item has been updated');
+        }
+
+      });
+
     }
   },
   mounted:function(){
-    console.log('show item mounted:');
-    console.log(this.itemid);
+
   }
 }
 </script>
