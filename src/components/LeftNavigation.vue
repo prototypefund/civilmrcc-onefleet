@@ -3,7 +3,7 @@
 
     <ul>
       <el-collapse v-model="activeCategories">
-        <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="item.plural">
+        <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul>
             <li v-for="item in category.items.rows">
               <el-switch
