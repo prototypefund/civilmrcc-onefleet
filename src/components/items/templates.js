@@ -81,13 +81,20 @@ get:function(name){
                     'name':'color',
                     'title':'Color',
                     'type':'text'
-                }
+                },
+                {
+                    'name':'active',
+                    'title':'Active',
+                    'type':'select',
+                    'options':
+                      {
+                        'true':'true',
+                        'false':'false'
+                      }
+                },
             ]
         }
     }
-
-    console.log(templates);
-    console.log(name);
     if(name == 'all')
       return templates;
     return templates[name];

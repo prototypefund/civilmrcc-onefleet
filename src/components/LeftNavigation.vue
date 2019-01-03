@@ -1,27 +1,28 @@
 <template>
    <nav>
-      <ul>
-        <li v-for="category in categories">
-          <ul>
-            <li><h3>{{category.plural}}</h3></li>
 
-            <li v-for="vehicle in category.items.rows">
+    <ul>
+      <el-collapse v-model="activeCategories">
+        <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
+          <ul>
+            <li v-for="item in category.items.rows">
               <el-switch
-                v-model="shown_items[vehicle.id]"
+                v-model="shown_items[item.id]"
                 active-color="#13ce66"
                 inactive-color="#ff4949"
                 active-value="true"
                 inactive-value="false"
-                @change="toggleItem(vehicle.id);"
+                @change="toggleItem(item.id);"
                 >
               </el-switch>
-              <span>{{vehicle.doc.properties.name}}</span>
+              <span class="item_name">{{item.doc.properties.name}}</span>
               <!--<span>{{vehicle.positions}}</span>-->
             </li>
           </ul>
-          <!--<span>{{vehicle.positions}}</span>-->
-        </li>
-      </ul>
+
+        </el-collapse-item>
+      </el-collapse>
+    </ul>
    </nav>
 </template>
 
@@ -36,7 +37,8 @@ export default {
     return {
       vehicles: [],
       shown_items:[],
-      categories:[]
+      categories:[],
+      activeCategories: ['Vehicles']
     }
   },
   computed: {
@@ -48,9 +50,8 @@ export default {
     isShown: function(identifier){
       return this.shown_items[identifier];
     },
-    initItem: function(identifier){
-        if(!this.shown_items[identifier])
-            this.shown_items[identifier] = true
+    initItem: function(identifier,active){
+        this.shown_items[identifier] = active
 
         serverBus.$emit('shown_items', this.shown_items);
 
@@ -80,7 +81,6 @@ export default {
                 if(error)
                   return alert('an error occured reading the template!');
 
-                console.log('templated icons',result);
                 self.categories.push({
                   title:template_index,
                   plural:all_templates[template_index].plural,
@@ -97,17 +97,19 @@ export default {
     this.$db.getVehicles(function(err,result){
         self.$data.vehicles = result.rows;
         for(var category_index in self.$data.categories){
-          console.log('category');
-          console.log(self.$data.categories[category_index]);
+
+          //get all items within a category
           for(var item in self.$data.categories[category_index].items.rows){
-            self.initItem(self.$data.categories[category_index].items.rows[item].id);
+            console.log(self.$data.categories[category_index].items.rows[item].doc.properties.active);
+            let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
+            self.initItem(self.$data.categories[category_index].items.rows[item].id,is_active);
           }
         }
     });
+
     this.$db.setOnChange('items',function(){
       console.log('change detected, rerender vehicles!');
         self.$db.getVehicles(function(err,result){
-
               self.$data.vehicles = result.rows;
         });
     });
@@ -116,9 +118,14 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style>
+
+.el-collapse-item__header{
+  font-size:22px;
+}
+</style>
+
 <style scoped>
-
-
 nav{
   position:absolute;
   left:0;
@@ -126,6 +133,11 @@ nav{
   top:60px;
   bottom:0;
   padding: 20px;
+}
+
+
+nav .categories .item_name{
+  margin-left:5px;
 }
 el-switch{
   margin-right:5px;
