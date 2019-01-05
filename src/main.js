@@ -32,6 +32,7 @@ var map = new function(){
     }).addTo(this.map);
 
     L.control.scale({imperial: false}).addTo(this.map);
+    console.log('map initted');
   };
   this.loadTemplatedItem = function(item){
     //every item is based on one of the following
@@ -54,55 +55,52 @@ var map = new function(){
     }
     return item;
   };
+  this.clearMap = function(){
+    var i = 0;
+    this.map.eachLayer(function (layer) {
+      console.log(layer);
+            if(i > 0)
+              map.map.removeLayer(layer);
+            i++;
+    });
+
+  }
   this.showItem = function(){
 
   };
   this.clickItem = function(){
 
   };
-  this.addItemToMap = function(item){
-    item = this.loadTemplatedItem(item);
-    this.loaded_items[item.id] = {};
+  this.generateLine = function(item){
+    var pointList = [];
+    if(item.positions.length > 0){
+      for(var i in item.positions){
+        var v = item.positions[i];
+        if(v.doc.lat&&v.doc.lon)
+        pointList.push([v.doc.lat, v.doc.lon]);
+        //pointList.push()
+      };
 
+      return new L.Polyline(pointList, {
+          color: ['red','yellow','blue'][Math.floor(Math.random()*2)],
+          weight: 3,
+          opacity: 0.5,
+          smoothFactor: 1
+      });
+    }
+  };
+  this.generateMarker = function(item){
     var self = this;
-    var line = false;
-    var marker = false;
-    if(typeof item.positions != 'undefined' && item.positions.length > 0)
-
-        item.doc.template = 'line';
-        if(item.doc.template == 'line'){
-            var pointList = [];
-            if(item.positions.length > 0){
-
-              for(var i in item.positions){
-                var v = item.positions[i];
-                if(v.doc.lat&&v.doc.lon)
-                pointList.push([v.doc.lat, v.doc.lon]);
-                //pointList.push()
-              };
-
-              line = new L.Polyline(pointList, {
-                  color: ['red','yellow','blue'][Math.floor(Math.random()*2)],
-                  weight: 3,
-                  opacity: 0.5,
-                  smoothFactor: 1
-              });
-            
-            }
-            //add item add the end
-            item.doc.template = 'point'
-
-        }
-        if(item.doc.template == 'point'){
-
-            for(var i in item.positions){
-              var v = item.positions[i];
+    var marker;
+    var positions = item.positions;
+    for(var i in positions){
+              var v = positions[i];
               //first position
               if(i == 0){
 
               }
               //last position
-              if(i == item.positions.length-1){
+              if(i == positions.length-1){
 
                 var width = 16;
                 var height = 16;
@@ -110,21 +108,68 @@ var map = new function(){
                 var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
                 var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
-                marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon}).addTo(self.map);
-                console.log(self.clickItem);
-                marker.on('click',L.bind(self.clickItem, null,item.id));
+                if(typeof v.doc.lat !== 'undefined' && typeof v.doc.lon !== 'undefined' ){
+
+                  marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon});
+                  marker.on('click',L.bind(self.clickItem, null,item.id));
+                  return marker;
+                }
                 
               }
-            };
+      };
+  }
+  this.addItemToMap = function(item){
+    item = this.loadTemplatedItem(item);
+    this.loaded_items[item.id] = {};
+
+    var self = this;
+    var line = false;
+    var marker = false;
+
+    if(typeof item.positions != 'undefined' && item.positions.length > 0)
+        item.doc.template = 'line';
+        if(item.doc.template == 'line'){
+            line = this.generateLine(item);
+            //add item add the end
+            item.doc.template = 'point'
+        }
+        if(item.doc.template == 'point'){
+            marker = this.generateMarker(item);
         }
         if(marker)
+          marker.addTo(this.map)
           this.loaded_items[item.id].marker = marker;
+
         if(line){
           this.loaded_items[item.id].line = line;
           this.loaded_items[item.id].line.addTo(this.map);
         }
 
 
+
+    };
+    this.updateItemPosition = function(item){
+      if(typeof this.loaded_items[item.id] == 'undefined'){
+        this.addItemToMap(item);
+      }else{
+
+        let lat = item.positions[item.positions.length-1].doc.lat;
+        let lon = item.positions[item.positions.length-1].doc.lon;
+        this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
+
+        this.loaded_items[item.id].line.setStyle({
+            opacity: 1
+        });
+      }
+    };
+    this.hideItem = function(item_id){
+      if(typeof this.loaded_items[item_id] !== 'undefined'){
+
+        this.loaded_items[item_id].line.setStyle({
+            opacity: 0
+        });
+        this.loaded_items[item_id].marker.setOpacity(0).update();
+      }
     }
 }
 
@@ -148,15 +193,17 @@ var app_db = new function(){
             }).on('change', function (change) {
               console.log('data ch change', change);
               if(typeof(self.databases[db_name].onChange) == 'function'){
-                self.databases[db_name].onChange();
+                self.databases[db_name].onChange(change);
               }
             }).on('error', function (err) {
               console.log('sync error', err);
             });
       }
-      this.setOnChange = function(db_name,method){
+    }
+
+    this.setOnChange = function(db_name,method){
+        var db = this.getDB(db_name);
         this.databases[db_name].onChange = method;
-      }
     }
     this.getDB = function(db_name){
         if(typeof this.databases[db_name] == 'undefined'){
@@ -331,20 +378,17 @@ var app_db = new function(){
     this.updateShownItemsOnMap = function(map,options){
         //item is here not the same as an item in the database
         //it could be a L.marker, L.polygon etc
-        var i = 0;
+        
         var self = this;
-        map.map.eachLayer(function (layer) {
-            if(i > 0)
-              map.map.removeLayer(layer);
-            i++;
-        });
+        //map.clearMap();
 
         for(var identifier in options.shown_items){
           if(options.shown_items[identifier] == 'true')
             self.getItem(identifier,function(result){
-
-              options.map.addItemToMap(result);
+              options.map.updateItemPosition(result);
             });
+          else
+            options.map.hideItem(identifier)
         }
 
         

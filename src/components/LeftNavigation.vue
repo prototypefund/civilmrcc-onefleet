@@ -66,7 +66,7 @@ export default {
   mounted: function() {
 
     serverBus.$on('shown_items', (shown_items) => {
-
+      this.shown_items = shown_items;
     });
 
     //load templates to append them as categories to the left navigation
@@ -100,9 +100,12 @@ export default {
 
           //get all items within a category
           for(var item in self.$data.categories[category_index].items.rows){
-            console.log(self.$data.categories[category_index].items.rows[item].doc.properties.active);
+            
             let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
-            self.initItem(self.$data.categories[category_index].items.rows[item].id,is_active);
+
+            let identifier = self.$data.categories[category_index].items.rows[item].id
+
+            self.initItem(identifier,is_active);
           }
         }
     });
