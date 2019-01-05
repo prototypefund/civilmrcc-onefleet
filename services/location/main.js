@@ -1,31 +1,31 @@
-/*
-This script calls the marinetraffic api and checks if any of the returned ships is inside the database.
-the marinetraffic_api_key needs to be set inside the config.js!
-*/
-
-
 const PouchDB = require('pouchdb');
 const request = require('request');
-const config = require('./config.js');
 const sqlite3 = require('sqlite3').verbose();
+
+const config = {
+  aisUrl: process.env.AIS_API,
+  dbUrl: process.env.DB_URL,
+  dbUser: process.env.DB_USER || null,
+  dbPassword: process.env.DB_PASSWORD || null,
+};
 
 var service = new function(){
 
   this.initDBs = function(){
-      this.dbConfig = {
+      this.dbConfig = process.env.DEVELOPMENT ? {} : {
         auth: {
-          username: config.db_username,
-          password: config.db_password
+          username: config.dbUser,
+          password: config.dbPassword,
         }
       };
-      this.itemDB = new PouchDB(config.db_remote_url+'/items', this.dbConfig);
-      this.locationsDB = new PouchDB(config.db_remote_url+'/positions', this.dbConfig);
+      this.itemDB = new PouchDB(`${config.dbUrl}/items`, this.dbConfig);
+      this.locationsDB = new PouchDB(`${config.dbUrl}/positions`, this.dbConfig);
 
       //SQLITE is used for long term storage
       this.sqlite =  new sqlite3.Database('./locations.db');
   }
   this.sqlite_query = function(sql,cb){
-     
+
     var self = this;
     this.sqlite.all(sql, [], (err, rows) => {
       if (err&&err.errno==1) {
@@ -68,7 +68,7 @@ var service = new function(){
                                     console.log(err);
                                   });
 
-                                
+
                                   var statement = 'INSERT INTO `locations` (`id`, `lat`, `lon`, `speed`, `course`, `timestamp`, `item_identifier`) VALUES ("'+identifier+"_"+new Date(Position.timestamp).toISOString()+'", '+Position.latitude+', '+Position.longitude+', '+Position.speed+', '+Position.course+', '+(new Date(Position.timestamp).getTime()/1000)+', "'+identifier+'")';
                                   //add position for longtime storage
                                   this.sqlite_query(statement,function(){
@@ -112,7 +112,7 @@ var service = new function(){
                                   console.log('got position from AIS:'+v.doc.identifier);
                                   console.log(Position);
                                   self.insertLocation(v.doc.identifier,Position);
-                                  
+
               });
             break;
           }
@@ -129,7 +129,7 @@ var service = new function(){
     };
     this.getPositionFromAIS = function(mmsi,cb){
       console.log()
-      request(config.ais_api+'getLastPosition/'+mmsi, { json: true }, (err, res, body) => {
+      request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
         if (err) { return console.log(err); }
         if (body.error != null) return console.log(body.error);
 

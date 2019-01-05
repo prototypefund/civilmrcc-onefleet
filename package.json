@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "db": "cd database && pouchdb-server -p 5984 -o 0.0.0.0 .",
-    "start-location-service": "node scripts/ais_location_service.js",
+    "dev": "npm install && npm run serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
@@ -13,10 +12,8 @@
     "bootstrap-vue": "^2.0.0-rc.11",
     "element-ui": "^2.4.11",
     "leaflet": "^1.3.4",
-    "pouchdb": "^7.0.0",
     "pouchdb-authentication": "^1.1.3",
     "pouchdb-browser": "^7.0.0",
-    "sqlite3": "^4.0.4",
     "vue": "^2.5.17"
   },
   "devDependencies": {

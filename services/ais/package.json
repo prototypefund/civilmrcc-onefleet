@@ -1,0 +1,12 @@
+{
+  "name": "sar-ais",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm install && npm run start",
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "ais-scraper": "git://github.com/transparency-everywhere/ais-api.git"
+  }
+}

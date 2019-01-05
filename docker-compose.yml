@@ -1,0 +1,71 @@
+version: '3'
+
+volumes:
+  data:
+
+services:
+  bootstrap:
+    build:
+      context: .
+      dockerfile: ./services/bootstrap/Dockerfile
+    command: dockerize -wait tcp://database:5984 -timeout 5m npm run start
+    environment:
+      - DB_URL=http://database:5984
+    volumes:
+      - ./services/bootstrap/:/app:cached
+      - /app/node_modules
+    links:
+      - database
+
+  database:
+    build:
+      context: .
+      dockerfile: ./services/database/Dockerfile
+    ports:
+      - "5984:5984" # fauxton UI
+    command: npm run dev
+    environment:
+      - PORT=5984
+    volumes:
+      - ./services/database/:/app:cached
+      - /app/node_modules
+      - data:/database
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.app
+    ports:
+      - "8080:8080" # vue serve
+    volumes:
+      - ./:/app:cached
+      - /app/node_modules
+    links:
+      - location
+
+  ais:
+    build:
+      context: .
+      dockerfile: ./services/ais/Dockerfile
+    command: npm run dev
+    volumes:
+      - ./services/ais:/app:cached
+      - /app/node_modules
+    environment:
+      - PORT=5000
+
+  location:
+    build:
+      context: .
+      dockerfile: ./services/location/Dockerfile
+    command: dockerize -wait tcp://database:5984 -wait tcp://ais:5000 -timeout 5m npm run dev
+    volumes:
+      - ./services/location:/app:cached
+      - /app/node_modules
+    environment:
+      - AIS_API=http://ais:5000
+      - DB_URL=http://database:5984
+      - DEVELOPMENT=true
+    links:
+      - ais
+      - bootstrap
