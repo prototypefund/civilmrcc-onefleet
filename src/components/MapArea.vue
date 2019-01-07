@@ -9,27 +9,49 @@
 import { serverBus } from '../main';
 export default {
   name: 'MapArea',
-  props: {
+  data: function () {
+    return {
+      map_initialized: false,
+    }
   },
   mounted:function(){
 
     var self = this;
-    this.$map.init('mapArea');
-    this.$map.clickItem = function(itemId){
-        console.log(itemId);
-        serverBus.$emit('itemId', itemId);
-    }
-    this.$db.appendItemsToMap(this.$map);
 
     serverBus.$on('shown_items', (shown_items) => {
+      self.shown_items = shown_items;
       self.$db.updateShownItemsOnMap(this.$map,{
         shown_items: shown_items,
         map:self.$map
       });
+
     });
+
+    this.$map.init('mapArea');
+    this.$map.clickItem = function(itemId){
+        serverBus.$emit('itemId', itemId);
+    }
+    this.$db.updateShownItemsOnMap(this.$map,{
+        shown_items: self.shown_items,
+        map:this.$map
+    });
+    this.$db.setOnChange('positions',function(change){
+      if(change.direction == 'pull'){
+        change.change.docs.forEach(function(item) {
+              let identifier = 'VEHICLE_'+item.item_identifier;
+              let lat = item.lat;
+              let lon = item.lon;
+              if(self.shown_items[identifier] == 'true')
+                self.$db.getItem(identifier,function(item){
+                  self.$map.updateItemPosition(item);
+                })
+        });
+      }
+    })
+
   },
   created:function(){
-    
+    console.log('created');
   }
 }
 </script>
