@@ -52,6 +52,8 @@ var service = new function(){
     )",{},cb);
   };
   this.insertLocation = function(identifier,Position){
+          if(typeof Position != 'undefined' && Position.timestamp != 'undefined'){
+
                                   this.locationsDB.put(
                                   {
                                     "_id": identifier+"_"+new Date(Position.timestamp).toISOString(),
@@ -74,6 +76,10 @@ var service = new function(){
                                   this.sqlite_query(statement,function(){
                                     console.log('location also stored in sqlite');
                                   });
+
+          }else{
+            console.log('there was an error getting the position');
+          }
   }
 
   this.getVehicles = function(callback){
@@ -128,7 +134,7 @@ var service = new function(){
       },interval_in_minutes*1000*60);
     };
     this.getPositionFromAIS = function(mmsi,cb){
-      console.log()
+      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
       request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
         if (err) { return console.log(err); }
         if (body.error != null) return console.log(body.error);
