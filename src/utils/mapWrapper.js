@@ -1,6 +1,3 @@
-if(typeof map == 'undefined')
-  var map = {}
-
 var mapWrapper = function(){
   this.map;
   this.loaded_items = {};
