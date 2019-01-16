@@ -4,9 +4,13 @@
     <ul>
       <el-collapse v-model="activeCategories">
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
-          <ul>
+          <ul class="category_list">
             <li v-for="item in category.items.rows">
-              <el-switch
+              <span class="item_name">{{item.doc.properties.name}}</span>
+
+
+              <span style="float:right;">
+                <el-switch
                 v-model="shown_items[item.id]"
                 active-color="#13ce66"
                 inactive-color="#ff4949"
@@ -14,8 +18,8 @@
                 inactive-value="false"
                 @change="toggleItem(item.id);"
                 >
-              </el-switch>
-              <span class="item_name">{{item.doc.properties.name}}</span>
+                </el-switch>
+              </span>
               <!--<span>{{vehicle.positions}}</span>-->
             </li>
           </ul>
@@ -123,8 +127,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 
-.el-collapse-item__header{
+nav .el-collapse-item__header{
   font-size:22px;
+  padding:10px;
 }
 </style>
 
@@ -132,16 +137,21 @@ export default {
 nav{
   position:absolute;
   left:0;
-  width:15vw;
+  width:20vw;
   top:60px;
   bottom:0;
-  padding: 20px;
 }
 
 
 nav .categories .item_name{
-  margin-left:5px;
+    margin-left: 5px;
+    font-size: 15px;
 }
+
+.category_list li{
+  padding:2px 15px;
+}
+
 el-switch{
   margin-right:5px;
 }

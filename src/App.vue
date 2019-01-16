@@ -95,8 +95,8 @@ export default {
 
 #mainWindow{
   position:absolute;
-  width:85vw;
-  left:15vw;
+  width:80vw;
+  left:20vw;
   top:60px;
   bottom:0;
   background:#FFF;
