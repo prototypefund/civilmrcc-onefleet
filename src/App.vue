@@ -7,11 +7,12 @@
       <TopNavigation></TopNavigation>
 
       <LeftNavigation></LeftNavigation>
-      <div id="mainWindow" >
+      <div id="mainWindow">
         <MapArea v-if="modus == 'map'"></MapArea>
         <ListView v-if="modus == 'cases'"></ListView>
       </div>
-      <div id="chat">
+      <div id="chat" v-bind:class="chatWindowClass">
+        <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>
         chat
       </div>
   </div>
@@ -44,7 +45,15 @@ export default {
     return {
       modus: 'map',
       modal: '',
-      itemId: false
+      itemId: false,
+      show_chat: false
+    }
+  },
+  computed: {
+    chatWindowClass: function () {
+
+      var windowClass = this.show_chat ? "show_chat":"hide_chat"
+      return windowClass
     }
   },
   methods:{
@@ -80,23 +89,27 @@ export default {
   padding-top:60px;
 }
 
+.hide_chat{
+  margin-right:-20vw;
+}
+
 #mainWindow{
   position:absolute;
-  width:60vw;
-  right:20vw;
+  width:85vw;
   left:15vw;
   top:60px;
   bottom:0;
   background:#FFF;
 }
 #chat{
-  position:absolute;
+  position:fixed;
   width:20vw;
   right:0;
   top:60px;
   bottom:0;
   z-index:999;
 }
+
 
 ul{
   list-style:none;

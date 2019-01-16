@@ -10,14 +10,15 @@
         <li v-on:click="openModal('createItem')"> <a>Create New Item</a></li>
       </ul>
       <ul id="nav-right">
-        <li class="dropdown">
-          Username
-          <ul v-if="false">
-            <li>Userinfo</li>
-            <li>Settings</li>
-            <li>Logout</li>
-          </ul>
-        </li>
+        <el-dropdown>
+          <span class="el-dropdown-link">
+            Username<i class="el-icon-arrow-down el-icon--right"></i>
+          </span>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item>Settings</el-dropdown-item>
+            <el-dropdown-item>Logout</el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </ul>
    </nav>
 </template>
@@ -86,5 +87,12 @@ export default {
   }
   #nav-right{
     float:right;
+  }
+
+  .el-dropdown{
+    margin-top: 29px;
+    margin-right: 15px;
+    font-size: 17px;
+    color: rgb(207,211,219)!important;
   }
 </style>
