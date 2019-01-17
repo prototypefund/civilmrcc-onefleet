@@ -12,7 +12,7 @@ var mapWrapper = function(){
 
     L.control.scale({imperial: false}).addTo(this.map);
     this.map.on('move',function(){
-      console.log('moved!')
+      console.log('map perspective moved!');
     });
     console.log('map initted');
   };
@@ -131,12 +131,23 @@ var mapWrapper = function(){
 
     };
     this.updateItemPosition = function(item){
+      console.log('update position of item:');
+      console.log(item);
       if(typeof this.loaded_items[item.id] == 'undefined'){
         this.addItemToMap(item);
       }else{
 
-        let lat = item.positions[item.positions.length-1].doc.lat;
-        let lon = item.positions[item.positions.length-1].doc.lon;
+        //set i to the current number of points in the line
+        var i = this.loaded_items[item.id].line._latlngs.length
+
+        //count up untill i matches the amount of points in the db
+        while(i < item.positions.length){
+          var v = item.positions[i];
+          if(v.doc.lat&&v.doc.lon)
+            this.loaded_items[item.id].line.addLatLng([v.doc.lat, v.doc.lon])
+          i++;
+        };
+
         this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
 
         this.loaded_items[item.id].line.setStyle({
