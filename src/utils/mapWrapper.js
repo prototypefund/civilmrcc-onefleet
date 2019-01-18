@@ -1,18 +1,37 @@
+import storage from './storageWrapper'
+
 var mapWrapper = function(){
   this.map;
   this.loaded_items = {};
   this.init = function(mapId){
-    this.map = L.map(mapId).setView([38.575655,10.710734], 5);
+    var mapzoom = storage.get('mapzoom');
+    var mapcenter;
+    try{
+      mapcenter = JSON.parse(storage.get('mapcenter'));
+    }
+    catch(e){
+
+    }
+    console.log(mapzoom,mapcenter);
+    if(typeof mapzoom == 'undefined')
+      mapzoom = 5;
+    if(typeof mapcenter == 'undefined')
+      mapcenter = [38.575655,10.710734];
+    this.map = L.map(mapId).setView(mapcenter, mapzoom);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
     id: 'mapbox.streets',
     accessToken: 'your.mapbox.access.token'
     }).addTo(this.map);
-
+    var self = this;
     L.control.scale({imperial: false}).addTo(this.map);
     this.map.on('move',function(){
-      console.log('map perspective moved!');
+      console.log(self.map);
+      console.log(self.map.getCenter());
+
+      storage.set('mapzoom',self.map._zoom);
+      storage.set('mapcenter',JSON.stringify([self.map.getCenter().lat,self.map.getCenter().lng]));
     });
     console.log('map initted');
   };
@@ -131,8 +150,6 @@ var mapWrapper = function(){
 
     };
     this.updateItemPosition = function(item){
-      console.log('update position of item:');
-      console.log(item);
       if(typeof this.loaded_items[item.id] == 'undefined'){
         this.addItemToMap(item);
       }else{
@@ -148,6 +165,8 @@ var mapWrapper = function(){
           i++;
         };
 
+        let lat = item.positions[item.positions.length-1].doc.lat;
+        let lon = item.positions[item.positions.length-1].doc.lon;
         this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
 
         this.loaded_items[item.id].line.setStyle({
