@@ -4,19 +4,15 @@ var mapWrapper = function(){
   this.map;
   this.loaded_items = {};
   this.init = function(mapId){
-    var mapzoom = storage.get('mapzoom');
-    var mapcenter;
+    var mapzoom = 5;
+    var mapcenter = [38.575655,10.710734];
     try{
+      mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
     }
     catch(e){
 
     }
-    console.log(mapzoom,mapcenter);
-    if(typeof mapzoom == 'undefined')
-      mapzoom = 5;
-    if(typeof mapcenter == 'undefined')
-      mapcenter = [38.575655,10.710734];
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -27,15 +23,20 @@ var mapWrapper = function(){
     var self = this;
     L.control.scale({imperial: false}).addTo(this.map);
     this.map.on('move',function(){
-      console.log(self.map);
-      console.log(self.map.getCenter());
-
       storage.set('mapzoom',self.map._zoom);
       storage.set('mapcenter',JSON.stringify([self.map.getCenter().lat,self.map.getCenter().lng]));
     });
     console.log('map initted');
   };
   this.loadTemplatedItem = function(item){
+    var max_positions = 3000;
+    //cut number of positions only keep
+    if(item.positions.length > max_positions){
+      item.positions.splice(0, item.positions.length - max_positions);
+
+    }
+    console.log('LENGTH: '+item.positions.length);
+
     //every item is based on one of the following
     //base templates: 
     //point: a single point
@@ -73,6 +74,10 @@ var mapWrapper = function(){
 
   };
   this.generateLine = function(item){
+    console.log('generating line with length of '+item.positions.length+' items');
+    console.log(item.positions.length);
+    console.log(item);
+
     var pointList = [];
     if(item.positions.length > 0){
       for(var i in item.positions){
@@ -128,20 +133,14 @@ var mapWrapper = function(){
     var marker = false;
 
     if(typeof item.positions != 'undefined' && item.positions.length > 0)
-        item.doc.template = 'line';
-        if(item.doc.template == 'line'){
+        
             line = this.generateLine(item);
-            //add item add the end
-            item.doc.template = 'point'
-        }
-        if(item.doc.template == 'point'){
             marker = this.generateMarker(item);
-        }
-        if(marker)
+        if(marker){
           marker.addTo(this.map)
           this.loaded_items[item.id].marker = marker;
-
-        if(line){
+        }
+        if(item.doc.template == 'line' && line){
           this.loaded_items[item.id].line = line;
           this.loaded_items[item.id].line.addTo(this.map);
         }
@@ -154,20 +153,11 @@ var mapWrapper = function(){
         this.addItemToMap(item);
       }else{
 
-        //set i to the current number of points in the line
-        var i = this.loaded_items[item.id].line._latlngs.length
-
-        //count up untill i matches the amount of points in the db
-        while(i < item.positions.length){
-          var v = item.positions[i];
-          if(v.doc.lat&&v.doc.lon)
-            this.loaded_items[item.id].line.addLatLng([v.doc.lat, v.doc.lon])
-          i++;
-        };
 
         let lat = item.positions[item.positions.length-1].doc.lat;
         let lon = item.positions[item.positions.length-1].doc.lon;
         this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
+        this.loaded_items[item.id].line.addLatLng([lat, lon])
 
         this.loaded_items[item.id].line.setStyle({
             opacity: 1
