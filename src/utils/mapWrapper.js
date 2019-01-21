@@ -4,15 +4,18 @@ var mapWrapper = function(){
   this.map;
   this.loaded_items = {};
   this.init = function(mapId){
-    var mapzoom = 5;
-    var mapcenter = [38.575655,10.710734];
     try{
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
     }
     catch(e){
-
     }
+    if(mapcenter == null)
+      var mapcenter = [38.575655,10.710734];
+    if(mapzoom == null)
+      var mapzoom = 5;
+    
+    console.log(mapcenter,mapzoom);
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
