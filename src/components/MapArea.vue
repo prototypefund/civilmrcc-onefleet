@@ -43,7 +43,7 @@ export default {
               let lon = item.lon;
               if(self.shown_items[identifier] == 'true')
                 self.$db.getItem(identifier,function(item){
-                  self.$map.updateItemPosition(item);
+                  self.$map.updateItemPosition(self.$map.loadTemplatedItem(item));
                 })
         });
       }
