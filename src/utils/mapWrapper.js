@@ -15,7 +15,6 @@ var mapWrapper = function(){
     if(mapzoom == null)
       var mapzoom = 5;
     
-    console.log(mapcenter,mapzoom);
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -90,8 +89,14 @@ var mapWrapper = function(){
         //pointList.push()
       };
 
+      var color;
+      if(typeof item.doc.properties.color != 'undefined')
+        color = item.doc.properties.color;
+      else
+        color = ['red','yellow','blue'][Math.floor(Math.random()*2)];
+
       return new L.Polyline(pointList, {
-          color: ['red','yellow','blue'][Math.floor(Math.random()*2)],
+          color: color,
           weight: 3,
           opacity: 0.5,
           smoothFactor: 1
