@@ -1,22 +1,44 @@
+import storage from './storageWrapper'
+
 var mapWrapper = function(){
   this.map;
   this.loaded_items = {};
   this.init = function(mapId){
-    this.map = L.map(mapId).setView([38.575655,10.710734], 5);
+    try{
+      mapzoom = storage.get('mapzoom');
+      mapcenter = JSON.parse(storage.get('mapcenter'));
+    }
+    catch(e){
+    }
+    if(mapcenter == null)
+      var mapcenter = [38.575655,10.710734];
+    if(mapzoom == null)
+      var mapzoom = 5;
+    
+    this.map = L.map(mapId).setView(mapcenter, mapzoom);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
     id: 'mapbox.streets',
     accessToken: 'your.mapbox.access.token'
     }).addTo(this.map);
-
+    var self = this;
     L.control.scale({imperial: false}).addTo(this.map);
     this.map.on('move',function(){
-      console.log('moved!')
+      storage.set('mapzoom',self.map._zoom);
+      storage.set('mapcenter',JSON.stringify([self.map.getCenter().lat,self.map.getCenter().lng]));
     });
     console.log('map initted');
   };
   this.loadTemplatedItem = function(item){
+    var max_positions = 3000;
+    //cut number of positions only keep
+    if(item.positions.length > max_positions){
+      item.positions.splice(0, item.positions.length - max_positions);
+
+    }
+    console.log('LENGTH: '+item.positions.length);
+
     //every item is based on one of the following
     //base templates: 
     //point: a single point
@@ -54,6 +76,10 @@ var mapWrapper = function(){
 
   };
   this.generateLine = function(item){
+    console.log('generating line with length of '+item.positions.length+' items');
+    console.log(item.positions.length);
+    console.log(item);
+
     var pointList = [];
     if(item.positions.length > 0){
       for(var i in item.positions){
@@ -63,8 +89,14 @@ var mapWrapper = function(){
         //pointList.push()
       };
 
+      var color;
+      if(typeof item.doc.properties.color != 'undefined')
+        color = item.doc.properties.color;
+      else
+        color = ['red','yellow','blue'][Math.floor(Math.random()*2)];
+
       return new L.Polyline(pointList, {
-          color: ['red','yellow','blue'][Math.floor(Math.random()*2)],
+          color: color,
           weight: 3,
           opacity: 0.5,
           smoothFactor: 1
@@ -109,20 +141,14 @@ var mapWrapper = function(){
     var marker = false;
 
     if(typeof item.positions != 'undefined' && item.positions.length > 0)
-        item.doc.template = 'line';
-        if(item.doc.template == 'line'){
+        
             line = this.generateLine(item);
-            //add item add the end
-            item.doc.template = 'point'
-        }
-        if(item.doc.template == 'point'){
             marker = this.generateMarker(item);
-        }
-        if(marker)
+        if(marker){
           marker.addTo(this.map)
           this.loaded_items[item.id].marker = marker;
-
-        if(line){
+        }
+        if(item.doc.template == 'line' && line){
           this.loaded_items[item.id].line = line;
           this.loaded_items[item.id].line.addTo(this.map);
         }
@@ -135,9 +161,11 @@ var mapWrapper = function(){
         this.addItemToMap(item);
       }else{
 
+
         let lat = item.positions[item.positions.length-1].doc.lat;
         let lon = item.positions[item.positions.length-1].doc.lon;
         this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
+        this.loaded_items[item.id].line.addLatLng([lat, lon])
 
         this.loaded_items[item.id].line.setStyle({
             opacity: 1

@@ -1,8 +1,8 @@
-
 import PouchDB from 'pouchdb-browser'
 import PouchDBAuthentication from 'pouchdb-authentication'
 import config from '../../config/config.js';
 PouchDB.plugin(PouchDBAuthentication);
+
 var dbWrapper = function(){
     this.databases = {};
     this.logged_in;
@@ -77,6 +77,8 @@ var dbWrapper = function(){
         }).then(function (result) {
             if(result.error)
                 return self.fetchError(result);
+
+           
             cb(result);
           // handle result
         }).catch(function (err) {

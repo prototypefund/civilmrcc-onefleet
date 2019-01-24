@@ -12,7 +12,7 @@
               <span style="float:right;">
                 <el-switch
                 v-model="shown_items[item.id]"
-                active-color="#13ce66"
+                :active-color="getItemColor(item.id)"
                 inactive-color="#ff4949"
                 active-value="true"
                 inactive-value="false"
@@ -64,6 +64,20 @@ export default {
        
 
         serverBus.$emit('shown_items', this.shown_items);
+    },
+    getItemColor: function(itemid){
+      var item = this.getItemById(itemid);
+      if(item&& typeof item.doc.properties != 'undefined'&& typeof item.doc.properties.color != 'undefined') 
+        return item.doc.properties.color;
+      else 
+        return '#13ce66';
+    },
+    getItemById:function(itemid){
+      for(var i in this.vehicles){
+        if(this.vehicles[i].id == itemid)
+          return this.vehicles[i];
+      }
+      return false
     }
 
   },
