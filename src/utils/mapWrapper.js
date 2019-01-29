@@ -16,14 +16,20 @@ var mapWrapper = function(){
       var mapzoom = 5;
     
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'your.mapbox.access.token'
+
+    var tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+    //var tile_url = '/MapTiles/{z}/{x}/{y}.png';
+
+    L.tileLayer(tile_url, {
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox.streets',
+      accessToken: 'your.mapbox.access.token'
     }).addTo(this.map);
-    var self = this;
+
     L.control.scale({imperial: false}).addTo(this.map);
+
+    var self = this;
     this.map.on('move',function(){
       storage.set('mapzoom',self.map._zoom);
       storage.set('mapcenter',JSON.stringify([self.map.getCenter().lat,self.map.getCenter().lng]));
@@ -157,6 +163,9 @@ var mapWrapper = function(){
 
     };
     this.updateItemPosition = function(item){
+
+
+
       if(typeof this.loaded_items[item.id] == 'undefined'){
         this.addItemToMap(item);
       }else{
