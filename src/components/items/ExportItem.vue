@@ -1,25 +1,19 @@
 <template>
-    <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
-        <div class="form-style-6"  v-if="template_data&&template_data.fields">
-          <h1>Show Item</h1>
-          <form @submit="storeItem">
+    <div class="background" v-show="exportItemId != false" v-on:click.self="closeModal">
+        <div class="form-style-6">
+          <h1>Export Item Positions</h1>
+          <form @submit="exportItem">
 
             <span>Identifier</span>
             <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
-            <div v-for="field in template_data.fields">
-              <span>{{field.name}}</span>
-              <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
-              <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
-                <option v-for="option in field.options">{{option}}</option>
-              </select>
 
-            </div>
-            <span>Last Position</span>
-            <p>
-             {{last_position}}
-            </p>
-            <a v-on:click="showExportModal(itemId)">Export Locations</a>
-            <input type="submit" value="Save" />
+            <span>Start Export at</span>
+            <input v-model="start_time" type="datetime-local" placeholder="start time">
+
+            <span>Stop Export at</span>
+            <input type="datetime-local" v-model="stop_time" placeholder="stop time">
+
+            <input type="submit" value="Generate CSV">
 
           </form>
         </div>
@@ -32,13 +26,15 @@ import {serverBus}  from '../../main';
 
 export default {
   name: 'ShowItem',
-  props: ['itemId'],
+  props: ['exportItemId'],
   data: function () {
     return {
       template: '',
       vehicles: [],
       template_data: {},
       last_position: {},
+      start_time:'',
+      stop_time:'',
       form_data:{properties:{}},
       position_data:{
         positions:[{}]
@@ -46,7 +42,7 @@ export default {
     }
   },
   watch: { 
-        itemId: function(newVal, oldVal) { // watch it
+        exportItemId: function(newVal, oldVal) { // watch it
           var self = this;
           //load doc
           this.$db.getItem(newVal,function(item){
@@ -56,6 +52,7 @@ export default {
 
             //load doc into form_data
             self.form_data = doc;
+            self.position_data.positions = item.positions;
 
             //load last position
             item.positions.forEach(function(v,i){
@@ -71,20 +68,59 @@ export default {
         }
   },
   methods: {
-    
+    exportItem:function(e){
+      e.preventDefault();
+        console.log(this.position_data.positions.length);
+        var data = [];
+        for(var i in this.position_data.positions){
+
+          if(new Date(this.position_data.positions[i].doc.timestamp) > new Date(this.start_time) &&
+            new Date(this.position_data.positions[i].doc.timestamp) < new Date(this.stop_time)){
+
+            data.push([this.position_data.positions[i].doc.timestamp,this.position_data.positions[i].doc.lat,this.position_data.positions[i].doc.lon]);
+           
+           }
+        }
+        // Building the CSV from the Data two-dimensional array
+      // Each column is separated by ";" and new line "\n" for next row
+      var csvContent = '';
+      data.forEach(function(infoArray, index) {
+        var dataString = infoArray.join(';');
+        csvContent += index < data.length ? dataString + '\n' : dataString;
+      });
+
+      // The download function takes a CSV string, the filename and mimeType as parameters
+      // Scroll/look down at the bottom of this snippet to see how download is called
+      var download = function(content, fileName, mimeType) {
+        var a = document.createElement('a');
+        mimeType = mimeType || 'application/octet-stream';
+
+        if (navigator.msSaveBlob) { // IE10
+          navigator.msSaveBlob(new Blob([content], {
+            type: mimeType
+          }), fileName);
+        } else if (URL && 'download' in a) { //html5 A[download]
+          a.href = URL.createObjectURL(new Blob([content], {
+            type: mimeType
+          }));
+          a.setAttribute('download', fileName);
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } else {
+          location.href = 'data:application/octet-stream,' + encodeURIComponent(content); // only this mime type is supported
+        }
+      }
+
+      download(csvContent, 'dowload.csv', 'text/csv;encoding:utf-8');
+    },
     loadTemplate: function (template_name) {
       this.template_data = templates.get(template_name);
       this.$nextTick();
     },
     closeModal: function () {
      // Using the service bus
-     serverBus.$emit('itemId', false);
-    },
-    showExportModal: function(id){
-     
-     serverBus.$emit('itemId', false);
-     // Using the service bus
-     serverBus.$emit('exportItemId', id);
+     serverBus.$emit('exportItemId', false);
     },
     storeItem: function(e){
       e.preventDefault();
@@ -101,7 +137,7 @@ export default {
             console.log(err);
         }else{
           if(result.ok == true)
-            self.itemId = false;
+            self.exportItemId = false;
             alert('The item has been updated');
         }
 
@@ -124,9 +160,13 @@ export default {
   bottom:0;
   left:0;
   background:rgba(0,0,0,0.8);
-  z-index: 9999;
+  z-index: 999;
 }
 
+.position_detail ul span{
+    width: 120px;
+    display: inline-block;
+}
 
 .form-style-6{
   font: 95% Arial, Helvetica, sans-serif;

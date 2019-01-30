@@ -3,7 +3,10 @@
 
       <CreateItem v-if="modal == 'createItem'"></CreateItem>
       <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
+      <ExportItem v-show="exportItemId != false" :exportItemId="exportItemId"></ExportItem>
+
       <Login v-if="modal == 'login'"></Login>
+      <Settings v-if="modal == 'settings'"></Settings>
       <TopNavigation></TopNavigation>
 
       <LeftNavigation></LeftNavigation>
@@ -23,10 +26,13 @@
 import TopNavigation from './components/TopNavigation.vue'
 import CreateItem from './components/items/CreateItem.vue'
 import ShowItem from './components/items/ShowItem.vue'
+import ExportItem from './components/items/ExportItem.vue'
+
 import LeftNavigation from './components/LeftNavigation.vue'
 import MapArea from './components/MapArea.vue'
 import ListView from './components/ListView.vue'
 import Login from './components/Login.vue'
+import Settings from './components/Settings.vue'
 
 import { serverBus } from './main';
 
@@ -38,14 +44,17 @@ export default {
     MapArea,
     CreateItem,
     ShowItem,
+    ExportItem,
     ListView,
-    Login
+    Login,
+    Settings
   },
   data: function () {
     return {
       modus: 'map',
       modal: '',
       itemId: false,
+      exportItemId: false,
       show_chat: false
     }
   },
@@ -73,6 +82,9 @@ export default {
       });
       serverBus.$on('itemId', (itemId) => {
         this.$data.itemId = itemId;
+      });
+      serverBus.$on('exportItemId', (itemId) => {
+        this.$data.exportItemId = itemId;
       });
   }
 
