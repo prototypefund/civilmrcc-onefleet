@@ -72,13 +72,25 @@ export default {
       e.preventDefault();
         console.log(this.position_data.positions.length);
         var data = [];
+        data.push(['Timestamp','Lat','Lng','Heading','Speed']);
+
         for(var i in this.position_data.positions){
 
           if(new Date(this.position_data.positions[i].doc.timestamp) > new Date(this.start_time) &&
             new Date(this.position_data.positions[i].doc.timestamp) < new Date(this.stop_time)){
 
-            data.push([this.position_data.positions[i].doc.timestamp,this.position_data.positions[i].doc.lat,this.position_data.positions[i].doc.lon]);
-           
+            var item = [];
+            if(typeof this.position_data.positions[i].doc.timestamp)
+              item.push(this.position_data.positions[i].doc.timestamp)
+            if(typeof this.position_data.positions[i].doc.lat)
+              item.push(this.position_data.positions[i].doc.lat)
+            if(typeof this.position_data.positions[i].doc.lon)
+              item.push(this.position_data.positions[i].doc.lon)
+            if(typeof this.position_data.positions[i].doc.heading)
+              item.push(this.position_data.positions[i].doc.heading)
+            if(typeof this.position_data.positions[i].doc.speed)
+              item.push(this.position_data.positions[i].doc.speed)
+            data.push(item);
            }
         }
         // Building the CSV from the Data two-dimensional array
