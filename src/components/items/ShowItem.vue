@@ -18,8 +18,7 @@
             <p>
              {{last_position}}
             </p>
-            
-            </v-container>
+            <a v-on:click="showExportModal(itemId)">Export Locations</a>
             <input type="submit" value="Save" />
 
           </form>
@@ -80,6 +79,12 @@ export default {
     closeModal: function () {
      // Using the service bus
      serverBus.$emit('itemId', false);
+    },
+    showExportModal: function(id){
+     
+     serverBus.$emit('itemId', false);
+     // Using the service bus
+     serverBus.$emit('exportItemId', id);
     },
     storeItem: function(e){
       e.preventDefault();

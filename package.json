@@ -6,7 +6,9 @@
     "serve": "vue-cli-service serve",
     "dev": "npm install && npm run serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "maptiles:clean": "rimraf dist/MapQuest",
+    "maptiles:extract": "extract-zip data/MapTiles.zip $(pwd)/public/"
   },
   "dependencies": {
     "bootstrap-vue": "^2.0.0-rc.11",
@@ -23,6 +25,7 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0-0",
+    "extract-zip": "^1.6.7",
     "vue-template-compiler": "^2.5.17"
   },
   "eslintConfig": {
