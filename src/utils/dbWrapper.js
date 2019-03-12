@@ -12,7 +12,7 @@ var dbWrapper = function(){
       if(typeof this.databases[db_name] == 'undefined'){
             this.databases[db_name] = {
               local: new PouchDB(db_name, {skip_setup:true}),
-              remote: new PouchDB(this.getDBURL()+db_name)
+              remote: new PouchDB(this.getDBURL()+db_name+'?descending=true')
             }
 
             this.databases[db_name].local.sync(this.databases[db_name].remote, {
