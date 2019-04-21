@@ -3,6 +3,17 @@
 ## About this Repo
 This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are storerd and the location-service which gathers e.g. ship locations to store them in the database. *The location-service and the database have to run when you start the app*
 
+## Installation
+
+## Clone the Repo
+
+```
+git clone https://gitlab.com/niczem/onefleet.git
+cd onefleet
+```
+
+## Installation without Docker
+
 ### Start Location-Service
 The location service runs in the background and requests the position data for vehicles in the database. To start it you have to run
 ```
@@ -17,15 +28,8 @@ cd services/database
 npm run start
 ```
 
+## Installation with Docker
 
-##Installation
-
-## Clone the Repo
-
-```
-git clone https://gitlab.com/niczem/onefleet.git
-cd onefleet
-```
 
 ### Run development environment
 ```
