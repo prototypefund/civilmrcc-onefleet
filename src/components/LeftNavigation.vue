@@ -6,8 +6,8 @@
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
             <li v-for="item in category.items.rows">
-              <span class="item_name">{{item.doc.properties.name}}</span>
-
+              <span class="item_name" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
+              <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
 
               <span style="float:right;">
                 <el-switch
