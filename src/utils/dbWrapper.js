@@ -12,10 +12,9 @@ var dbWrapper = function(){
       if(typeof this.databases[db_name] == 'undefined'){
             this.databases[db_name] = {
               local: new PouchDB(db_name, {skip_setup:true}),
-              remote: new PouchDB(this.getDBURL()+db_name+'?descending=true')
+              remote: new PouchDB(this.getDBURL()+db_name+'?include_docs=true&descending=true', {skip_setup:true}),   
             }
-
-            this.databases[db_name].local.sync(this.databases[db_name].remote, {
+            this.databases[db_name].remote.sync(db_name, {
               live: true,
               retry: true
             }).on('change', function (change) {
@@ -164,7 +163,6 @@ var dbWrapper = function(){
         }).then(function (result) {
             if(result.error)
                 return self.fetchError(result);
-
             if(result.rows.length == 0)
               return cb(null,[]); 
 
@@ -187,7 +185,6 @@ var dbWrapper = function(){
 
           // handle result
         }).catch(function (err) {
-
           cb(err)
         });
     }
