@@ -3,10 +3,10 @@ const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
 const config = {
-  aisUrl: process.env.AIS_API,
-  dbUrl: process.env.DB_URL,
-  dbUser: process.env.DB_USER || null,
-  dbPassword: process.env.DB_PASSWORD || null,
+  aisUrl: process.env.AIS_API ||'http://localhost:5000',
+  dbUrl: process.env.DB_URL ||'http://localhost:5984',
+  dbUser: process.env.DB_USER ||'admin',
+  dbPassword: process.env.DB_PASSWORD || 'abcabc',
 };
 
 var service = new function(){
@@ -18,6 +18,7 @@ var service = new function(){
           password: config.dbPassword,
         }
       };
+      console.log(this.dbConfig);
       this.itemDB = new PouchDB(`${config.dbUrl}/items`, this.dbConfig);
       this.locationsDB = new PouchDB(`${config.dbUrl}/positions`, this.dbConfig);
 
