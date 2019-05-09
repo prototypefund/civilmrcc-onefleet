@@ -1,7 +1,7 @@
 <template>
    <div class="background" v-on:click.self="closeModal">
       <div class="form-style-6">
-        <h1>Show Item</h1>
+        <h1>Create Item</h1>
         <form @submit="createItem">
           <span>Template</span>
           <select v-model="form_data.template" @change="loadTemplate()">
