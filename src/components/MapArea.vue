@@ -36,15 +36,20 @@ export default {
         map:this.$map
     });
     this.$db.setOnChange('positions',function(change){
-      if(change.direction == 'pull'){
+
+      if(change.direction == 'push'){
         change.change.docs.forEach(function(item) {
               let identifier = 'VEHICLE_'+item.item_identifier;
               let lat = item.lat;
               let lon = item.lon;
-              if(self.shown_items[identifier] == 'true')
+
+              if(self.shown_items[identifier] == 'true'){
+              
                 self.$db.getItem(identifier,function(item){
+                  console.log('update Position now!');
                   self.$map.updateItemPosition(self.$map.loadTemplatedItem(item));
                 })
+              }
         });
       }
     })

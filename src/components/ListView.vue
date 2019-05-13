@@ -36,7 +36,7 @@ export default {
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
-                  return alert('an error occured reading the template!');
+                  return alert('an error occured reading the template listview!');
 
                 self.categories.push({
                   title:template_index,

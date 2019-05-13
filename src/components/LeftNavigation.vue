@@ -97,7 +97,7 @@ export default {
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
-                  return alert('an error occured reading the template!');
+                  return alert('an error occured reading the template for the leftnav! ');
 
                 self.categories.push({
                   title:template_index,
@@ -151,7 +151,7 @@ nav .el-collapse-item__header{
 nav{
   position:absolute;
   left:0;
-  width:20vw;
+  width:25vw;
   top:60px;
   bottom:0;
 }

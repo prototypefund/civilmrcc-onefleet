@@ -54,7 +54,7 @@ var service = new function(){
   };
   this.insertLocation = function(identifier,Position){
           if(typeof Position != 'undefined' && Position.timestamp != 'undefined'){
-
+                                  console.log(Position);
                                   this.locationsDB.put(
                                   {
                                     "_id": identifier+"_"+new Date(Position.timestamp).toISOString(),
