@@ -37,7 +37,7 @@ var mapWrapper = function(){
     console.log('map initted');
   };
   this.loadTemplatedItem = function(item){
-    var max_positions = 3000;
+    var max_positions = 100;
     //cut number of positions only keep
     if(item.positions.length > max_positions){
       item.positions.splice(0, item.positions.length - max_positions);
@@ -86,6 +86,9 @@ var mapWrapper = function(){
     console.log(item.positions.length);
     console.log(item);
 
+    /*let max_length = 5;
+    item.positions.slice(-1 * max_length);*/
+    console.log(item.positions);
     var pointList = [];
     if(item.positions.length > 0){
       for(var i in item.positions){
@@ -125,7 +128,7 @@ var mapWrapper = function(){
                 var width = 16;
                 var height = 16;
                 var rotation = v.doc.heading;
-                var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-top:-"+(height/2)+"px;margin-left:"+(width/2)+"px;";
+                var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-left:"+(width/2)+"px;";
                 var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
                 if(typeof v.doc.lat !== 'undefined' && typeof v.doc.lon !== 'undefined' ){
@@ -139,6 +142,8 @@ var mapWrapper = function(){
       };
   }
   this.addItemToMap = function(item){
+    console.log('adding item to map');
+    console.log(item);
     item = this.loadTemplatedItem(item);
     this.loaded_items[item.id] = {};
 
@@ -146,7 +151,7 @@ var mapWrapper = function(){
     var line = false;
     var marker = false;
 
-    if(typeof item.positions != 'undefined' && item.positions.length > 0)
+    if(typeof item.positions != 'undefined' && item.positions.length > 0){
         
             line = this.generateLine(item);
             marker = this.generateMarker(item);
@@ -158,19 +163,16 @@ var mapWrapper = function(){
           this.loaded_items[item.id].line = line;
           this.loaded_items[item.id].line.addTo(this.map);
         }
-
-
-
-    };
-    this.updateItemPosition = function(item){
-
-
-
+    }
+  };
+  this.updateItemPosition = function(item){
+      if(item.positions.length < 1){
+        console.log(item.id+' has no positions so far');
+        return false;
+      }
       if(typeof this.loaded_items[item.id] == 'undefined'){
         this.addItemToMap(item);
       }else{
-
-
         let lat = item.positions[item.positions.length-1].doc.lat;
         let lon = item.positions[item.positions.length-1].doc.lon;
         this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();

@@ -155,6 +155,9 @@ var dbWrapper = function(){
     }
     this.getItemsByTemplate = function(template,cb){
         var self = this;
+
+        console.log('getItemsByTemplate');
+        console.log(template);
         this.getDB('items').allDocs({
           include_docs: true,
           attachments: true,
@@ -185,6 +188,8 @@ var dbWrapper = function(){
 
           // handle result
         }).catch(function (err) {
+          console.log('err');
+          console.log(err);
           cb(err)
         });
     }
