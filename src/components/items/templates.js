@@ -93,38 +93,37 @@ get:function(name){
                       }
                 },
             ]
+        },
+        'sighting':{
+                plural:'Sightings',
+                pouch_identifier:'SIGHTING',
+                add_initial_position:false,
+                type:'line',
+                fields : [
+                    {
+                        'name':'name',
+                        'title':'title',
+                        'type':'text'
+                    },
+                    {
+                        'name':'comment',
+                        'title':'comment',
+                        'type':'text'
+                    },
+                    {
+                        'name':'color',
+                        'title':'Color',
+                        'type':'select',
+                        'options':
+                          {
+                            'red':'red',
+                            'yellow':'yellow',
+                            'blue':'blue'
+                          }
+                    },
+                ]
+            }
         }
-    },
-    'sighting':{
-            plural:'Sightings',
-            pouch_identifier:'SIGHTING',
-            add_initial_position:false,
-            type:'line',
-            fields : [
-                {
-                    'name':'name',
-                    'title':'title',
-                    'type':'text'
-                },
-                {
-                    'name':'comment',
-                    'title':'comment',
-                    'type':'text'
-                },
-                {
-                    'name':'color',
-                    'title':'Color',
-                    'type':'select',
-                    'options':
-                      {
-                        'red':'red',
-                        'yellow':'yellow',
-                        'blue':'blue'
-                      }
-                },
-            ]
-        }
-    }
     if(name == 'all')
       return templates;
     return templates[name];
