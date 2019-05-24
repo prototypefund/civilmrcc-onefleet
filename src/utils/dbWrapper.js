@@ -1,6 +1,7 @@
 import PouchDB from 'pouchdb-browser'
 import PouchDBAuthentication from 'pouchdb-authentication'
 import config from '../../config/config.js';
+import { serverBus } from '../main';
 PouchDB.plugin(PouchDBAuthentication);
 
 var dbWrapper = function(){
@@ -24,6 +25,10 @@ var dbWrapper = function(){
               }
             }).on('error', function (err) {
               console.log('sync error', err);
+              if(err.error === 'unauthorized'){
+                localStorage.clear();
+                window.location.reload();
+              }
             });
       }
     }
@@ -39,7 +44,6 @@ var dbWrapper = function(){
         return this.databases[db_name].local;
     };
     this.showLogin = function(){
-        alert('Show Login NOW!');
         serverBus.$emit('modal_modus', 'login');
         //this.login('sw3','password',this.getDB('items'))
     };
@@ -64,7 +68,7 @@ var dbWrapper = function(){
 
             return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
         else    
-            return 'http://'+config.db_remote_host+':'+config.db_remote_port+'/';
+            this.showLogin();
     }
     this.getPositionsForItem = function(identifier,cb){
         var self = this;

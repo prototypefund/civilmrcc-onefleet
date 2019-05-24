@@ -1,13 +1,19 @@
 <template>
    
    <div class="background" v-on:click.self="closeModal">
-      <div>
-        <h2>Login</h2>
-          
-        <input type="text" placeholder="username">
-        <input type="password" placeholder="password">
 
-      </div>
+        <div class="form-style-6">
+            <h1>Login</h1>
+            <form @submit="login">
+              <span>Username</span>
+              <input type="text" placeholder="username" v-model="username">
+
+              <span>Password</span>
+              <input type="password" placeholder="password" v-model="password">
+              
+              <input type="submit" value="Send" />
+            </form>
+        </div>
    </div>
 </template>
 
@@ -19,8 +25,8 @@ export default {
 
   data: function () {
     return {
-      vehicles: [],
-      shown_items:[]
+      username: '',
+      password:''
     }
   },
   methods:{
@@ -28,14 +34,10 @@ export default {
      // Using the service bus
      serverBus.$emit('modal_modus', '');
     },
-    toggleItem: function(identifier){
-        if(this.shown_items.indexOf(identifier) == -1)
-          this.shown_items.push(identifier)
-        else
-          this.shown_items.filter(e => e !== identifier) //remove item from array
-
-
-        serverBus.$emit('shown_items', this.shown_items);
+    login: function(){
+      localStorage.username = this.username;
+      localStorage.password = this.password;
+      window.location.reload();
     }
 
   },

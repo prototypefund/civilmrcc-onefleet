@@ -12,11 +12,11 @@
       <ul id="nav-right">
         <el-dropdown>
           <span class="el-dropdown-link">
-            Username<i class="el-icon-arrow-down el-icon--right"></i>
+            {{username}}<i class="el-icon-arrow-down el-icon--right"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>Settings</el-dropdown-item>
-            <el-dropdown-item>Logout</el-dropdown-item>
+            <el-dropdown-item><a v-on:click="openModal('settings')">Settings</a></el-dropdown-item>
+            <el-dropdown-item><a v-on:click="logout()">Logout</a></el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </ul>
@@ -28,15 +28,30 @@
 import {serverBus}  from '../main';
 export default {
   name: 'TopNavigation',
+  data:function(){
+    return {
+      username:'',
+      password:''
+    }
+  },
   methods: {
     changeModus: function (value) {
      // Using the service bus
      serverBus.$emit('app_modus', value);
     },
     openModal: function (value) {
+      console.log(value);
+      console.log('asdasd');
      // Using the service bus
      serverBus.$emit('modal_modus', value);
+    },
+    logout: function(){
+      localStorage.clear();
+      window.location.reload();
     }
+  },
+  created:function(){
+    this.username = localStorage.username || 'guest'
   }
 }
 </script>

@@ -163,6 +163,7 @@ ul{
 .form-style-6 input[type="search"],
 .form-style-6 input[type="time"],
 .form-style-6 input[type="url"],
+.form-style-6 input[type="password"],
 .form-style-6 textarea,
 .form-style-6 select 
 {
@@ -190,6 +191,7 @@ ul{
 .form-style-6 input[type="search"]:focus,
 .form-style-6 input[type="time"]:focus,
 .form-style-6 input[type="url"]:focus,
+.form-style-6 input[type="password"]:focus,
 .form-style-6 textarea:focus,
 .form-style-6 select:focus
 {
