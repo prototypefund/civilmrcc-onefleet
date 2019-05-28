@@ -35,7 +35,7 @@ var mapWrapper = function(){
       id: 'groundtile',
     }).addTo(this.map);
 
-    if(localStorage.settings_map = 'openseamap'){
+    if(localStorage.settings_openseamap == 'true'){
       L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
         attribution: '',
         maxZoom: 18,
@@ -43,8 +43,12 @@ var mapWrapper = function(){
         accessToken: ''
       }).addTo(this.map);
     }
-    
+
     L.control.scale({imperial: false}).addTo(this.map);
+
+
+    L.control.polylineMeasure ({position:'topleft', unit:'nautical miles', showBearings:true, clearMeasurementsOnStop: false, showClearControl: true, showUnitControl: true}).addTo (this.map);
+
 
     var self = this;
     this.map.on('move',function(){
