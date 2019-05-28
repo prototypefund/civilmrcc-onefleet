@@ -17,16 +17,33 @@ var mapWrapper = function(){
     
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
-    var tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+
+
+    let tile_url;
+
+    switch(localStorage.settings_map){
+
+      default:
+        tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
+      break;
+    }
     //var tile_url = '/MapTiles/{z}/{x}/{y}.png';
 
     L.tileLayer(tile_url, {
-      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+      attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
       maxZoom: 18,
-      id: 'mapbox.streets',
-      accessToken: 'your.mapbox.access.token'
+      id: 'groundtile',
     }).addTo(this.map);
 
+    if(localStorage.settings_map = 'openseamap'){
+      L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+        attribution: '',
+        maxZoom: 18,
+        id: 'openseamap',
+        accessToken: ''
+      }).addTo(this.map);
+    }
+    
     L.control.scale({imperial: false}).addTo(this.map);
 
     var self = this;
@@ -73,7 +90,6 @@ var mapWrapper = function(){
               map.map.removeLayer(layer);
             i++;
     });
-
   }
   this.showItem = function(){
 

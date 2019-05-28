@@ -1,12 +1,18 @@
 <template>
    
    <div class="background" v-on:click.self="closeModal">
-      <div>
-        <h2>Settings</h2>
-          
-        <input type="text" placeholder="username">
-        <input type="password" placeholder="password">
-
+    <div class="form-style-6">
+            <h1>Settings</h1>
+            <form v-on:submit.prevent="save">
+              <span>Map</span>
+              <select v-model="settings.maptiles">
+                <option value="openlayers">OpenLayers (online)</option>
+                <option value="onefleet">Onefleet (offline)</option>
+              </select>
+              <span>Openseamap</span>
+              <input type="checkbox" value="true" v-model="settings.openseamap">
+              <input type="submit" value="Save" />
+            </form>
       </div>
    </div>
 </template>
@@ -19,8 +25,11 @@ export default {
 
   data: function () {
     return {
-      vehicles: [],
-      shown_items:[]
+      show:true,
+      settings:{
+        maptiles:localStorage.settings_map||'openlayers',
+        openseamap:localStorage.settings_openseamap||false
+      }
     }
   },
   methods:{
@@ -28,29 +37,23 @@ export default {
      // Using the service bus
      serverBus.$emit('modal_modus', '');
     },
-    toggleItem: function(identifier){
-        if(this.shown_items.indexOf(identifier) == -1)
-          this.shown_items.push(identifier)
-        else
-          this.shown_items.filter(e => e !== identifier) //remove item from array
+    save: function(){
 
+      localStorage.settings_maptiles = this.settings.maptiles;
+      localStorage.settings_openseamap = this.settings.openseamap;
 
-        serverBus.$emit('shown_items', this.shown_items);
     }
-
   },
   mounted: function() {
-    var self = this;
-    this.$db.getVehicles(function(err,result){
-        self.$data.vehicles = result.rows;
-    });
-    this.$db.setOnChange('items',function(){
-      console.log('change detected, rerender vehicles!');
-        self.$db.getVehicles(function(err,result){
 
-              self.$data.vehicles = result.rows;
-        });
+
+    var self = this;
+
+
+    serverBus.$on('modal_modus', (modal_modus) => {
+      console.log('modalmodus')
     });
+
   }
 }
 </script>
