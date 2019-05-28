@@ -7,6 +7,7 @@
           <select v-model="form_data.template" @change="loadTemplate()">
             <option>case</option>
             <option>vehicle</option>
+            <option>sighting</option>
           </select>
 
 

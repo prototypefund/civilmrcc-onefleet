@@ -51,7 +51,7 @@ export default {
     }
   },
   created:function(){
-    this.username = localStorage.username || 'guest'
+    this.username = localStorage.username||'guest'
   }
 }
 </script>
