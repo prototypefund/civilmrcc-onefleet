@@ -1,33 +1,87 @@
 <template>
    <div id="listview">
       <h2>Items</h2>
-      <ul>
-        <li>
-            <h3 v-for="category in categories">{{category.plural}}</h3>
-            <ul>
-                <li v-if="category" v-for="item in category.items">{{item.id}}</li>
-            </ul>
-          
-        </li>
+      
 
-      </ul>
+
+      <el-collapse v-model="activeCategories">
+        <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
+          <table>
+            <tr v-for="item in category.items.rows">
+
+              <td>{{item.doc._id}}</td>
+              <td>{{item.doc.properties.name}}</td>
+              <td>{{item.doc.properties}}</td>
+
+              <!--<span>{{vehicle.positions}}</span>-->
+            </tr>
+          </table>
+
+        </el-collapse-item>
+      </el-collapse>
+
    </div>
 </template>
 
 <script>
 
 import templates from './items/templates.js'
+import { serverBus } from '../main';
 export default {
   name: 'ListView',
+
   data: function () {
     return {
-      categories:[]
+      vehicles: [],
+      shown_items:[],
+      categories:[],
+      activeCategories: ['Vehicles']
     }
   },
-  props: {
+  computed: {
+    searcher() {  
+
+    }
   },
-  created:function(){
-        var self = this;
+  methods:{
+    isShown: function(identifier){
+      return this.shown_items[identifier];
+    },
+    initItem: function(identifier,active){
+        this.shown_items[identifier] = active
+
+        serverBus.$emit('shown_items', this.shown_items);
+
+    },
+    toggleItem: function(identifier,event){
+       
+
+        serverBus.$emit('shown_items', this.shown_items);
+    },
+    getItemColor: function(itemid){
+      var item = this.getItemById(itemid);
+      if(item&& typeof item.doc.properties != 'undefined'&& typeof item.doc.properties.color != 'undefined') 
+        return item.doc.properties.color;
+      else 
+        return '#13ce66';
+    },
+    getItemById:function(itemid){
+      for(var i in this.vehicles){
+        if(this.vehicles[i].id == itemid)
+          return this.vehicles[i];
+      }
+      return false
+    }
+
+  },
+  mounted: function() {
+
+    serverBus.$on('shown_items', (shown_items) => {
+      this.shown_items = shown_items;
+    });
+
+    //load templates to append them as categories to the left navigation
+    var self = this;
     var all_templates = templates.get('all');
     for(var template in all_templates){
       var all_templates = all_templates;
@@ -36,7 +90,7 @@ export default {
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
-                  return alert('an error occured reading the template listview!');
+                  return alert('an error occured reading the template for the leftnav! ');
 
                 self.categories.push({
                   title:template_index,
@@ -46,8 +100,35 @@ export default {
 
               });
       })(template);
+
+
+      
+    }
+
+    this.$db.getVehicles(function(err,result){
+        self.$data.vehicles = result.rows;
+        for(var category_index in self.$data.categories){
+
+          //get all items within a category
+          for(var item in self.$data.categories[category_index].items.rows){
+            
+            let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
+
+            let identifier = self.$data.categories[category_index].items.rows[item].id
+
+            self.initItem(identifier,is_active);
+          }
+        }
+    });
+
+    this.$db.setOnChange('items',function(){
+      console.log('change detected, rerender vehicles!');
+        self.$db.getVehicles(function(err,result){
+              self.$data.vehicles = result.rows;
+        });
+    });
   }
-}
+
 }
 </script>
 
