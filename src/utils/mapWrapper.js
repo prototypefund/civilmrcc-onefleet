@@ -58,7 +58,9 @@ var mapWrapper = function(){
     console.log('map initted');
   };
   this.loadTemplatedItem = function(item){
-    var max_positions = 100;
+    let max_positions = localStorage.settings_map_track_length||100;
+    if(typeof max_positions == 'string')
+      max_positions = parseInt(max_positions)
     //cut number of positions only keep
     if(item.positions.length > max_positions){
       item.positions.splice(0, item.positions.length - max_positions);

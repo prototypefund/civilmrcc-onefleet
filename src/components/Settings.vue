@@ -4,12 +4,17 @@
     <div class="form-style-6">
             <h1>Settings</h1>
             <form v-on:submit.prevent="save">
-              <span>Map</span>
+              <h3>Map</h3>
+              <span>Tileset</span>
               <select v-model="settings.maptiles">
                 <option value="openlayers">OpenLayers (online)</option>
                 <option value="onefleet">Onefleet (offline)</option>
               </select>
-              <span>Openseamap</span>
+
+              <span>Max Track Length</span>
+              <input type="number" v-model="settings.max_track_length">
+
+              <span>Show Openseamap</span>
               <input type="checkbox" value="true" v-model="settings.openseamap">
               <input type="submit" value="Save" />
             </form>
@@ -27,8 +32,9 @@ export default {
     return {
       show:true,
       settings:{
-        maptiles:localStorage.settings_map||'openlayers',
-        openseamap:localStorage.settings_openseamap||false
+        maptiles:localStorage.settings_maptiles||'openlayers',
+        openseamap:localStorage.settings_openseamap == 'true'||false,
+        max_track_length:localStorage.settings_map_track_length||1000
       }
     }
   },
@@ -41,6 +47,7 @@ export default {
 
       localStorage.settings_maptiles = this.settings.maptiles;
       localStorage.settings_openseamap = this.settings.openseamap;
+      localStorage.settings_map_track_length = this.settings.max_track_length;
 
     }
   },
