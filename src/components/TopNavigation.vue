@@ -5,14 +5,45 @@
         OneFleet
       </div>
       <ul id="nav-left">
-        <li v-on:click="changeModus('map')"> <a>Map</a></li>
-        <li v-on:click="changeModus('cases')"> <a>List</a></li>
-        <li v-on:click="openModal('createItem')"> <a>Create New Item</a></li>
+        <li v-on:click="openModal('createItem')">
+          <a>
+            <i class="fas fa-plus-circle"></i>
+            <span>
+              Add
+            </span>
+          </a>
+        </li>
+        <li v-on:click="changeModus('map')"> 
+          <a>
+            <i class="fas fa-map-marked"></i>
+            <span>
+            Map
+            </span>
+          </a>
+        </li>
+        <li v-on:click="changeModus('cases')">
+          <a>
+            <i class="fas fa-list-alt"></i>
+            <span>
+            List
+            </span>
+          </a>
+        </li>
+        <li v-on:click="toggleAir()">
+          <a>
+
+            <i class="fas fa-plane"></i>
+            <span>
+              Air
+            </span>
+          </a>
+        </li>
       </ul>
       <ul id="nav-right">
         <el-dropdown>
           <span class="el-dropdown-link">
-            {{username}}<i class="el-icon-arrow-down el-icon--right"></i>
+            <i class="fas fa-user"></i>
+            {{username}}<i class="el-icon-arrow-down el-icon--left"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item><a v-on:click="openModal('settings')">Settings</a></el-dropdown-item>
@@ -30,6 +61,7 @@ export default {
   name: 'TopNavigation',
   data:function(){
     return {
+      show_air:false,
       username:'',
       password:''
     }
@@ -44,6 +76,10 @@ export default {
       console.log('asdasd');
      // Using the service bus
      serverBus.$emit('modal_modus', value);
+    },
+    toggleAir:function(){
+      this.$data.show_air = !this.$data.show_air;
+      serverBus.$emit('show_air', this.$data.show_air);
     },
     logout: function(){
       localStorage.clear();
@@ -84,13 +120,25 @@ export default {
   #nav-left li{
     float: left;
     height: 60px;
-    padding-top: 30px;
+    padding-top: 15px;
     padding-left: 30px;
     padding-right: 30px;
     cursor:pointer;
   }
   #nav-left li:hover{
     background:#000;
+  }
+
+  #nav-left li a i{
+    font-size:26px;
+  }
+  #nav-left li a{
+    text-align:center;
+  }
+  #nav-left li a span{
+    display: block;
+    margin-top: -5px;
+    font-size:12px;
   }
 
   nav a{
@@ -110,4 +158,28 @@ export default {
     font-size: 17px;
     color: rgb(207,211,219)!important;
   }
+
+  .fas.fa-user.el-dropdown-selfdefine{
+    font-size:26px;
+    margin-left: 6px;
+  }
+
+  .el-dropdown{
+    margin-top: 15px;
+    margin-right: 15px;
+    font-size: 17px;
+    color: rgb(207,211,219)!important;
+  }
+  .el-dropdown-link{
+    display: block;
+    margin-top: -2px;
+    font-size: 12px;
+  }
+</style>
+<style>
+.fas.fa-user{
+  font-size: 26px;
+  display: block;
+  margin-left: 6px;
+}
 </style>
