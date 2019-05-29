@@ -10,6 +10,7 @@
       <TopNavigation></TopNavigation>
 
       <LeftNavigation></LeftNavigation>
+      <Air v-if="show_air"></Air>
       <div id="mainWindow">
         <MapArea v-if="modus == 'map'"></MapArea>
         <ListView v-if="modus == 'cases'"></ListView>
@@ -29,6 +30,7 @@ import ShowItem from './components/items/ShowItem.vue'
 import ExportItem from './components/items/ExportItem.vue'
 
 import LeftNavigation from './components/LeftNavigation.vue'
+import Air from './components/Air.vue'
 import MapArea from './components/MapArea.vue'
 import ListView from './components/ListView.vue'
 import Login from './components/Login.vue'
@@ -41,6 +43,7 @@ export default {
   components: {
     TopNavigation,
     LeftNavigation,
+    Air,
     MapArea,
     CreateItem,
     ShowItem,
@@ -53,6 +56,7 @@ export default {
     return {
       modus: 'map',
       modal: '',
+      show_air: false,
       itemId: false,
       exportItemId: false,
       show_chat: false
@@ -79,6 +83,10 @@ export default {
 
       serverBus.$on('modal_modus', (modal_modus) => {
         this.$data.modal = modal_modus;
+      });
+      serverBus.$on('show_air', (show_air) => {
+        console.log('show_air',show_air);
+        this.$data.show_air = show_air;
       });
       serverBus.$on('itemId', (itemId) => {
         this.$data.itemId = itemId;
@@ -164,6 +172,7 @@ ul{
 .form-style-6 input[type="time"],
 .form-style-6 input[type="url"],
 .form-style-6 input[type="password"],
+.form-style-6 input[type="checkbox"],
 .form-style-6 textarea,
 .form-style-6 select 
 {
