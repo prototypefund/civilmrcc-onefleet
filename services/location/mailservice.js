@@ -7,15 +7,7 @@ const sqlite3 = require('sqlite3').verbose();
 const smtpTransport = require("nodemailer-smtp-transport");
 const send_mail = false;
 
-var config = {
-      imap_username:'username',
-      imap_password:'abcabc',
-      imap_host:'mail.server.com',
-      iridium_sender_mail:'some@mail.com',
-      db_remote_url:'http://pouch.db:5984',
-      db_username:'admin',
-      db_password:'abcabc'
-    }
+var config = {}
 //mail address of inreach service
 
 var mail_service = new function(){
@@ -114,16 +106,12 @@ var mail_service = new function(){
     });
 
     mailListener.on("mail", function(mail, seqno, attributes){
-
+      console.log('got mail!');
       listener_config.mail_callback(mail, seqno, attributes);
-
     });
-
   }
+
   this.positionCallback = function(mail, seqno, attributes){
-
-
-
         var self = this;
         var sender_mail = this.getEmailsFromString(mail.headers.from);
         var sender_config_mail = this.getEmailsFromString(config.iridium_sender_mail)
@@ -153,26 +141,24 @@ var mail_service = new function(){
                         
                         console.log('Mail from gateway sender received:');
 
-                        console.log(mail.text);
 
-                        var lat = mail.text.substring( mail.text.indexOf('Lat+') + 4,
-                                                       mail.text.indexOf('Lon')).trim();
+                        let lat = parseFloat(mail.text.substring( mail.text.indexOf('Lat+') + 4,
+                                                       mail.text.indexOf('Lon')).trim());
 
-                        var lon = mail.text.substring( mail.text.indexOf('Lon+') + 4,
-                                                       mail.text.indexOf('Alt')).trim();
+                        let lon = parseFloat(mail.text.substring( mail.text.indexOf('Lon+') + 4,
+                                                       mail.text.indexOf('Alt')).trim());
 
-                        var alt = mail.text.substring( mail.text.indexOf('Alt+') + 4,
+                        let alt = mail.text.substring( mail.text.indexOf('Alt+') + 4,
                                                        mail.text.indexOf('GPS')).trim();
 
-                        var alt = alt.replace('ft','')
+                        alt = parseFloat(alt.replace('ft',''))
 
                         console.log('adding position to db:')
-
-
                         self.insertLocation(res[i].doc.identifier,{
-                          timestamp:new Date(),
+                          timestamp:new Date(mail.headers.date),
                           latitude:lat,
                           longitude:lon,
+                          altitude:alt,
                           speed:-1,
                           course:-1
                         });
@@ -219,6 +205,18 @@ var mail_service = new function(){
         }
         return email;
   }
+  this.createTable = function(cb){
+    console.log('creating locations table');
+    this.sqlite.run("CREATE TABLE IF NOT EXISTS `locations` ( \
+      `id` varchar(255) NOT NULL,\
+      `item_identifier` varchar(255) NOT NULL,\
+      `lat` decimal(11,8) NOT NULL,\
+      `lon` decimal(11,8) NOT NULL,\
+      `speed` float NOT NULL,\
+      `course` float NOT NULL,\
+      `timestamp` int(11) NOT NULL\
+    )",{},cb);
+  };
   this.sqlite_query = function(sql,cb){
 
     var self = this;
@@ -233,7 +231,7 @@ var mail_service = new function(){
         cb(rows)
       }
     });
-  }
+  };
   this.insertLocation = function(identifier,Position){
       if(typeof Position != 'undefined' && Position.timestamp != 'undefined'){
                               console.log(Position);
@@ -243,6 +241,7 @@ var mail_service = new function(){
                                 "lat": Position.latitude,
                                 "lon": Position.longitude,
                                 "heading": Position.course,
+                                "altitude": Position.altitude,
                                 "speed": Position.speed,
                                 "item_identifier":identifier,
                                 "source":"ais_api",
