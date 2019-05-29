@@ -29,6 +29,8 @@
             </span>
           </a>
         </li>
+      </ul>
+      <ul id="nav-right">
         <li v-on:click="toggleAir()">
           <a>
 
@@ -38,8 +40,6 @@
             </span>
           </a>
         </li>
-      </ul>
-      <ul id="nav-right">
         <el-dropdown>
           <span class="el-dropdown-link">
             <i class="fas fa-user"></i>
@@ -117,7 +117,7 @@ export default {
     list-style: none;
     height:60px;
   }
-  #nav-left li{
+  nav li{
     float: left;
     height: 60px;
     padding-top: 15px;
@@ -125,17 +125,17 @@ export default {
     padding-right: 30px;
     cursor:pointer;
   }
-  #nav-left li:hover{
+  nav li:hover{
     background:#000;
   }
 
-  #nav-left li a i{
+  nav li a i{
     font-size:26px;
   }
-  #nav-left li a{
+  nav li a{
     text-align:center;
   }
-  #nav-left li a span{
+  nav li a span{
     display: block;
     margin-top: -5px;
     font-size:12px;
@@ -145,7 +145,7 @@ export default {
     color: rgb(207,211,219)!important;
   }
 
-  #nav-left li:hover a{
+  nav li:hover a{
     color: rgb(255,255,255)!important;
   }
   #nav-right{

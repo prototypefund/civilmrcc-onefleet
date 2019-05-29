@@ -4,7 +4,8 @@
           <h1>Show Item</h1>
           <form @submit="storeItem">
 
-            <span>Identifier</span>
+            <Position v-bind:position="last_position"></Position>
+            <span style="padding-top:20px">Identifier</span>
             <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
             <div v-for="field in template_data.fields">
               <span>{{field.name}}</span>
@@ -14,10 +15,6 @@
               </select>
 
             </div>
-            <span>Last Position</span>
-            <p>
-             {{last_position}}
-            </p>
             <a v-on:click="showExportModal(itemId)">Export Locations</a>
             <input type="submit" value="Save" />
 
@@ -28,11 +25,15 @@
 <script>
 
 import templates from './templates.js';
+import Position from './Position';
 import {serverBus}  from '../../main';
 
 export default {
   name: 'ShowItem',
   props: ['itemId'],
+  components:{
+    Position
+  },
   data: function () {
     return {
       template: '',

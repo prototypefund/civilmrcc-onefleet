@@ -64,17 +64,33 @@ get:function(name){
                     'type':'text'
                 },
                 {
+                    'name':'air',
+                    'title':'Air',
+                    'type':'select',
+                    'options':
+                      {
+                        'true':'true',
+                        'false':'false'
+                      }
+                },
+                {
                     'name':'tracking_type',
                     'title':'Tracking Type',
                     'type':'select',
                     'options':
                       {
-                        'AIS':'AIS'
+                        'AIS':'AIS',
+                        'IRIDIUMGO':'IRIDIUMGO'
                       }
                 },
                 {
                     'name':'MMSI',
                     'title':'MMSI',
+                    'type':'text'
+                },
+                {
+                    'name':'iridium_sender_mail',
+                    'title':'Iridium Sender Mail (for iridium tracking only)',
                     'type':'text'
                 },
                 {
