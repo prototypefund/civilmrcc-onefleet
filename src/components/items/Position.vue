@@ -17,8 +17,22 @@
 <script>
 export default {
   name: 'Position',
+  data:function(){
+    return {
+      vehicles:[]
+    }
+  },
   props: {
     position: Object
+  },
+  methods:{
+    loadVehicles:function(){
+       this.$db.getItemsByTemplate('VEHICLE',function(err,result){
+        console.log('got items by template');
+        console.log(err,result);
+        self.$data.vehicles = result.rows;
+      });
+    }
   }
 }
 </script>

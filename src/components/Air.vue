@@ -14,13 +14,11 @@
 <script>
 
 import Position from './items/Position'
-import AltitudeChart from './items/AltitudeChart'
 import { serverBus } from '../main';
 export default {
   name: 'Cockpit',
   components: {
-    Position,
-    AltitudeChart
+    Position
   },
   data: function () {
     return {
@@ -107,6 +105,7 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .air{
+    opacity:0.7;
     position: fixed;
     top: 60px;
     right: 0;
@@ -117,6 +116,9 @@ export default {
     z-index: 9999;
 }
 
+.air:hover{
+  opacity:1;
+}
 .air li{
     float: left;
     width: 14vw;
