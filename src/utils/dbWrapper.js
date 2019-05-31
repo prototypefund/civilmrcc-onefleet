@@ -11,11 +11,20 @@ var dbWrapper = function(){
     this.initDB = function(db_name){
       var self = this;
       if(typeof this.databases[db_name] == 'undefined'){
+        console.log(this.getDBURL()+db_name+'?include_docs=true&descending=true');
             this.databases[db_name] = {
-              local: new PouchDB(db_name, {skip_setup:true}),
-              remote: new PouchDB(this.getDBURL()+db_name+'?include_docs=true&descending=true', {skip_setup:true}),   
+              local: new PouchDB(db_name, {skip_setup:false}),
+              remote: new PouchDB(this.getDBURL()+db_name+'?include_docs=true&descending=true', {skip_setup:false}),   
             }
-            this.databases[db_name].remote.sync(db_name, {
+
+            this.databases[db_name].local.replicate.from(this.databases[db_name].remote).on('complete', function (r,a,n) {
+            // yay, we're done!
+
+            console.log(r,a,n);
+            console.log('initial replication done!');
+            console.log('starting sync..');
+
+            self.databases[db_name].remote.sync(db_name, {
               live: true,
               retry: true
             }).on('change', function (change) {
@@ -30,6 +39,14 @@ var dbWrapper = function(){
                 window.location.reload();
               }
             });
+
+          }).on('error', function (err) {
+
+            console.log('error during inital replication:');
+            console.log(err);
+            // boo, something went wrong!
+          });
+
       }
     }
 
@@ -39,6 +56,7 @@ var dbWrapper = function(){
     }
     this.getDB = function(db_name){
         if(typeof this.databases[db_name] == 'undefined'){
+            console.log('db not defined so far, initialize db:'+db_name);
             this.initDB(db_name)
         }
         return this.databases[db_name].local;
@@ -64,7 +82,7 @@ var dbWrapper = function(){
             this.showLogin();
     }
     this.getDBURL = function(){
-        if(localStorage.username && localStorage.username.length > 0)
+        if(typeof localStorage.username != 'undefined' && localStorage.username.length > 0)
 
             return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
         else    
