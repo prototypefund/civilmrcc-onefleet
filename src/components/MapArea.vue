@@ -62,8 +62,15 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
 #mapArea{
     height:calc(100vh - 60px);
+}
+
+.vehicle-marker{
+  height: 16px!important;
+  width: 16px!important;
+  margin-left: 0!important;
+  margin-top: 0!important;
 }
 </style>
