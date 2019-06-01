@@ -6,7 +6,7 @@
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
             <li v-for="item in category.items.rows">
-              <span class="item_name" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
+              <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
 
               <span style="float:right;">
@@ -65,16 +65,19 @@ export default {
 
         serverBus.$emit('shown_items', this.shown_items);
     },
-    getItemColor: function(itemid){
-      var item = this.getItemById(itemid);
+    clickItem: function(itemId){
+      serverBus.$emit('itemId', itemId);
+    },
+    getItemColor: function(itemId){
+      var item = this.getItemById(itemId);
       if(item&& typeof item.doc.properties != 'undefined'&& typeof item.doc.properties.color != 'undefined') 
         return item.doc.properties.color;
       else 
         return '#13ce66';
     },
-    getItemById:function(itemid){
+    getItemById:function(itemId){
       for(var i in this.vehicles){
-        if(this.vehicles[i].id == itemid)
+        if(this.vehicles[i].id == itemId)
           return this.vehicles[i];
       }
       return false
