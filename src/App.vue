@@ -12,8 +12,8 @@
       <LeftNavigation></LeftNavigation>
       <Air v-if="show_air"></Air>
       <div id="mainWindow">
-        <MapArea v-if="modus == 'map'"></MapArea>
-        <ListView v-if="modus == 'cases'"></ListView>
+        <MapArea v-show="modus == 'map'"></MapArea>
+        <ListView v-show="modus == 'cases'"></ListView>
       </div>
       <div id="chat" v-bind:class="chatWindowClass">
         <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>
