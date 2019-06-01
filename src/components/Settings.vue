@@ -16,7 +16,7 @@
 
               <span>Show Openseamap</span>
               <input type="checkbox" value="true" v-model="settings.openseamap">
-              <input type="submit" value="Save" />
+              <input type="submit" value="Save and reload" />
             </form>
       </div>
    </div>
@@ -48,6 +48,7 @@ export default {
       localStorage.settings_maptiles = this.settings.maptiles;
       localStorage.settings_openseamap = this.settings.openseamap;
       localStorage.settings_map_track_length = this.settings.max_track_length;
+      window.location.reload();
 
     }
   },
