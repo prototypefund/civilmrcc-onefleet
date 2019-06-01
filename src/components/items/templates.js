@@ -19,8 +19,7 @@ get:function(name){
                     'attended':'attended',
                     'possible_target':'possible_target',
                     'confirmed':'confirmed',
-                    'critical':'critical',
-                    'need_help':'need_help'
+                    'critical':'critical'
                   }
               },
               {
