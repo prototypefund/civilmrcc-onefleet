@@ -8,9 +8,9 @@
             <span style="padding-top:20px">Identifier</span>
             <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
             <div v-for="field in template_data.fields">
-              <span>{{field.name}}</span>
+              <span>{{field.title}}</span>
               <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
-              <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
+              <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]" class="select-css">
                 <option v-for="option in field.options">{{option}}</option>
               </select>
 

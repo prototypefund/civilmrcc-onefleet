@@ -1,5 +1,4 @@
 <template>
-   
    <div class="air" v-on:click.self="closeModal">
     <ul>
       <li v-for="vehicle in vehicles" v-if="vehicle.doc.properties.air == 'true'">
@@ -12,7 +11,6 @@
 </template>
 
 <script>
-
 import Position from './items/Position'
 import { serverBus } from '../main';
 export default {
@@ -66,15 +64,17 @@ export default {
       let airrows = []
       let diagram_points = [];
       for(let row in result.rows){
-
+        console.log(123);
         console.log(result.rows[row].doc.properties.name,result.rows[row].doc.properties.air)
         if(result.rows[row].doc.properties.air == 'true'){
           for(let pos in result.rows[row].positions){
-            let positionObj = result.rows[row].positions[pos].doc
-            diagram_points.push({
-              x: new Date(positionObj.timestamp),
-              y: parseFloat(positionObj.altitude)
-            })
+            if(result.rows[row].positions[pos].doc){ 
+              let positionObj = result.rows[row].positions[pos].doc
+              diagram_points.push({
+                x: new Date(positionObj.timestamp),
+                y: parseFloat(positionObj.altitude)
+              })
+            }
           }
           airrows.push(result.rows[row])
           self.$data.diagramdata.push({        

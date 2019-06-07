@@ -3,11 +3,19 @@
 
     <h3>Last Position</h3>
     <label>{{new Date(position.timestamp).toLocaleString()}}</label><br/>
-    <label>Lat:</label>
-    <span>{{position.lat}}</span>
+
+    <label>Coodinate Type</label>
+    <select v-model="type">
+      <option value="decimal_degees">Decimal Degrees</option>
+      <option value="dms">DMS</option>
+    </select>
+
+
+    <label>Latitude:</label>
+    <span>{{showPosition(position.lat,position.lon).lat}}</span>
     <br/>
-    <label>Lon:</label>
-    <span>{{position.lon}}</span>
+    <label>Longitude:</label>
+    <span>{{showPosition(position.lat,position.lon).lon}}</span>
     <br/>
     <label>Altitude:</label>
     <span>{{position.altitude}} (ft)</span>
@@ -19,19 +27,51 @@ export default {
   name: 'Position',
   data:function(){
     return {
-      vehicles:[]
+      vehicles:[],
+      type:'decimal_degrees'
     }
   },
   props: {
     position: Object
   },
   methods:{
-    loadVehicles:function(){
-       this.$db.getItemsByTemplate('VEHICLE',function(err,result){
-        console.log('got items by template');
-        console.log(err,result);
-        self.$data.vehicles = result.rows;
-      });
+    changeType:function(type){
+       this.$data.type = type
+    },
+    showPosition:function(lat,lon){
+      switch(this.$data.type){
+        default:
+          return {lat:lat,lon:lon}
+        break;
+        case 'dms':
+          let val = lat+','+lon;
+          var decre = /^\s*([\-+]?\d+(\.\d+)?)\s*,\s*([\-+]?\d+(\.\d+)?)\s*$/;
+          var dec = decre.exec(val);
+          if (dec == null || dec == '') return null;
+          var lat = parseFloat(dec[1]);
+          var lon = parseFloat(dec[3]);
+          // D = trunc(DD)
+          // M = trunc(|DD| * 60) mod 60
+          // S = (|DD| * 3600) mod 60
+          // where |DD| is absolute value of DD
+          var abslat = Math.abs(lat);
+          var d1 = Math.floor(abslat);
+          var m1 = Math.floor(abslat*60) % 60;
+          var s1 = abslat*3600 % 60;
+          s1 = Math.round(100 * s1)/100; // 11-meter accuracy
+          var nw = (lat < 0 ? 'S' : 'N'); // neg lat is South
+          var abslon = Math.abs(lon);
+          var d2 = Math.floor(abslon); // trunc
+          var m2 = Math.floor(abslon*60) % 60;
+          var s2 = abslon*3600 % 60;
+          s2 = Math.round(100 * s2)/100;
+          var ew = (lon < 0 ? 'W' : 'E'); // neg lon is West
+          return {
+              lat:d1 + 'd ' + m1 + 'm ' + s1 + 's ' + nw + ', ',
+              lon:d2 + 'd ' + m2 + 'm ' + s2 + 's ' + ew
+          }
+        break;
+      }
     }
   }
 }
@@ -44,5 +84,9 @@ h3{
 }
 .positionbox{
   font-size:12px;
+}
+
+.positionbox label{
+  min-width:80px;
 }
 </style>

@@ -49,12 +49,6 @@ var mapWrapper = function(){
 
     L.control.polylineMeasure ({position:'topleft', unit:'nautical miles', showBearings:true, clearMeasurementsOnStop: false, showClearControl: true, showUnitControl: true}).addTo (this.map);
 
-    // define rectangle geographical bounds
-    var bounds = [[35, 11], [37, 13]];
-    // create an orange rectangle
-    L.rectangle(bounds, {color: "#ff7800", weight: 1}).addTo(this.map);
-    // zoom the map to the rectangle bounds
-
      this.initDraw();
     var self = this;
     this.map.on('move',function(){
@@ -71,12 +65,12 @@ var mapWrapper = function(){
             edit: {
                 featureGroup: drawnItems,
                 poly : {
-                    allowIntersection : false
+                    allowIntersection : true
                 }
             },
             draw: {
                 polygon : {
-                    allowIntersection: false,
+                    allowIntersection: true,
                     showArea:true
                 }
             }
@@ -235,14 +229,15 @@ var mapWrapper = function(){
               if(i == 0){
 
               }
+              console.log(positions.length);
               //last position
-              if(i == positions.length-1){
+              if(positions.length == 1 || i == positions.length-1){
 
                 var width = 16;
                 var height = 16;
                 var rotation = v.doc.heading;
-                var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-left:"+(width/2)+"px;";
-                var icon = L.divIcon({className: 'my-div-icon',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
+                var style = "transform: rotate("+rotation+"deg);width: "+width+"px; height:"+height+"px;margin-left:-"+(width/2)+"px;margin-top:-"+(height/2)+"px;";
+                var icon = L.divIcon({className: 'vehicle-marker',html:'<img src="/gfx/icons/cursor.png" style="'+style+'">'});
 
                 if(typeof v.doc.lat !== 'undefined' && typeof v.doc.lon !== 'undefined' ){
 
@@ -264,13 +259,16 @@ var mapWrapper = function(){
     var line = false;
     var marker = false;
 
+    if(item.positions.length == 1){
+      item.positions[1] = item.positions[0];
+    }
+
     if(typeof item.positions != 'undefined' && item.positions.length > 0){
-        
             line = this.generateLine(item);
             marker = this.generateMarker(item);
         if(marker){
-          marker.addTo(this.map)
           this.loaded_items[item.id].marker = marker;
+          this.loaded_items[item.id].marker = marker.addTo(this.map);
         }
         if(item.doc.template == 'line' && line){
           this.loaded_items[item.id].line = line;
@@ -280,7 +278,6 @@ var mapWrapper = function(){
   };
   this.updateItemPosition = function(item){
       if(item.positions.length < 1){
-        console.log(item.id+' has no positions so far');
         return false;
       }
       if(typeof this.loaded_items[item.id] == 'undefined'){
@@ -288,8 +285,15 @@ var mapWrapper = function(){
       }else{
         let lat = item.positions[item.positions.length-1].doc.lat;
         let lon = item.positions[item.positions.length-1].doc.lon;
-        this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
-        this.loaded_items[item.id].line.addLatLng([lat, lon])
+        if(this.loaded_items[item.id].marker){
+          this.loaded_items[item.id].marker.setLatLng([lat, lon]).setOpacity(1).update();
+        }
+ 
+        if(this.loaded_items[item.id].line){
+
+          if(lat && lon)
+          this.loaded_items[item.id].line.addLatLng([lat, lon])
+        }
 
         this.loaded_items[item.id].line.setStyle({
             opacity: 1

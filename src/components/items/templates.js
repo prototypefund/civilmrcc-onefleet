@@ -22,6 +22,7 @@ get:function(name){
                     'critical':'critical'
                   }
               },
+
               {
                 'name':'boat_type',
                 'title':'Boat Type',
@@ -42,6 +43,11 @@ get:function(name){
                     'true':'yes',
                     'false':'no'
                   }
+              },
+              {
+                'name':'color',
+                'title':'color',
+                'type':'color'
               },
               {
                 'name':'people_on_baoard',
@@ -83,9 +89,17 @@ get:function(name){
                       }
                 },
                 {
+                    'name':'get_historical_data_since',
+                    'title':'Get historical data since (days)',
+                    'type':'number',
+                    'value':-1,
+                    'step':1
+                },
+                {
                     'name':'MMSI',
                     'title':'MMSI',
-                    'type':'text'
+                    'type':'number',
+                    'step':1
                 },
                 {
                     'name':'iridium_sender_mail',
@@ -95,7 +109,7 @@ get:function(name){
                 {
                     'name':'color',
                     'title':'Color',
-                    'type':'text'
+                    'type':'color'
                 },
                 {
                     'name':'active',

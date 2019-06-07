@@ -4,7 +4,7 @@
         <h1>Create Item</h1>
         <form @submit="createItem">
           <span>Template</span>
-          <select v-model="form_data.template" @change="loadTemplate()">
+          <select v-model="form_data.template" @change="loadTemplate()" class="select-css" required>
             <option>case</option>
             <option>vehicle</option>
             <option>sighting</option>
@@ -12,7 +12,7 @@
 
 
           <span>Identifier</span>
-          <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()">
+          <input type="text" v-model="form_data.identifier" placeholder="identifier" @input="form_data.identifier = $event.target.value.toUpperCase()" >
 
 
           <div id="position" v-if="template_data.add_initial_position">
@@ -24,9 +24,9 @@
           </div>
 
           <div v-for="field in template_data.fields">
-            <span>{{field.name}}</span>
+            <span>{{field.title}}</span>
             <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
-            <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]">
+            <select v-if="field.type == 'select'" class="select-css" v-model="form_data.properties[field.name]">
               <option v-for="option in field.options">{{option}}</option>
             </select>
 
