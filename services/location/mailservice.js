@@ -2,12 +2,10 @@ const MailListener = require("mail-listener2");
 const PouchDB = require('pouchdb');
 const dJSON = require('dirty-json');
 const nodemailer = require('nodemailer');
-
 const sqlite3 = require('sqlite3').verbose();
 const smtpTransport = require("nodemailer-smtp-transport");
-const send_mail = false;
+const config = require('./config.js');
 
-var config = {}
 //mail address of inreach service
 
 var mail_service = new function(){
@@ -34,20 +32,15 @@ var mail_service = new function(){
   this.initDBs = function(){
       var dbConfig = {
         auth: {
-          username: config.db_username,
-          password: config.db_password
+          username: config.dbUser,
+          password: config.dbPassword
         }
       };
 
       //SQLITE is used for long term storage
       this.sqlite =  new sqlite3.Database('./locations.db');
-      this.itemsDB = new PouchDB(config.db_remote_url+'/items', dbConfig);
-      this.locationsDB = new PouchDB(config.db_remote_url+'/positions', dbConfig);
-
-
-     /* this.casesDB = new PouchDB(config.db_remote_url+'/cases', dbConfig);
-      this.vehiclesDB = new PouchDB(config.db_remote_url+'/vehicles', dbConfig);
-      this.positionsDB = new PouchDB(config.db_remote_url+'/locations', dbConfig);*/
+      this.itemsDB = new PouchDB(config.dbUrl+'/items', dbConfig);
+      this.locationsDB = new PouchDB(config.dbUrl+'/positions', dbConfig);
 
   }
   this.getItems = function(callback){
@@ -114,7 +107,6 @@ var mail_service = new function(){
   this.positionCallback = function(mail, seqno, attributes){
         var self = this;
         var sender_mail = this.getEmailsFromString(mail.headers.from);
-        var sender_config_mail = this.getEmailsFromString(config.iridium_sender_mail)
 
         console.log('getting vehicles...');
 
@@ -179,11 +171,6 @@ var mail_service = new function(){
               }
 
             });
-
-
-
-
-       
 
   }
 

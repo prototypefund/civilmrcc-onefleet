@@ -2,12 +2,9 @@ const PouchDB = require('pouchdb');
 const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
-const config = {
-  aisUrl: process.env.AIS_API ||'http://localhost:5000',
-  dbUrl: process.env.DB_URL ||'http://localhost:5984',
-  dbUser: process.env.DB_USER ||'admin',
-  dbPassword: process.env.DB_PASSWORD || 'abcabc',
-};
+const config = require('./config.js');
+
+console.log(config);
 
 var service = new function(){
 
@@ -55,19 +52,21 @@ var service = new function(){
   this.insertLocation = function(identifier,Position){
           if(typeof Position != 'undefined' && Position.timestamp != 'undefined'){
                                   console.log(Position);
-                                  this.locationsDB.put(
-                                  {
+                                  let entry = {
                                     "_id": identifier+"_"+new Date(Position.timestamp).toISOString(),
                                     "lat": Position.latitude,
                                     "lon": Position.longitude,
                                     "heading": Position.course,
                                     "speed": Position.speed,
                                     "item_identifier":identifier,
-                                    "source":"ais_api",
+                                    "source":Position.source||"ais_api",
                                     "timestamp":new Date(Position.timestamp).toISOString()
-                                  }).then(function (response) {
+                                  };
+                                  this.locationsDB.put(entry).then(function (response) {
                                     console.log('location created');
+                                    console.log(entry);
                                   }).catch(function (err) {
+                                    console.log(entry);
                                     console.log(err);
                                   });
 
@@ -119,9 +118,38 @@ var service = new function(){
                                   console.log('got position from AIS:'+v.doc.identifier);
                                   console.log(Position);
                                   self.insertLocation(v.doc.identifier,Position);
-
               });
+              console.log(v.doc.properties.get_historical_data_since);
+              if(v.doc.properties.get_historical_data_since > -1){
+                self.getHistoricalData(v.doc.properties.MMSI,v.doc.properties.get_historical_data_since, function(positions){
+                  console.log(positions);
+                  for(let i in positions){
+                    let Position = {
+                      speed:positions[i][2],
+                      status:positions[i][1],
+                      longitude:positions[i][3],
+                      latitude:positions[i][4],
+                      course:positions[i][5],
+                      heading:positions[i][6],
+                      timestamp:positions[i][7]
+                    };
+                    console.log('got position from AIS:'+v.doc.identifier);
+                    console.log(Position);
+                    self.insertLocation(v.doc.identifier,Position);
+
+                    //update entry in db items, set get_historical_data_since to 0
+                    
+                    items.put(v.doc).then(function (response) {
+                      console.log('item created');
+                      console.log(response)
+                    }).catch(function (err) {
+                      cb(err);
+                    });
+                  }
+                })
+              }
             break;
+
           }
         });
       }
@@ -130,20 +158,86 @@ var service = new function(){
     };
     this.runInterval = function(interval_in_minutes){
       var self = this;
+      //run on startup at function
+      this.run();
       setInterval(function(){
         self.run()
       },interval_in_minutes*1000*60);
     };
+    this.parsePositionFromMarineTrafficApi = function(apiResult){
+        return {
+          'mmsi':apiResult[0],
+          'latitude':apiResult[1],
+          'longitude':apiResult[2],
+          'speed':apiResult[3],
+          'heading':apiResult[4],
+          'course':apiResult[5],
+          'status':apiResult[6],
+          'timestamp':apiResult[7],
+          'source':apiResult[8]
+        }
+    }
+    this.getHistoricalData = function(mmsi,days,cb){
+      console.log('get historical data')
+      let url = 'https://services.marinetraffic.com/api/exportvesseltrack/'+config.marine_traffic_exportvesseltrack_api_key+'/v:2/period:hourly/days:'+days+'/mmsi:'+mmsi+'/protocol:json';
+      let self = this;
+      if(config.marine_traffic_exportvesseltrack_api_key){
+        request(url, {json:true}, (err, res, body) => {
+          if(err){
+            console.log('error fetching position from marine traffic:', err);
+            console.log('retry with ais api')
+            config.marine_traffic_api_key = false;
+            self.getPositionFromAIS(mmsi,cb);
+          }
+          console.log(body)
+          if(body && body.length >= 1){
+            cb(body);
+          }
+        });
+      }
+    }
     this.getPositionFromAIS = function(mmsi,cb){
-      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
-      request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
-        if (err) { return console.log(err); }
-        if (body.error != null) return console.log(body.error);
+      let url = 'https://services.marinetraffic.com/api/exportvessel/v:5/'+config.marine_traffic_exportvessel_api_key+'/timespan:2880/mmsi:'+mmsi+'/protocol:json';
+      let self = this;
+      if(config.marine_traffic_exportvessel_api_key){
+        console.log(url);
+        request(url, {json:true}, (err, res, body) => {
+          if(err){
+            console.log('error fetching position from marine traffic:', err);
+            console.log('retry with ais api')
+            config.marine_traffic_exportvessel_api_key = false;
+            self.getPositionFromAIS(mmsi,cb);
+          }
 
-        cb(body.data);
-      });
+            console.log('body');
+            console.log(body);
+            console.log(body.length);
+          if((body &&(body.length >= 1)||typeof body != 'string')){
+            console.log('body2');
+            console.log(body);
+            if(typeof body.errors != 'undefined'){
+              console.log('error fetching position from marine traffic:', err);
+              console.log('retry with ais api');
+              config.marine_traffic_exportvessel_api_key = false;
+              self.getPositionFromAIS(mmsi,cb);
+            }else{
+              let i = 0;
+              cb(self.parsePositionFromMarineTrafficApi(body[i]));
+            }
+          }
+        });
+      }else{
 
+        console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+        request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
+          if (err) { return console.log(err); }
+          if (body.error != null) return console.log(body.error);
+
+          cb(body.data);
+        });
+
+      }
     }
 }
 
-service.runInterval(1);
+service.runInterval(5);
