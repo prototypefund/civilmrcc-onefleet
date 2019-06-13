@@ -44,6 +44,10 @@ var dbWrapper = function(){
 
             console.log('error during inital replication:');
             console.log(err);
+            if(err.error === 'unauthorized'){
+                localStorage.clear();
+                window.location.reload();
+            }
             // boo, something went wrong!
           });
 
