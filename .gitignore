@@ -6,6 +6,7 @@
 config/config.js
 scripts/config.js
 
+services/location/config.js
 
 .DS_Store
 node_modules
