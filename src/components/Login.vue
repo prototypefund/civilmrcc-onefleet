@@ -43,16 +43,6 @@ export default {
   },
   mounted: function() {
     var self = this;
-    this.$db.getVehicles(function(err,result){
-        self.$data.vehicles = result.rows;
-    });
-    this.$db.setOnChange('items',function(){
-      console.log('change detected, rerender vehicles!');
-        self.$db.getVehicles(function(err,result){
-
-              self.$data.vehicles = result.rows;
-        });
-    });
   }
 }
 </script>
