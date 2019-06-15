@@ -20,14 +20,16 @@ var mapWrapper = function(){
 
 
     let tile_url;
-
-    switch(localStorage.settings_map){
+    switch(localStorage.settings_maptiles){
 
       default:
         tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
       break;
+      case 'onefleet':
+
+       tile_url = '/MapTiles/{z}/{x}/{y}.png';
+      break;
     }
-    //var tile_url = '/MapTiles/{z}/{x}/{y}.png';
 
     L.tileLayer(tile_url, {
       attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -144,6 +146,7 @@ var mapWrapper = function(){
   }
   this.loadTemplatedItem = function(item){
     let max_positions = localStorage.settings_map_track_length||100;
+    let max_track_type = localStorage.settings_max_track_type||'number_of_positions'
     if(typeof max_positions == 'string')
       max_positions = parseInt(max_positions)
     //cut number of positions only keep
