@@ -12,6 +12,13 @@
               </select>
 
               <span>Max Track Length</span>
+
+
+              <select v-model="settings.max_track_type">
+                <option value="number_of_positions">number of positions</option>
+                <option value="number_of_days">number of days</option>
+              </select>
+
               <input type="number" v-model="settings.max_track_length">
 
               <span>Show Openseamap</span>
@@ -34,10 +41,12 @@ export default {
       settings:{
         maptiles:localStorage.settings_maptiles||'openlayers',
         openseamap:localStorage.settings_openseamap == 'true'||false,
-        max_track_length:localStorage.settings_map_track_length||1000
+        max_track_length:localStorage.settings_map_track_length||100,
+        max_track_type:localStorage.settings_max_track_type||'number_of_positions'
       }
     }
   },
+
   methods:{
     closeModal: function () {
      // Using the service bus
@@ -48,6 +57,7 @@ export default {
       localStorage.settings_maptiles = this.settings.maptiles;
       localStorage.settings_openseamap = this.settings.openseamap;
       localStorage.settings_map_track_length = this.settings.max_track_length;
+      localStorage.settings_max_track_type = this.settings.max_track_type;
       window.location.reload();
 
     }

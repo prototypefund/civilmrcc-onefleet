@@ -147,14 +147,26 @@ var mapWrapper = function(){
   this.loadTemplatedItem = function(item){
     let max_positions = localStorage.settings_map_track_length||100;
     let max_track_type = localStorage.settings_max_track_type||'number_of_positions'
+ 
     if(typeof max_positions == 'string')
-      max_positions = parseInt(max_positions)
-    //cut number of positions only keep
-    if(item.positions.length > max_positions){
-      item.positions.splice(0, item.positions.length - max_positions);
+      max_positions = parseInt(max_positions);
+
+    if(max_track_type == 'number_of_positions'){
+
+      //filter out positions by number of positions
+      //cut number of positions only keep
+      if(item.positions.length > max_positions){
+        item.positions.splice(0, item.positions.length - max_positions);
+      }
+    }else{
+      //filter out positions by date
+      let min_date = new Date()
+      min_date.setDate(min_date.getDate()-max_positions);
+      item.positions = item.positions.filter(function (position) {
+        return min_date<new Date(position.doc.timestamp);
+      });
 
     }
-    console.log('LENGTH: '+item.positions.length);
 
     //every item is based on one of the following
     //base templates: 
@@ -179,7 +191,6 @@ var mapWrapper = function(){
   this.clearMap = function(){
     var i = 0;
     this.map.eachLayer(function (layer) {
-      console.log(layer);
             if(i > 0)
               map.map.removeLayer(layer);
             i++;
@@ -192,13 +203,9 @@ var mapWrapper = function(){
 
   };
   this.generateLine = function(item){
-    console.log('generating line with length of '+item.positions.length+' items');
-    console.log(item.positions.length);
-    console.log(item);
 
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    console.log(item.positions);
     var pointList = [];
     if(item.positions.length > 0){
       for(var i in item.positions){
@@ -232,7 +239,6 @@ var mapWrapper = function(){
               if(i == 0){
 
               }
-              console.log(positions.length);
               //last position
               if(positions.length == 1 || i == positions.length-1){
 
@@ -253,8 +259,6 @@ var mapWrapper = function(){
       };
   }
   this.addItemToMap = function(item){
-    console.log('adding item to map');
-    console.log(item);
     item = this.loadTemplatedItem(item);
     this.loaded_items[item.id] = {};
 
@@ -296,11 +300,12 @@ var mapWrapper = function(){
 
           if(lat && lon)
           this.loaded_items[item.id].line.addLatLng([lat, lon])
+
+          this.loaded_items[item.id].line.setStyle({
+              opacity: 1
+          });
         }
 
-        this.loaded_items[item.id].line.setStyle({
-            opacity: 1
-        });
       }
     };
     this.hideItem = function(item_id){
