@@ -5,21 +5,33 @@
     <label>{{new Date(position.timestamp).toLocaleString()}}</label><br/>
 
     <label>Coodinate Type</label>
-    <select v-model="type">
+    <select v-model="type" style="width:125px">
       <option value="decimal_degees">Decimal Degrees</option>
       <option value="dms">DMS</option>
     </select>
-
+    <br>
 
     <label>Latitude:</label>
     <span>{{showPosition(position.lat,position.lon).lat}}</span>
     <br/>
     <label>Longitude:</label>
     <span>{{showPosition(position.lat,position.lon).lon}}</span>
-    <br/>
-    <label>Altitude:</label>
-    <span>{{position.altitude}} (ft)</span>
-
+    <div v-if="position.altitude">
+      <label>Altitude:</label>
+      <span>{{position.altitude}} (ft)</span>
+    </div>
+    <div v-if="position.speed">
+      <label>Speed:</label>
+      <span>{{position.speed}}</span>
+    </div>
+    <div v-if="position.source">
+      <label>Source:</label>
+      <span>{{position.source}}</span>
+    </div>
+    <div v-if="position.heading">
+      <label>Heading:</label>
+      <span>{{position.heading}}</span>
+    </div>
   </div>
 </template>
 <script>
@@ -72,7 +84,7 @@ export default {
           }
         break;
       }
-    }
+    },
   }
 }
 </script>

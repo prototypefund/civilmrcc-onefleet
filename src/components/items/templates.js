@@ -74,8 +74,8 @@ get:function(name){
                     'type':'select',
                     'options':
                       {
-                        'true':'true',
-                        'false':'false'
+                        'false':'false',
+                        'true':'true'
                       }
                 },
                 {
