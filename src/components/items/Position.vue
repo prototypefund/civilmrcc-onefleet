@@ -2,7 +2,7 @@
   <div class="positionbox">
 
     <h3>Last Position</h3>
-    <label>{{new Date(position.timestamp).toLocaleString()}}</label><br/>
+    <label>{{new Date(position.timestamp).toLocaleString()}} ({{timeSince(new Date(position.timestamp))}} ago)</label><br/>
 
     <label>Coodinate Type</label>
     <select v-model="type" style="width:125px">
@@ -85,6 +85,32 @@ export default {
         break;
       }
     },
+    timeSince:function(date){
+      let seconds = Math.floor((new Date() - date) / 1000);
+
+      let interval = Math.floor(seconds / 31536000);
+
+      if (interval > 1) {
+        return interval + " years";
+      }
+      interval = Math.floor(seconds / 2592000);
+      if (interval > 1) {
+        return interval + " months";
+      }
+      interval = Math.floor(seconds / 86400);
+      if (interval > 1) {
+        return interval + " days";
+      }
+      interval = Math.floor(seconds / 3600);
+      if (interval > 1) {
+        return interval + " hours";
+      }
+      interval = Math.floor(seconds / 60);
+      if (interval > 1) {
+        return interval + " minutes";
+      }
+      return Math.floor(seconds) + " seconds";
+    }
   }
 }
 </script>
