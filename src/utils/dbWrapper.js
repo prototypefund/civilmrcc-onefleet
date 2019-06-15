@@ -19,8 +19,6 @@ var dbWrapper = function(){
 
             this.databases[db_name].local.replicate.from(this.databases[db_name].remote).on('complete', function (r,a,n) {
             // yay, we're done!
-
-            console.log(r,a,n);
             console.log('initial replication done!');
             console.log('starting sync..');
 
@@ -60,7 +58,6 @@ var dbWrapper = function(){
     }
     this.getDB = function(db_name){
         if(typeof this.databases[db_name] == 'undefined'){
-            console.log('db not defined so far, initialize db:'+db_name);
             this.initDB(db_name)
         }
         return this.databases[db_name].local;
