@@ -49,7 +49,7 @@ var mapWrapper = function(){
     L.control.scale({imperial: false}).addTo(this.map);
 
 
-    L.control.polylineMeasure ({position:'topleft', unit:'nautical miles', showBearings:true, clearMeasurementsOnStop: false, showClearControl: true, showUnitControl: true}).addTo (this.map);
+    L.control.polylineMeasure ({position:'topleft', unit:'nauticalmiles', showBearings:true, clearMeasurementsOnStop: false, showClearControl: true, showUnitControl: true}).addTo (this.map);
 
      this.initDraw();
     var self = this;
