@@ -10,7 +10,7 @@ const config = require('./config.js');
 
 var mail_service = new function(){
 
-  this.init = function(){
+  this.initMail = function(){
     console.log('db init');
     this.initDBs();
 
