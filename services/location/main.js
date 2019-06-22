@@ -9,15 +9,15 @@ const config = require('./config.js');
 const program = require('commander');
 
 program
-  .option('-d, --debug', 'output extra debugging')
-  .option('-t, --time <min>', 'run interval')
+  .option('-t <min>', 'run interval')
   .option('-m, --mail', 'activate mail')
-  .option('-p, --purchase', 'purchase locations if api key is provided');
+  .option('-p, --purchase', 'purchase locations if api key is provided')
+  .version('0.0.1');
 
 program.parse(process.argv);
 let INTERVAL = program.time || 10;
 
-var service = new function(){
+let service = new function(){
   this.initDBs = function(){
       this.dbConfig = process.env.DEVELOPMENT ? {} : {
         auth: {
@@ -33,11 +33,9 @@ var service = new function(){
       this.sqlite =  new sqlite3.Database('./locations.db');
   }
   this.initMail = function(){
-    console.log('db init');
+    console.log('starting mail listener...');
     this.initDBs();
-
     var self = this;
-
     console.log('mail init');
     this.initMailListener({
       imap_username:config.imap_username,
@@ -46,10 +44,10 @@ var service = new function(){
       ,
 
       mail_callback:function(mail, seqno, attributes){
+        if(mail)
         self.positionCallback(mail, seqno, attributes);
       }
     });
-
   }
   this.sqlite_query = function(sql,cb){
 
@@ -79,7 +77,7 @@ var service = new function(){
     )",{},cb);
   };
   this.insertLocation = function(identifier,Position){
-          if(typeof Position != 'undefined' && Position.timestamp != 'undefined'){
+          if(typeof Position != 'undefined' && Position != false && Position.timestamp != 'undefined'){
                                   console.log(Position);
                                   let entry = {
                                     "_id": identifier+"_"+new Date(Position.timestamp).toISOString(),
@@ -110,7 +108,6 @@ var service = new function(){
             console.log('there was an error getting the position');
           }
   }
-
   this.getVehicles = function(callback){
 
         var items = this.itemDB;
@@ -130,10 +127,9 @@ var service = new function(){
           console.log('error while getting vehicles: ',err);
         });
   }
-
-  this.run = function(){
+  this.fetchAPIs = function(){
     this.initDBs();
-    this.initMail();
+    //this.initMail();
     var self = this;
 
     this.getVehicles(function(err,res){
@@ -150,7 +146,8 @@ var service = new function(){
                                   self.insertLocation(v.doc.identifier,Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
-              if(v.doc.properties.get_historical_data_since > -1){
+              if(false){
+                die();
                 self.getHistoricalData(v.doc.properties.MMSI,v.doc.properties.get_historical_data_since, function(positions){
                   console.log(positions);
                   for(let i in positions){
@@ -185,16 +182,33 @@ var service = new function(){
       }
     });
 
-    };
-    this.runInterval = function(interval_in_minutes){
+  };
+    this.fetchAPIInterval = function(interval_in_minutes){
       var self = this;
       //run on startup at function
-      this.run();
+      this.fetchAPIs();
       setInterval(function(){
-        self.run()
+        self.fetchAPIs()
       },interval_in_minutes*1000*60);
     };
+    this.parsePositionFromFleetmonApi = function(apiResult){
+      if(!apiResult)
+        return false
+      //die();
+        return {
+          'mmsi':apiResult.mmsi,
+          'latitude':apiResult.latitude,
+          'longitude':apiResult.longitude,
+          'speed':apiResult.speed,
+          'heading':apiResult.heading,
+          'course':apiResult.course,
+          'timestamp':apiResult.timestamp,
+          'source':apiResult.source
+        }
+    }
     this.parsePositionFromMarineTrafficApi = function(apiResult){
+      console.log(apiResult);
+      die();
         return {
           'mmsi':apiResult[0],
           'latitude':apiResult[1],
@@ -227,6 +241,43 @@ var service = new function(){
       }
     }
     this.getPositionFromAIS = function(mmsi,cb){
+
+      let url = 'https://apiv2.fleetmon.com/ais/position/?limit=1&mmsi='+mmsi+'&apikey='+config.fleetmon_api_key;
+      let self = this;
+      if(config.fleetmon_api_key){
+        console.log(url);
+        request(url, {json:true}, (err, res, body) => {
+          if(err){
+            console.log('error fetching position from fleetmon:', err);
+            console.log('retry with ais api')
+            config.fleetmon_api_key = false;
+            self.getPositionFromAIS(mmsi,cb);
+          }
+          if((body &&(body.ais_position_items >= 1)||typeof body != 'string')){
+            if(typeof body.errors != 'undefined'){
+              console.log('error fetching position from fleetmon:', err);
+              console.log('retry with ais api');
+              config.fleetmon_api_key = false;
+              self.getPositionFromAIS(mmsi,cb);
+            }else{
+              let i = 0;
+              cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
+            }
+          }
+        });
+      }else{
+
+        console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+        request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
+          if (err) { return console.log(err); }
+          if (body.error != null) return console.log(body.error);
+
+          cb(body.data);
+        });
+
+      }
+    }
+    this.getPositionFromAISMT = function(mmsi,cb){
       let url = 'https://services.marinetraffic.com/api/exportvessel/v:5/'+config.marine_traffic_exportvessel_api_key+'/timespan:2880/mmsi:'+mmsi+'/protocol:json';
       let self = this;
       if(config.marine_traffic_exportvessel_api_key){
@@ -252,7 +303,7 @@ var service = new function(){
               self.getPositionFromAIS(mmsi,cb);
             }else{
               let i = 0;
-              cb(self.parsePositionFromMarineTrafficApi(body[i]));
+              cb(self.parsePositionFromFleetmonApi(body[i]));
             }
           }
         });
@@ -346,29 +397,30 @@ var service = new function(){
                         
                         console.log('Mail from gateway sender received:');
 
+                        if(mail.text.indexOf('I am here')>-1){
+                          let lat = parseFloat(mail.text.substring( mail.text.indexOf('Lat+') + 4,
+                                                         mail.text.indexOf('Lon')).trim());
 
-                        let lat = parseFloat(mail.text.substring( mail.text.indexOf('Lat+') + 4,
-                                                       mail.text.indexOf('Lon')).trim());
+                          let lon = parseFloat(mail.text.substring( mail.text.indexOf('Lon+') + 4,
+                                                         mail.text.indexOf('Alt')).trim());
 
-                        let lon = parseFloat(mail.text.substring( mail.text.indexOf('Lon+') + 4,
-                                                       mail.text.indexOf('Alt')).trim());
+                          let alt = mail.text.substring( mail.text.indexOf('Alt+') + 4,
+                                                         mail.text.indexOf('GPS')).trim();
 
-                        let alt = mail.text.substring( mail.text.indexOf('Alt+') + 4,
-                                                       mail.text.indexOf('GPS')).trim();
+                          alt = parseFloat(alt.replace('ft',''))
 
-                        alt = parseFloat(alt.replace('ft',''))
-
-                        console.log('adding position to db:')
-                        self.insertLocation(res[i].doc.identifier,{
-                          timestamp:new Date(mail.headers.date),
-                          latitude:lat,
-                          longitude:lon,
-                          altitude:alt,
-                          speed:-1,
-                          course:-1
-                        });
-
-
+                          console.log('adding position to db:')
+                          self.insertLocation(res[i].doc.identifier,{
+                            timestamp:new Date(mail.headers.date),
+                            latitude:lat,
+                            longitude:lon,
+                            altitude:alt,
+                            speed:-1,
+                            course:-1
+                          });
+                        }else{
+                          console.log('not a position update, so a new case!');
+                        }
 
                       }else{
                         console.log('Mail is not from gateway sender');
@@ -386,7 +438,6 @@ var service = new function(){
             });
 
   }
-
   /*
   *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
   *returns mail (e.g. joe.smith@somemail.com)
@@ -405,35 +456,19 @@ var service = new function(){
         }
         return email;
   }
-  this.createTable = function(cb){
-    console.log('creating locations table');
-    this.sqlite.run("CREATE TABLE IF NOT EXISTS `locations` ( \
-      `id` varchar(255) NOT NULL,\
-      `item_identifier` varchar(255) NOT NULL,\
-      `lat` decimal(11,8) NOT NULL,\
-      `lon` decimal(11,8) NOT NULL,\
-      `speed` float NOT NULL,\
-      `course` float NOT NULL,\
-      `timestamp` int(11) NOT NULL\
-    )",{},cb);
-  };
-  this.sqlite_query = function(sql,cb){
-
-    var self = this;
-    this.sqlite.all(sql, [], (err, rows) => {
-      if (err&&err.errno==1) {
-        console.log(err);
-        self.createTable(function(){
-          console.log('locations table created');
-          self.sqlite_query(sql,cb);
-        });
-      }else{
-        cb(rows)
-      }
-    });
-  };
 
 }
 
-service.initMail();
+  console.log(program.opts());
+
+
+if (program.T) {
+  service.fetchAPIInterval(program.T);
+}
+if (program.mail) {
+  service.initMail();
+}
+
+//service.initMail();
+
 
