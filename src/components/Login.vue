@@ -11,6 +11,11 @@
               <span>Password</span>
               <input type="password" placeholder="password" v-model="password">
               
+              <span @click="showSettings=!showSettings" id="settingsToggle"><i class="fas fa-cog"  v-bind:class="{ 'active': showSettings }"></i></span>
+              <div v-show="showSettings==true">
+                <input type="text" placeholder="database url" v-model="db_remote_host"><br>
+                <input type="text" placeholder="database port" v-model="db_remote_port"><br>
+              </div>
               <input type="submit" value="Send" />
             </form>
         </div>
@@ -20,13 +25,17 @@
 <script>
 
 import { serverBus } from '../main';
+import config from '../../config/config.js';
 export default {
-  name: 'LeftNavigation',
+  name: 'Login',
 
   data: function () {
     return {
       username: '',
-      password:''
+      password:'',
+      db_remote_host:'',
+      db_remote_port:'',
+      showSettings:false
     }
   },
   methods:{
@@ -37,25 +46,30 @@ export default {
     login: function(){
       localStorage.username = this.username;
       localStorage.password = this.password;
+      localStorage.db_remote_host = this.db_remote_host;
+      localStorage.db_remote_port = this.db_remote_port;
       window.location.reload();
     }
-
   },
   mounted: function() {
     var self = this;
+    this.$data.db_remote_host = localStorage.db_remote_host||config.db_remote_host;
+    this.$data.db_remote_port = localStorage.db_remote_port||config.db_remote_port;
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.background{
-  position:fixed;
-  top:0;
-  right:0;
-  bottom:0;
-  left:0;
-  background:rgba(0,0,0,0.8);
-  z-index: 9999;
+#settingsToggle{
+  margin-bottom: 15px;
+  float: right;
+}
+.fas.fa-cog{
+  color:#c9c9c9;
+  font-size:22px;
+}
+.fas.fa-cog.active{
+  color:#212529;
 }
 </style>

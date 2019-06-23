@@ -33,7 +33,8 @@ var dbWrapper = function(){
             }).on('error', function (err) {
               console.log('sync error', err);
               if(err.error === 'unauthorized'){
-                localStorage.clear();
+                localStorage.removeItem(username);
+                localStorage.removeItem(password);
                 window.location.reload();
               }
             });
