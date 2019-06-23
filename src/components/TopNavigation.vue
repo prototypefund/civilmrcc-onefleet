@@ -120,25 +120,26 @@ export default {
   nav li{
     float: left;
     height: 60px;
-    padding-top: 15px;
-    padding-left: 30px;
-    padding-right: 30px;
-    cursor:pointer;
+    padding-top: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    cursor: pointer;
   }
   nav li:hover{
     background:#000;
   }
-
-  nav li a i{
-    font-size:26px;
-  }
   nav li a{
     text-align:center;
+    font-size: 22px;
   }
   nav li a span{
     display: block;
     margin-top: -5px;
     font-size:12px;
+  }
+
+  nav li a i{
+    font-size:26px;
   }
 
   nav a{
