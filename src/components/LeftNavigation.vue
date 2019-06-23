@@ -6,8 +6,11 @@
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
             <li v-for="item in category.items.rows">
+
+
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
+              <span><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag></span>
 
               <span style="float:right;">
                 <el-switch
@@ -81,6 +84,53 @@ export default {
           return this.vehicles[i];
       }
       return false
+    },
+    showTimeTag:function(item){
+      if(item.positions[item.positions.length-1])
+        return this.timeSince(item.positions[item.positions.length-1].doc.timestamp)
+    },
+    getTimeTagType:function(item){
+
+      if(item.positions[item.positions.length-1]){
+
+        let date = new Date(item.positions[item.positions.length-1].doc.timestamp);
+        let seconds = Math.floor((new Date() - date) / 1000);
+        let type;
+        if(seconds > 0 && seconds <= 1800)
+          type='success'
+        else if(seconds > 1800 && seconds <= 86400)
+          type='warning'
+        else if(seconds > 86400)
+          type='danger'
+        return type;
+      }
+    },
+    timeSince:function(date){
+      date = new Date(date);
+      let seconds = Math.floor((new Date() - date) / 1000);
+
+      let interval = Math.floor(seconds / 31536000);
+
+      if (interval > 1) {
+        return interval + " years";
+      }
+      interval = Math.floor(seconds / 2592000);
+      if (interval > 1) {
+        return interval + " months";
+      }
+      interval = Math.floor(seconds / 86400);
+      if (interval > 1) {
+        return interval + " days";
+      }
+      interval = Math.floor(seconds / 3600);
+      if (interval > 1) {
+        return interval + " hours";
+      }
+      interval = Math.floor(seconds / 60);
+      if (interval > 1) {
+        return interval + " minutes";
+      }
+      return Math.floor(seconds) + " seconds";
     }
 
   },
@@ -100,7 +150,7 @@ export default {
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
-                  return alert('an error occured reading the template for the leftnav! ');
+                  throw('an error occured reading the template for the leftnav! ');
 
                 self.categories.push({
                   title:template_index,
@@ -158,11 +208,11 @@ nav{
   top:60px;
   bottom:0;
 }
-
-
 nav .categories .item_name{
     margin-left: 5px;
     font-size: 15px;
+    min-width: 170px;
+    display: inline-block;
 }
 
 .category_list li{
