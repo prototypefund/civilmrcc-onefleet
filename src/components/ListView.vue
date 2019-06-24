@@ -7,12 +7,15 @@
       <el-collapse v-model="activeCategories">
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <table>
+            <thead>
+              <th>id</th>
+              <th v-for="field in category.fields">{{field.name}}</th>
+            </thead>
+
             <tr v-for="item in category.items.rows">
 
               <td>{{item.doc._id}}</td>
-              <td>{{item.doc.properties.name}}</td>
-              <td>{{item.doc.properties}}</td>
-
+              <td v-for="field in category.fields">{{item.doc.properties[field.name]}}</td>
               <!--<span>{{vehicle.positions}}</span>-->
             </tr>
           </table>
@@ -90,12 +93,16 @@ export default {
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
-                  return alert('an error occured reading the template for the leftnav! ');
+                  throw('an error occured reading the template for the leftnav! ');
+
+                console.log('all_templates[template_index]');
+                console.log(all_templates[template_index]);
 
                 self.categories.push({
                   title:template_index,
                   plural:all_templates[template_index].plural,
-                  items: result
+                  items: result,
+                  fields:all_templates[template_index].fields
                 });
 
               });
@@ -128,11 +135,17 @@ export default {
         });
     });
   }
-
 }
 </script>
-
 <!-- Add "scoped" attribute to limit CSS to this component only -->
+<style>
+.el-collapse-item__header {
+  font-size:22px;
+}
+</style>
 <style scoped>
-
+table{
+  width:100%;
+}
+tr:nth-child(even) {background-color: #f2f2f2;}
 </style>
