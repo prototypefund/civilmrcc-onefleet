@@ -10,6 +10,7 @@ const program = require('commander');
 
 program
   .option('-t <min>', 'run interval')
+  .option('-l', 'fetches locations once')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
   .version('0.0.1');
@@ -105,7 +106,7 @@ let service = new function(){
                                   });
 
           }else{
-            console.log('there was an error getting the position');
+            console.log('there was an error getting the position for '+identifier);
           }
   }
   this.getVehicles = function(callback){
@@ -146,22 +147,14 @@ let service = new function(){
                                   self.insertLocation(v.doc.identifier,Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
-              if(false){
-                die();
+              if(false&&v.doc.properties.get_historical_data_since > 0){
                 self.getHistoricalData(v.doc.properties.MMSI,v.doc.properties.get_historical_data_since, function(positions){
                   console.log(positions);
                   for(let i in positions){
-                    let Position = {
-                      speed:positions[i][2],
-                      status:positions[i][1],
-                      longitude:positions[i][3],
-                      latitude:positions[i][4],
-                      course:positions[i][5],
-                      heading:positions[i][6],
-                      timestamp:positions[i][7]
-                    };
-                    console.log('got position from AIS:'+v.doc.identifier);
-                    console.log(Position);
+                    
+                    console.log('got historical position from AIS:'+v.doc.identifier);
+                    console.log(positions[i]);
+                    /*
                     self.insertLocation(v.doc.identifier,Position);
 
                     //update entry in db items, set get_historical_data_since to 0
@@ -172,6 +165,8 @@ let service = new function(){
                     }).catch(function (err) {
                       cb(err);
                     });
+                    */
+                    die();
                   }
                 })
               }
@@ -206,39 +201,8 @@ let service = new function(){
           'source':apiResult.source
         }
     }
-    this.parsePositionFromMarineTrafficApi = function(apiResult){
-      console.log(apiResult);
-      die();
-        return {
-          'mmsi':apiResult[0],
-          'latitude':apiResult[1],
-          'longitude':apiResult[2],
-          'speed':apiResult[3],
-          'heading':apiResult[4],
-          'course':apiResult[5],
-          'status':apiResult[6],
-          'timestamp':apiResult[7],
-          'source':apiResult[8]
-        }
-    }
     this.getHistoricalData = function(mmsi,days,cb){
-      console.log('get historical data')
-      let url = 'https://services.marinetraffic.com/api/exportvesseltrack/'+config.marine_traffic_exportvesseltrack_api_key+'/v:2/period:hourly/days:'+days+'/mmsi:'+mmsi+'/protocol:json';
-      let self = this;
-      if(config.marine_traffic_exportvesseltrack_api_key){
-        request(url, {json:true}, (err, res, body) => {
-          if(err){
-            console.log('error fetching position from marine traffic:', err);
-            console.log('retry with ais api')
-            config.marine_traffic_api_key = false;
-            self.getPositionFromAIS(mmsi,cb);
-          }
-          console.log(body)
-          if(body && body.length >= 1){
-            cb(body);
-          }
-        });
-      }
+      console.log('implement me!');
     }
     this.getPositionFromAIS = function(mmsi,cb){
 
@@ -247,7 +211,8 @@ let service = new function(){
       if(config.fleetmon_api_key){
         console.log(url);
         request(url, {json:true}, (err, res, body) => {
-          if(err){
+          console.log(res);
+          if(err&&err.length>0){
             console.log('error fetching position from fleetmon:', err);
             console.log('retry with ais api')
             config.fleetmon_api_key = false;
@@ -260,50 +225,9 @@ let service = new function(){
               config.fleetmon_api_key = false;
               self.getPositionFromAIS(mmsi,cb);
             }else{
+      console.log(url);
               let i = 0;
               cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
-            }
-          }
-        });
-      }else{
-
-        console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
-        request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
-          if (err) { return console.log(err); }
-          if (body.error != null) return console.log(body.error);
-
-          cb(body.data);
-        });
-
-      }
-    }
-    this.getPositionFromAISMT = function(mmsi,cb){
-      let url = 'https://services.marinetraffic.com/api/exportvessel/v:5/'+config.marine_traffic_exportvessel_api_key+'/timespan:2880/mmsi:'+mmsi+'/protocol:json';
-      let self = this;
-      if(config.marine_traffic_exportvessel_api_key){
-        console.log(url);
-        request(url, {json:true}, (err, res, body) => {
-          if(err){
-            console.log('error fetching position from marine traffic:', err);
-            console.log('retry with ais api')
-            config.marine_traffic_exportvessel_api_key = false;
-            self.getPositionFromAIS(mmsi,cb);
-          }
-
-            console.log('body');
-            console.log(body);
-            console.log(body.length);
-          if((body &&(body.length >= 1)||typeof body != 'string')){
-            console.log('body2');
-            console.log(body);
-            if(typeof body.errors != 'undefined'){
-              console.log('error fetching position from marine traffic:', err);
-              console.log('retry with ais api');
-              config.marine_traffic_exportvessel_api_key = false;
-              self.getPositionFromAIS(mmsi,cb);
-            }else{
-              let i = 0;
-              cb(self.parsePositionFromFleetmonApi(body[i]));
             }
           }
         });
@@ -464,6 +388,9 @@ let service = new function(){
 
 if (program.T) {
   service.fetchAPIInterval(program.T);
+}
+if (program.L) {
+  service.this.fetchAPIs();
 }
 if (program.mail) {
   service.initMail();
