@@ -43,7 +43,9 @@
         <el-dropdown>
           <span class="el-dropdown-link">
             <i class="fas fa-user"></i>
+            <span>
             {{username}}<i class="el-icon-arrow-down el-icon--left"></i>
+            </span>
           </span>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item><a v-on:click="openModal('settings')">Settings</a></el-dropdown-item>
@@ -120,7 +122,7 @@ export default {
   nav li{
     float: left;
     height: 60px;
-    padding-top: 5px;
+    padding-top: 8px;
     padding-left: 20px;
     padding-right: 20px;
     cursor: pointer;
@@ -166,7 +168,7 @@ export default {
   }
 
   .el-dropdown{
-    margin-top: 15px;
+    margin-top: 18px;
     margin-right: 15px;
     font-size: 17px;
     color: rgb(207,211,219)!important;
@@ -175,6 +177,14 @@ export default {
     display: block;
     margin-top: -2px;
     font-size: 12px;
+  }
+
+  .el-dropdown-link .fa-user{
+      font-size: 17px;
+    margin-left: 12px;
+  }
+  .el-dropdown-link span{
+    display:block;
   }
 </style>
 <style>
