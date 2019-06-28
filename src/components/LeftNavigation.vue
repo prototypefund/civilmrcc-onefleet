@@ -207,6 +207,7 @@ nav{
   width:25vw;
   top:60px;
   bottom:0;
+  overflow: auto;
 }
 nav .categories .item_name{
     margin-left: 5px;
