@@ -201,6 +201,7 @@ ul{
   padding: 3%;
   color: #555;
   font: 95% Arial, Helvetica, sans-serif;
+  height:42px;
 }
 .form-style-6 input[type="text"]:focus,
 .form-style-6 input[type="date"]:focus,
