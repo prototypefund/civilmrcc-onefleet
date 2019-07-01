@@ -317,6 +317,11 @@ var mapWrapper = function(){
         this.loaded_items[item_id].marker.setOpacity(0).update();
       }
     }
+    this.getDistance = function(point1,point2){
+      let latlng1 = L.latLng(point1.lat, point1.lon);
+      let latlng2 = L.latLng(point2.lat, point2.lon);
+      return latlng1.distanceTo(latlng2);
+    }
 }
 
 export default new mapWrapper();

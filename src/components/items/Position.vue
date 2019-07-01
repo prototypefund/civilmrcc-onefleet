@@ -4,11 +4,12 @@
     <h3>Last Position</h3>
     <label>{{new Date(position.timestamp).toLocaleString()}} ({{timeSince(new Date(position.timestamp))}} ago)</label><br/>
 
-    <label>Coodinate Type</label>
-    <select v-model="type" style="width:125px">
-      <option value="decimal_degees">Decimal Degrees</option>
-      <option value="dms">DMS</option>
-    </select>
+    <label>Coodinate Type:</label>
+    <span>
+      <input type="radio" v-model="type" value="decimal_degrees" id="decimal"> <label for="decimal">Decimal Degrees</label>
+
+      <input type="radio" v-model="type" value="dms" id="dms"> <label for="decimal">DMS</label>
+    </span>
     <br>
 
     <label>Latitude:</label>
@@ -32,6 +33,14 @@
       <label>Heading:</label>
       <span>{{position.heading}}</span>
     </div>
+    <el-collapse>
+        <el-collapse-item title="Distances">
+          <ul class="distancelist">
+            <li v-for="vehicle in vehicles" v-if="vehicle.positions&&vehicle.positions.length>1">
+              <span>{{getDistance(vehicle.positions[vehicle.positions.length-1], position)}} NM</span> - {{vehicle.doc.properties.name}}</li>
+          </ul>
+        </el-collapse-item>
+    </el-collapse>
   </div>
 </template>
 <script>
@@ -110,7 +119,21 @@ export default {
         return interval + " minutes";
       }
       return Math.floor(seconds) + " seconds";
+    },
+    getDistance:function(position1,position2){
+      if(position1.doc.lat&&position1.doc.lon)
+      return Math.round(this.$map.getDistance(position1.doc,position2)*0.00053995680);
     }
+  },
+  mounted:function(){
+    let self = this;
+    this.$db.getItemsByTemplate('VEHICLE',function(error, result){
+                if(error)
+                  throw('an error occured reading the template for the leftnav! ');
+
+                self.vehicles = result.rows;
+
+              });
   }
 }
 </script>
@@ -118,13 +141,42 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 h3{
-  font-size:18px;
+    margin-left: 5px;
+    font-size: 18px;
+    margin-bottom: 5px;
+    font-weight: 200;
+    margin-top: 5px;
 }
 .positionbox{
   font-size:12px;
+  border-top: 1px solid #ebeef5;
+  border-left: 1px solid #ebeef5;
+  border-right: 1px solid #ebeef5;
 }
 
-.positionbox label{
-  min-width:80px;
+.positionbox>label,.positionbox>div>label{
+    margin-left: 5px;
+    min-width: 100px;
+    display: inline-block;
+    margin-bottom: 3px;
+}
+
+.distancelist{
+  padding:5px;
+}
+
+.distancelist span{
+  min-width:100px;
+}
+</style>
+<style>
+.positionbox .el-collapse-item__header{
+  font-size: 18px;
+  font-weight: 200;
+  padding-left:5px;
+  background:none;
+}
+.positionbox .el-collapse-item__wrap{
+  background:none;
 }
 </style>
