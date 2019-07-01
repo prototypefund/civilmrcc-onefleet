@@ -158,7 +158,6 @@ ul{
 }
 
 .form-style-6{
-  font: 95% Arial, Helvetica, sans-serif;
   max-width: 400px;
   margin: 10px auto;
   padding: 16px;
@@ -203,6 +202,12 @@ ul{
   font: 95% Arial, Helvetica, sans-serif;
   height:42px;
 }
+
+.form-style-6 input[type="checkbox"]{
+  height: 10px;
+  width: auto;
+}
+
 .form-style-6 input[type="text"]:focus,
 .form-style-6 input[type="date"]:focus,
 .form-style-6 input[type="datetime"]:focus,
