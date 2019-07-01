@@ -390,7 +390,7 @@ if (program.T) {
   service.fetchAPIInterval(program.T);
 }
 if (program.L) {
-  service.this.fetchAPIs();
+  service.fetchAPIs();
 }
 if (program.mail) {
   service.initMail();
