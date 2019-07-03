@@ -160,12 +160,21 @@ var mapWrapper = function(){
       }
     }else{
       //filter out positions by date
-      let min_date = new Date()
-      min_date.setDate(min_date.getDate()-max_positions);
-      item.positions = item.positions.filter(function (position) {
-        return min_date<new Date(position.doc.timestamp);
-      });
-
+      if(max_track_type == 'number_of_days'){
+        let min_date = new Date();
+        min_date.setDate(min_date.getDate()-max_positions);
+        item.positions = item.positions.filter(function (position) {
+          return min_date<new Date(position.doc.timestamp);
+        });
+      }
+      else if(max_track_type == 'date_range'){
+        let min_date = new Date(localStorage.settings_track_startdate);
+        let max_date = new Date(localStorage.settings_track_enddate);
+        item.positions = item.positions.filter(function (position) {
+          let date = new Date(position.doc.timestamp);
+          return max_date>date&&date>min_date;
+        });
+      }
     }
 
     //every item is based on one of the following

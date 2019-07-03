@@ -182,6 +182,7 @@ ul{
 .form-style-6 input[type="url"],
 .form-style-6 input[type="password"],
 .form-style-6 input[type="checkbox"],
+.form-style-6 input[type="datetime-local"],
 .form-style-6 textarea,
 .form-style-6 select 
 {
