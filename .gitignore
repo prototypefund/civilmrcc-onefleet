@@ -2,6 +2,7 @@
 /services/database/data
 /data
 /database
+/public/MapTiles/
 
 config/config.js
 scripts/config.js
