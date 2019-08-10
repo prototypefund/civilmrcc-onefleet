@@ -96,12 +96,18 @@ var dbWrapper = function(){
           include_docs: true,
           attachments: true,
           startkey: identifier,
-          endkey: identifier+'\uffff'
+          endkey: identifier+'\uffff',
+          limit:10000,
+          skip:0,
+          descending: false
         }).then(function (result) {
+           if(result.rows.length>1000){
+            result.rows=result.rows.splice(-1000);
+           }
             if(result.error)
                 return self.fetchError(result);
 
-           
+
             cb(result);
           // handle result
         }).catch(function (err) {
