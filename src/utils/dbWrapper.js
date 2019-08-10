@@ -101,6 +101,8 @@ var dbWrapper = function(){
           skip:0,
           descending: false
         }).then(function (result) {
+          //quick fix
+          //this has to be put to the server site
            if(result.rows.length>1000){
             result.rows=result.rows.splice(-1000);
            }
