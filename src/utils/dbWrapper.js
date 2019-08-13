@@ -10,7 +10,10 @@ var dbWrapper = function(){
 
     this.initDB = function(db_name){
       var self = this;
+
+      db_name = config.db_prefix+db_name;
       if(typeof this.databases[db_name] == 'undefined'){
+
         console.log(this.getDBURL()+db_name+'?include_docs=true&descending=true');
             this.databases[db_name] = {
               local: new PouchDB(db_name, {skip_setup:false}),
@@ -58,6 +61,7 @@ var dbWrapper = function(){
         this.databases[db_name].onChange = method;
     }
     this.getDB = function(db_name){
+        
         if(typeof this.databases[db_name] == 'undefined'){
             this.initDB(db_name)
         }

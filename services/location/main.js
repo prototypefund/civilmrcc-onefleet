@@ -27,8 +27,8 @@ let service = new function(){
         }
       };
       console.log(this.dbConfig);
-      this.itemDB = new PouchDB(`${config.dbUrl}/items`, this.dbConfig);
-      this.locationsDB = new PouchDB(`${config.dbUrl}/positions`, this.dbConfig);
+      this.itemDB = new PouchDB(`${config.dbUrl}/${config.dbPrefix}items`, this.dbConfig);
+      this.locationsDB = new PouchDB(`${config.dbUrl}/${config.dbPrefix}positions`, this.dbConfig);
 
       //SQLITE is used for long term storage
       this.sqlite =  new sqlite3.Database('./locations.db');
