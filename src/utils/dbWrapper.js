@@ -10,14 +10,12 @@ var dbWrapper = function(){
 
     this.initDB = function(db_name){
       var self = this;
-
-      db_name = config.db_prefix+db_name;
       if(typeof this.databases[db_name] == 'undefined'){
 
         console.log(this.getDBURL()+db_name+'?include_docs=true&descending=true');
             this.databases[db_name] = {
               local: new PouchDB(db_name, {skip_setup:false}),
-              remote: new PouchDB(this.getDBURL()+db_name+'?include_docs=true&descending=true', {skip_setup:false}),   
+              remote: new PouchDB(this.getDBURL()+config.db_prefix+db_name+'?include_docs=true&descending=true', {skip_setup:false}),   
             }
 
             this.databases[db_name].local.replicate.from(this.databases[db_name].remote).on('complete', function (r,a,n) {
