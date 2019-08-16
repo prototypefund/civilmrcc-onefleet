@@ -206,12 +206,10 @@ let service = new function(){
     }
     this.getPositionFromAIS = function(mmsi,cb){
 
-      let url = 'https://apiv2.fleetmon.com/ais/position/?limit=1&mmsi='+mmsi+'&apikey='+config.fleetmon_api_key;
+      let url = 'https://apiv2.fleetmon.com/ais/position/?limit=1&sort=desc&mmsi='+mmsi+'&apikey='+config.fleetmon_api_key;
       let self = this;
       if(config.fleetmon_api_key){
-        console.log(url);
         request(url, {json:true}, (err, res, body) => {
-          console.log(res);
           if(err&&err.length>0){
             console.log('error fetching position from fleetmon:', err);
             console.log('retry with ais api')
@@ -219,13 +217,13 @@ let service = new function(){
             self.getPositionFromAIS(mmsi,cb);
           }
           if((body &&(body.ais_position_items >= 1)||typeof body != 'string')){
+            
             if(typeof body.errors != 'undefined'){
               console.log('error fetching position from fleetmon:', err);
               console.log('retry with ais api');
               config.fleetmon_api_key = false;
               self.getPositionFromAIS(mmsi,cb);
             }else{
-      console.log(url);
               let i = 0;
               cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
             }
