@@ -10,8 +10,7 @@
 
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
-              <span><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag></span>
-
+              <span><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
               <span style="float:right;">
                 <el-switch
                 v-model="shown_items[item.id]"
@@ -63,9 +62,7 @@ export default {
         serverBus.$emit('shown_items', this.shown_items);
 
     },
-    toggleItem: function(identifier,event){
-       
-
+    toggleItem: function(identifier,event){       
         serverBus.$emit('shown_items', this.shown_items);
     },
     clickItem: function(itemId){
@@ -145,7 +142,6 @@ export default {
     var all_templates = templates.get('all');
     for(var template in all_templates){
       var all_templates = all_templates;
-
       //i actually like js, but sometimes...
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
@@ -161,8 +157,6 @@ export default {
               });
       })(template);
 
-
-      
     }
 
     this.$db.getVehicles(function(err,result){
@@ -181,7 +175,7 @@ export default {
         }
     });
 
-    this.$db.setOnChange('items',function(){
+    this.$db.setOnChange('items', 'leftnav_chage', function(){
       console.log('change detected, rerender vehicles!');
         self.$db.getVehicles(function(err,result){
               self.$data.vehicles = result.rows;

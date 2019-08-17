@@ -11,8 +11,6 @@ var dbWrapper = function(){
     this.initDB = function(db_name){
       var self = this;
       if(typeof this.databases[db_name] == 'undefined'){
-
-        console.log(this.getDBURL()+db_name+'?include_docs=true&descending=true');
             this.databases[db_name] = {
               local: new PouchDB(db_name, {skip_setup:false}),
               remote: new PouchDB(this.getDBURL()+config.db_prefix+db_name+'?include_docs=true&descending=true', {skip_setup:false}),   
@@ -28,8 +26,10 @@ var dbWrapper = function(){
               retry: true
             }).on('change', function (change) {
               console.log('data ch change', change);
-              if(typeof(self.databases[db_name].onChange) == 'function'){
-                self.databases[db_name].onChange(change);
+              for(let n in self.databases[db_name].onChange){
+                if(typeof(self.databases[db_name].onChange[n]) == 'function'){
+                  self.databases[db_name].onChange[n]();
+                }
               }
             }).on('error', function (err) {
               console.log('sync error', err);
@@ -53,10 +53,19 @@ var dbWrapper = function(){
 
       }
     }
-
-    this.setOnChange = function(db_name,method){
+   /**
+   * Sets onchange funtions for a specified database
+   *
+   * @param {string} db_name - Database selector
+   * @param {string} method_name - Index of the method
+   * @param {functoin} method - Function that is executed on db-change
+   */
+    this.setOnChange = function(db_name,method_name,method){
         var db = this.getDB(db_name);
-        this.databases[db_name].onChange = method;
+        if(typeof this.databases[db_name].onChange == 'undefined'){
+          this.databases[db_name].onChange = {}
+        }
+        this.databases[db_name].onChange[method_name] = method;
     }
     this.getDB = function(db_name){
         
