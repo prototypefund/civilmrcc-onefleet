@@ -26,6 +26,7 @@ var dbWrapper = function(){
               retry: true
             }).on('change', function (change) {
               console.log('data ch change', change);
+              //each database can contain multiple onchange listeners, defined by index n
               for(let n in self.databases[db_name].onChange){
                 if(typeof(self.databases[db_name].onChange[n]) == 'function'){
                   self.databases[db_name].onChange[n]();
@@ -103,6 +104,7 @@ var dbWrapper = function(){
     }
     this.getPositionsForItem = function(identifier,cb){
         var self = this;
+        let result  = [];
         this.getDB('positions').allDocs({
           include_docs: true,
           attachments: true,
