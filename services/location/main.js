@@ -208,6 +208,15 @@ let service = new function(){
 
       let url = 'https://apiv2.fleetmon.com/ais/position/?limit=1&sort=desc&mmsi='+mmsi+'&apikey='+config.fleetmon_api_key;
       let self = this;
+      let fallbackCallback = function(){
+        console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+        request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
+          if (err) { return console.log(err); }
+          if (body.error != null) return console.log(body.error);
+
+          cb(body.data);
+        });
+      }
       if(config.fleetmon_api_key){
         request(url, {json:true}, (err, res, body) => {
           if(err&&err.length>0){
@@ -225,23 +234,18 @@ let service = new function(){
               self.getPositionFromAIS(mmsi,cb);
             }else{
               let i = 0;
-              cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
+              console.log(body);
+              if(typeof body.ais_position_items != 'undefined')
+                cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
+              else
+                fallbackCallback();
             }
           }
         });
-      }else{
-
-        console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
-        request(`${config.aisUrl}/getLastPosition/${mmsi}`, { json: true }, (err, res, body) => {
-          if (err) { return console.log(err); }
-          if (body.error != null) return console.log(body.error);
-
-          cb(body.data);
-        });
-
-      }
+      }else
+                fallbackCallback();
+      
     }
-
   this.initMailListener = function(listener_config){
     var self = this;
     console.log(listener_config);
