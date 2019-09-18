@@ -98,7 +98,7 @@ var dbWrapper = function(){
     this.getDBURL = function(){
         if(typeof localStorage.username != 'undefined' && localStorage.username.length > 0)
 
-            return 'http://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
+            return 'https://'+localStorage.username+':'+localStorage.password+'@'+config.db_remote_host+':'+config.db_remote_port+'/';
         else    
             this.showLogin();
     }
