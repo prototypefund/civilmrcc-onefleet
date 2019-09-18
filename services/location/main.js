@@ -88,6 +88,7 @@ let service = new function(){
                                     "speed": Position.speed,
                                     "item_identifier":identifier,
                                     "source":Position.source||"ais_api",
+                                    "altitude":Posiiton.altitude||-1,
                                     "timestamp":new Date(Position.timestamp).toISOString()
                                   };
                                   this.locationsDB.put(entry).then(function (response) {
@@ -342,7 +343,8 @@ let service = new function(){
                             longitude:lon,
                             altitude:alt,
                             speed:-1,
-                            course:-1
+                            course:-1,
+                            source:'iridium_mailservice'
                           });
                         }else{
                           console.log('not a position update, so a new case!');
