@@ -2,9 +2,6 @@ import pouchwrapper from 'pouchwrapper'
 import { serverBus } from '../main';
 import config from '../../config/config.js';
 
-console.log('CONFIG');
-console.log(config);
-
 pouchwrapper.setConfig(config);
 
 pouchwrapper.getPositionsForItem = function(identifier,cb){
