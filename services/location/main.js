@@ -88,7 +88,7 @@ let service = new function(){
                                     "speed": Position.speed,
                                     "item_identifier":identifier,
                                     "source":Position.source||"ais_api",
-                                    "altitude":Posiiton.altitude||-1,
+                                    "altitude":Position.altitude||-1,
                                     "timestamp":new Date(Position.timestamp).toISOString()
                                   };
                                   this.locationsDB.put(entry).then(function (response) {
