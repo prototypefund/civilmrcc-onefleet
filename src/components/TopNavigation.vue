@@ -48,8 +48,8 @@
             </span>
           </span>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item><a v-on:click="openModal('settings')">Settings</a></el-dropdown-item>
-            <el-dropdown-item><a v-on:click="logout()">Logout</a></el-dropdown-item>
+            <el-dropdown-item v-on:click="openModal('settings')"><a v-on:click="openModal('settings')">Settings</a></el-dropdown-item>
+            <el-dropdown-item v-on:click="logout()"><a v-on:click="logout()">Logout</a></el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </ul>
