@@ -14,6 +14,10 @@ import mapWrapper from './utils/mapWrapper'
 
 export const serverBus = new Vue();
 Vue.prototype.$db = dbWrapper;
+Vue.prototype.$db.setLoginCallback(function(){
+    serverBus.$emit('modal_modus', 'login');
+});
+
 Vue.prototype.$map = mapWrapper;
 
 Vue.use(ElementUI);
