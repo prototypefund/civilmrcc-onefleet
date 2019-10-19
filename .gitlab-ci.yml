@@ -3,8 +3,8 @@ image: node:8.12.0
 stages:
   - install
   - build
+  - lint
   # - test
-  # - lint
   # - code_formatting
   # - docker
 
@@ -25,3 +25,9 @@ build:
   stage: build
   script:
    - npm run build
+
+lint:
+  stage: lint
+  allow_failure: true
+  script:
+   - npm run lint
