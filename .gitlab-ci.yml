@@ -19,7 +19,7 @@ install:
       - services/location/node_modules
     expire_in: 1 day
   script:
-   - npm install --no-save
+   - npm install --no-save --unsafe-perm
 
 build:
   stage: build
