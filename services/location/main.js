@@ -398,10 +398,7 @@ let service = new function(){
     let i = 0;
     let self = this;
     while(i <= number_of_cases){
-
-
-
-
+      //NEEDS TO BE UPDTED AFTER EVERY CHANGE OF template.js!!!
       let item = {
         "_id": "CASE_"+(start_identifier+i),
         "properties": {
