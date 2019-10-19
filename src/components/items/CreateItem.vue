@@ -93,7 +93,7 @@ export default {
       });
       e.preventDefault();
     },
-    loadTemplate: function (event) {
+    loadTemplate: function () {
       console.log(this.form_data.template);
       var template = templates.get(this.form_data.template);
       this.template_data = template;
@@ -105,7 +105,6 @@ export default {
     }
   },
   mounted: function() {
-    var self = this;
   }
 }
 </script>

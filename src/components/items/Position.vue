@@ -60,17 +60,16 @@ export default {
        this.$data.type = type
     },
     showPosition:function(lat,lon){
+      let val = lat + ',' + lon;
       switch(this.$data.type){
         default:
           return {lat:lat,lon:lon}
-        break;
         case 'dms':
-          let val = lat+','+lon;
-          var decre = /^\s*([\-+]?\d+(\.\d+)?)\s*,\s*([\-+]?\d+(\.\d+)?)\s*$/;
+          var decre = /^\s*([-+]?\d+(\.\d+)?)\s*,\s*([-+]?\d+(\.\d+)?)\s*$/;
           var dec = decre.exec(val);
           if (dec == null || dec == '') return null;
-          var lat = parseFloat(dec[1]);
-          var lon = parseFloat(dec[3]);
+          lat = parseFloat(dec[1]);
+          lon = parseFloat(dec[3]);
           // D = trunc(DD)
           // M = trunc(|DD| * 60) mod 60
           // S = (|DD| * 3600) mod 60
@@ -91,7 +90,6 @@ export default {
               lat:d1 + 'd ' + m1 + 'm ' + s1 + 's ' + nw + ', ',
               lon:d2 + 'd ' + m2 + 'm ' + s2 + 's ' + ew
           }
-        break;
       }
     },
     timeSince:function(date){

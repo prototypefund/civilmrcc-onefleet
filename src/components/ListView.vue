@@ -43,7 +43,7 @@ export default {
   },
   computed: {
     searcher() {  
-
+      return;
     }
   },
   methods:{
@@ -87,7 +87,7 @@ export default {
     var self = this;
     var all_templates = templates.get('all');
     for(var template in all_templates){
-      var all_templates = all_templates;
+      all_templates = all_templates;
 
       //i actually like js, but sometimes...
       (function(template_index) {
