@@ -40,6 +40,14 @@ npm run start
 docker-compose up
 ```
 
+### Run prod environment
+
+Copy the file `.env.template` to `.env`. Replace placeholder values in `.env` with real values. Then start the docker containers with:
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
 ### Compiles and minifies for production
 ```
 docker-compose exec app npm run build

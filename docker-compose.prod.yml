@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  bootstrap:
+    environment:
+      - DB_URL=${DB_URL}
+
+  location:
+    environment:
+      - AIS_API=${AIS_API}
+      - DB_URL=${DB_URL}
+      - DEVELOPMENT=false
