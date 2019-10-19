@@ -7,7 +7,6 @@
           <ul class="category_list">
             <li v-for="item in category.items.rows">
 
-
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
@@ -217,4 +216,11 @@ nav .categories .item_name{
 el-switch{
   margin-right:5px;
 }
+
+.item_name:hover{
+  cursor: pointer;
+  font-weight: 500;
+  transition: ease-in-out 0.2s;
+}
+
 </style>
