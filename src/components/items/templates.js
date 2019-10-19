@@ -22,7 +22,6 @@ get:function(name){
                     'critical':'critical'
                   }
               },
-
               {
                 'name':'boat_type',
                 'title':'Boat Type',
@@ -35,8 +34,8 @@ get:function(name){
                   }
               },
               {
-                'name':'enginge_working',
-                'title':'Enginge Working',
+                'name':'engine_working',
+                'title':'Engine Working',
                 'type':'select',
                 'options':
                   {
@@ -45,13 +44,37 @@ get:function(name){
                   }
               },
               {
-                'name':'color',
-                'title':'color',
+                'name':'boat_color',
+                'title':'Boat Color',
                 'type':'color'
               },
               {
-                'name':'people_on_baoard',
+                'name':'pob_total',
                 'title':'People On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_women',
+                'title':'Women On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_men',
+                'title':'Men On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_minors',
+                'title':'Minors On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_medical_cases',
+                'title':'Medical Cases On Board',
                 'type':'number',
                 'step':1
               }
