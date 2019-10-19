@@ -11,10 +11,10 @@
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span>
-                <el-tag class="position_button" v-on:click="flyToPosition(item.positions)" size="small" :type="getTimeTagType(item)" style="width:100px;" 
+                <button class="position_button" v-on:click="flyToPosition(item)" style="width:100px;" 
                   v-if="item.positions && item.positions.length > 0 && item.positions[item.positions.length-1]">
                   {{showTimeTag(item)}} ago
-                </el-tag>
+                </button>
                 <el-tag size="small" type="info" style="width:100px" 
                   v-if=" !item.positions || item.positions.length == 0">
                   no positions
@@ -82,9 +82,13 @@ export default {
     },
 
     // click on the last position span
-    flyToPosition: function(position){
-      console.log('flyTo send')
-      serverBus.$emit('fly_to_position', position);
+    flyToPosition: function(item){
+      const mappedPositions = item.positions.map(i => {
+        return { lat: i.doc.lat, lon: i.doc.lon};
+      });
+
+      console.log('flyTo send', mappedPositions)
+      serverBus.$emit('fly_to_position', mappedPositions[1]);
     },
 
     getItemColor: function(itemId){

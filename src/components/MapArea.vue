@@ -26,7 +26,7 @@ export default {
       });
 
     serverBus.$on('fly_to_position', (position) => {
-      console.log('fylTo receive')
+      console.log('fylTo receive', self.$map);
       self.$map.flyTo(position);
     })
 
