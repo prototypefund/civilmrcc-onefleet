@@ -8,9 +8,16 @@ stages:
   # - code_formatting
   # - docker
 
-
 install:
   stage: install
+  artifacts:
+    paths:
+      - node_modules
+      - services/ai/node_modules
+      - services/bootstrap/node_modules
+      - services/database/node_modules
+      - services/location/node_modules
+    expire_in: 1 day
   script:
    - npm install --no-save
 
