@@ -23,6 +23,10 @@ install:
 
 build:
   stage: build
+  artifacts:
+    paths:
+      - dist
+    expire_in: 1 day  
   script:
    - npm run build
 
