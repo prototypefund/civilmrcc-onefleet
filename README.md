@@ -1,7 +1,7 @@
 # sar-app
 
 ## About this Repo
-This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are storerd and the location-service which gathers e.g. ship locations to store them in the database. *The location-service and the database have to run when you start the app*
+This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are stored and the location-service which gathers e.g. ship locations to store them in the database. *The location-service and the database have to run when you start the app*
 
 ### Issues
 Please report all issues in the [issue page](https://gitlab.com/niczem/onefleet/issues)
@@ -41,6 +41,14 @@ npm run start
 ### Run development environment
 ```
 docker-compose up
+```
+
+### Run prod environment
+
+Copy the file `.env.template` to `.env`. Replace placeholder values in `.env` with real values. Then start the docker containers with:
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 ```
 
 ### Compiles and minifies for production
