@@ -11,7 +11,7 @@
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span>
-                <el-tag size="small" :type="getTimeTagType(item)" style="width:100px" 
+                <el-tag class="position_button" v-on:click="flyToPosition(item.positions)" size="small" :type="getTimeTagType(item)" style="width:100px;" 
                   v-if="item.positions && item.positions.length > 0 && item.positions[item.positions.length-1]">
                   {{showTimeTag(item)}} ago
                 </el-tag>
@@ -62,6 +62,7 @@ export default {
     }
   },
   methods:{
+
     isShown: function(identifier){
       return this.shown_items[identifier];
     },
@@ -74,9 +75,18 @@ export default {
     toggleItem: function(identifier,event){       
         serverBus.$emit('shown_items', this.shown_items);
     },
+
+    // click on the itemname span
     clickItem: function(itemId){
       serverBus.$emit('itemId', itemId);
     },
+
+    // click on the last position span
+    flyToPosition: function(position){
+      console.log('flyTo send')
+      serverBus.$emit('fly_to_position', position);
+    },
+
     getItemColor: function(itemId){
       var item = this.getItemById(itemId);
       if(item&& typeof item.doc.properties != 'undefined'&& typeof item.doc.properties.color != 'undefined') 

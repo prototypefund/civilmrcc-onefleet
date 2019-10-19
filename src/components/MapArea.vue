@@ -25,6 +25,11 @@ export default {
         map:self.$map
       });
 
+    serverBus.$on('fly_to_position', (position) => {
+      console.log('fylTo receive')
+      self.$map.flyTo(position);
+    })
+
     });
 
     this.$map.init('mapArea');
