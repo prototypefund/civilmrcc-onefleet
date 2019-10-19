@@ -13,6 +13,9 @@ services/location/config.js
 node_modules
 /dist
 
+# env file for docker-compose
+/.env
+
 # local env files
 .env.local
 .env.*.local
