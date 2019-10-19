@@ -1,7 +1,7 @@
 # sar-app
 
 ## About this Repo
-This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are storerd and the location-service which gathers e.g. ship locations to store them in the database. *The location-service and the database have to run when you start the app*
+This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are stored and the location-service which gathers e.g. ship locations to store them in the database. *The location-service and the database have to run when you start the app*
 
 ### Issues
 Please report all issues in the [issue page](https://gitlab.com/niczem/onefleet/issues)
