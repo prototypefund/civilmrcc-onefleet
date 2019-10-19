@@ -11,10 +11,13 @@
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span>
-                <button class="position_button" v-on:click="flyToPosition(item)" style="width:100px;" 
-                  v-if="item.positions && item.positions.length > 0 && item.positions[item.positions.length-1]">
-                  {{showTimeTag(item)}} ago
-                </button>
+                <!-- use span tag to trigger click event, click event on el-tag won't work for some reason -->
+                <span v-on:click="flyToPosition(item.positions)">
+                  <el-tag  class="position_button" size="small" :type="getTimeTagType(item)" style="width:100px;" 
+                    v-if="item.positions && item.positions.length > 0 && item.positions[item.positions.length-1]">
+                    {{showTimeTag(item)}} ago
+                  </el-tag >
+                </span>
                 <el-tag size="small" type="info" style="width:100px" 
                   v-if=" !item.positions || item.positions.length == 0">
                   no positions
@@ -82,13 +85,13 @@ export default {
     },
 
     // click on the last position span
-    flyToPosition: function(item){
-      const mappedPositions = item.positions.map(i => {
-        return { lat: i.doc.lat, lon: i.doc.lon};
+    flyToPosition: function(positions){
+      const mappedPositions = positions.map(position => {
+        return { lat: position.doc.lat, lon: position.doc.lon};
       });
 
-      console.log('flyTo send', mappedPositions)
-      serverBus.$emit('fly_to_position', mappedPositions[1]);
+      const lastPositionIndex = mappedPositions.length - 1;
+      serverBus.$emit('fly_to_position', mappedPositions[lastPositionIndex]);
     },
 
     getItemColor: function(itemId){
