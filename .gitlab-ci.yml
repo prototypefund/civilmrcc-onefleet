@@ -10,11 +10,11 @@ stages:
 
 
 install:
-  step: install
+  stage: install
   script:
    - npm install --no-save
 
 build:
-  step: build
+  stage: build
   script:
    - npm run build
