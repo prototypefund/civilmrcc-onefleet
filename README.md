@@ -14,6 +14,7 @@ Please report all issues in the [issue page](https://gitlab.com/niczem/onefleet/
 ```
 git clone https://gitlab.com/niczem/onefleet.git
 cd onefleet
+npm i
 ```
 
 ## Installation without Docker
@@ -22,6 +23,7 @@ cd onefleet
 The location service runs in the background and requests the position data for vehicles in the database. To start it you have to run
 ```
 cd services/location
+npm i
 npm run start
 ```
 ### Start Database
@@ -29,6 +31,7 @@ The database in this repo is a pouchdb-server instance. We highly recomend to us
 
 ```
 cd services/database
+npm i
 npm run start
 ```
 
