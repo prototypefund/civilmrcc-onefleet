@@ -10,6 +10,7 @@ const program = require('commander');
 
 program
   .option('-t <min>', 'run interval')
+  .option('-c <number>', 'generate testcases')
   .option('-l', 'fetches locations once')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
@@ -384,7 +385,67 @@ let service = new function(){
         }
         return email;
   }
+  //@int i number of cases
+  this.generateTestCases = function(number_of_cases){
+    this.initDBs();
+    Array.prototype.randomElement = function () {
+        return this[Math.floor(Math.random() * this.length)]
+    }
+    //start identifier
+    let start_identifier = 13;
 
+    let objects = [];
+    let i = 0;
+    let self = this;
+    while(i <= number_of_cases){
+      //NEEDS TO BE UPDTED AFTER EVERY CHANGE OF template.js!!!
+      let item = {
+        "_id": "CASE_"+(start_identifier+i),
+        "properties": {
+          "status": ["closed","attended","possible_target","confirmed", "critical"].randomElement(),
+          "boat_type": ["wood","rubber"].randomElement(),
+          "pob_total": Math.round(Math.random() * 100),
+          "pob_women": Math.round(Math.random() * 100),
+          "pob_men": Math.round(Math.random() * 100),
+          "pob_minors": Math.round(Math.random() * 100),
+          "pob_medical_cases": Math.round(Math.random() * 100),
+          "actors_involved": ["SW3, COL", "SW3", "LYCG, MOO"].randomElement(),
+          "people_drowned": Math.round(Math.random() * 100),
+          "people_missing": Math.round(Math.random() * 100)
+        },
+        "template": "case",
+        "identifier": (start_identifier+i)
+      }
+
+      self.itemDB.put(item).then(function (response) {
+        console.log('item created');
+
+        let entry = {
+          "_id": (start_identifier+i)+"_"+new Date().toISOString(),
+          "lat": 35+Math.random(),
+          "lon": 13+Math.random(),
+          "heading": Math.round(Math.random() * 100),
+          "speed": Math.round(Math.random() * 10),
+          "item_identifier":start_identifier+i,
+          "source":"testcase",
+          "altitude":null,
+          "timestamp":new Date().toISOString()
+        };
+        self.locationsDB.put(entry).then(function (response) {
+          console.log('location created');
+          console.log(entry);
+        }).catch(function (err) {
+          console.log(entry);
+          console.log(err);
+        });
+
+      }).catch(function (err) {
+        console.log(err);
+      });
+      i++;
+    }
+    console.log(objects);
+  }
 }
 
   console.log(program.opts());
@@ -398,6 +459,9 @@ if (program.L) {
 }
 if (program.mail) {
   service.initMail();
+}
+if (program.C) {
+  service.generateTestCases(program.C);
 }
 
 //service.initMail();
