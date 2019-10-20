@@ -9,13 +9,13 @@
           <table>
             <thead>
               <th>id</th>
-              <th v-for="field in category.fields">{{field.name}}</th>
+              <th v-for="field in category.fields" :key="field">{{field.name}}</th>
             </thead>
 
-            <tr v-for="item in category.items.rows">
+            <tr v-for="item in category.items.rows" :key="item">
 
               <td>{{item.doc._id}}</td>
-              <td v-for="field in category.fields">{{item.doc.properties[field.name]}}</td>
+              <td v-for="field in category.fields" :key="field">{{item.doc.properties[field.name]}}</td>
               <!--<span>{{vehicle.positions}}</span>-->
             </tr>
           </table>
@@ -42,9 +42,6 @@ export default {
     }
   },
   computed: {
-    searcher() {  
-      return;
-    }
   },
   methods:{
     isShown: function(identifier){
@@ -52,13 +49,9 @@ export default {
     },
     initItem: function(identifier,active){
         this.shown_items[identifier] = active
-
         serverBus.$emit('shown_items', this.shown_items);
-
     },
-    toggleItem: function(identifier,event){
-       
-
+    toggleItem: function(){
         serverBus.$emit('shown_items', this.shown_items);
     },
     getItemColor: function(itemid){
@@ -87,9 +80,7 @@ export default {
     var self = this;
     var all_templates = templates.get('all');
     for(var template in all_templates){
-      all_templates = all_templates;
-
-      //i actually like js, but sometimes...
+      //I actually like js, but sometimes...
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)
@@ -107,9 +98,6 @@ export default {
 
               });
       })(template);
-
-
-      
     }
 
     this.$db.getVehicles(function(err,result){
