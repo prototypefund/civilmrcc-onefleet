@@ -9,14 +9,13 @@
           <table>
             <thead>
               <th>id</th>
-              <th v-for="field in category.fields" :key="field">{{field.name}}</th>
+              <th v-for="(field, index) in category.fields" :key="index">{{field.name}}</th>
             </thead>
 
-            <tr v-for="item in category.items.rows" :key="item">
+            <tr v-for="(item, index) in category.items.rows" :key="index">
 
               <td>{{item.doc._id}}</td>
-              <td v-for="field in category.fields" :key="field">{{item.doc.properties[field.name]}}</td>
-              <!--<span>{{vehicle.positions}}</span>-->
+              <td v-for="(field, index) in category.fields" :key="index">{{item.doc.properties[field.name]}}</td>
             </tr>
           </table>
 
