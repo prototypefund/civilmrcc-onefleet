@@ -398,7 +398,7 @@ let service = new function(){
     let i = 0;
     let self = this;
     while(i <= number_of_cases){
-      //NEEDS TO BE UPDTED AFTER EVERY CHANGE OF template.js!!!
+      //NEEDS TO BE UPDATED AFTER EVERY CHANGE OF template.js!!!
       let item = {
         "_id": "CASE_"+(start_identifier+i),
         "properties": {
@@ -417,7 +417,7 @@ let service = new function(){
         "identifier": (start_identifier+i)
       }
 
-      self.itemDB.put(item).then(function (response) {
+      self.itemDB.put(item).then( ((i) => { return function (response) {
         console.log('item created');
 
         let entry = {
@@ -439,7 +439,7 @@ let service = new function(){
           console.log(err);
         });
 
-      }).catch(function (err) {
+      }})(i)).catch(function (err) {
         console.log(err);
       });
       i++;
