@@ -11,7 +11,7 @@
               <span>{{field.title}}</span>
               <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
               <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]" class="select-css">
-                <option v-for="option in field.options" :key="option">{{option}}</option>
+                <option v-for="option in field.options":value="field.options[option]">{{option}}</option>
               </select>
 
             </div>
@@ -41,6 +41,7 @@ export default {
       template_data: {},
       last_position: {},
       form_data:{properties:{}},
+      historical_form_data:{}, //will be used for change log comparison 
       position_data:{
         positions:[{}]
       }
@@ -55,8 +56,9 @@ export default {
             //load template for doc
             self.loadTemplate(doc.template);
 
-            //load doc into form_data
+            //load doc into form_data and historical formdata for changelog
             self.form_data = doc;
+            self.historical_form_data = JSON.parse(JSON.stringify(doc));
 
             //load last position
             item.positions.forEach(function(v,i){
@@ -90,6 +92,21 @@ export default {
     storeItem: function(e){
       e.preventDefault();
       var self = this;
+
+
+      let changes = [];
+      //compare the changed form data with historic properties to identify changes
+      for(let i in this.form_data.properties){
+        if(this.historical_form_data.properties[i] != this.form_data.properties[i]){
+          changes.push({old:this.historical_form_data.properties[i],new:this.form_data.properties[i]});
+        }
+      }
+      console.log(changes)
+
+      for(let i in changes){
+        this.$db.addItemLog(itemId, changes[i]);
+      }
+
       this.$db.createItem(this.form_data,function(err,result){
 
         if(err){

@@ -27,7 +27,7 @@
             <span>{{field.title}}</span>
             <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
             <select v-if="field.type == 'select'" class="select-css" v-model="form_data.properties[field.name]">
-              <option v-for="option in field.options" :key="option">{{option}}</option>
+              <option v-for="option in field.options" :value="field.options[option]">{{option}}</option>
             </select>
 
           </div>
@@ -70,14 +70,14 @@ export default {
             console.log(err.name);
         }else{
           if(result.ok == true)
-            alert('everything is ok!');
+            alert('case created');
 
             var position = {
               "_id": self.form_data.identifier+"_"+new Date().toISOString(),
               "lat": self.position_data.positions[0].lat,
               "lon": self.position_data.positions[0].lon,
               "item_identifier":self.form_data.identifier,
-               "source":"sar_app",
+               "source":"onefleet",
                "timestamp":new Date().toISOString()
             }
             self.$db.createPosition(position,function(err,result){
@@ -85,7 +85,7 @@ export default {
                 alert('error!')
               }else{
                 if(result.ok)
-                  alert('everything is ok')
+                  alert('position created')
               }
             })
         }

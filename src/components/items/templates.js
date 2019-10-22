@@ -22,7 +22,6 @@ get:function(name){
                     'critical':'critical'
                   }
               },
-
               {
                 'name':'boat_type',
                 'title':'Boat Type',
@@ -35,8 +34,8 @@ get:function(name){
                   }
               },
               {
-                'name':'enginge_working',
-                'title':'Enginge Working',
+                'name':'engine_working',
+                'title':'Engine Working',
                 'type':'select',
                 'options':
                   {
@@ -45,15 +44,87 @@ get:function(name){
                   }
               },
               {
-                'name':'color',
-                'title':'color',
+                'name':'boat_color',
+                'title':'Boat Color',
                 'type':'color'
               },
               {
-                'name':'people_on_baoard',
+                'name':'pob_total',
                 'title':'People On Board',
                 'type':'number',
                 'step':1
+              },
+              {
+                'name':'pob_women',
+                'title':'Women On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_men',
+                'title':'Men On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_minors',
+                'title':'Minors On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'pob_medical_cases',
+                'title':'Medical Cases On Board',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'ap_contact',
+                'title':'Alarmphone Contact',
+                'type':'select',
+                'options':
+                  {
+                    'true':'yes',
+                    'false':'no'
+                  }
+              },
+              {
+                'name':'actors_involved',
+                'title':'Actors Involved',
+                'type':'text'
+              },
+              {
+                'name':'Outcome',
+                'title':'Outcome',
+                'type':'select',
+                'options':
+                  {
+                    'pullback_libya':'Pullback to Libya',
+                    'closed':'Rescued/Closed',
+                  }
+              },
+              {
+                'name':'people_drowned',
+                'title':'People Drowned',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'people_missing',
+                'title':'People Missing',
+                'type':'number',
+                'step':1
+              },
+              {
+                'name':'airplane_involvement',
+                'title':'Airplane Involvement',
+                'type':'select',
+                'options':
+                  {
+                    'discovered':'Discovered',
+                    'verified':'Verified',
+                    'not_found':'Not found',
+                  }
               }
             ]
         },

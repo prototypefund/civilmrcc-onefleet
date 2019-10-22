@@ -59,6 +59,12 @@ var mapWrapper = function(){
     });
     console.log('map initted');
   };
+
+  this.flyTo = function(positions) {
+    console.log("flyto in MapWrapper", self, this);
+    this.map.flyTo(positions);
+  }
+
   this.initDraw = function(){
 
        let drawnItems = new L.FeatureGroup();
