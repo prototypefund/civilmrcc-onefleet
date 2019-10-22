@@ -36,8 +36,12 @@
     <el-collapse>
         <el-collapse-item title="Distances">
           <ul class="distancelist">
-            <li v-for="vehicle in vehicles" v-if="vehicle.positions&&vehicle.positions.length>1">
-              <span>{{getDistance(vehicle.positions[vehicle.positions.length-1], position)}} NM</span> - {{vehicle.doc.properties.name}}</li>
+            <template  v-for="vehicle in vehicles">
+              <li v-if="vehicle.positions&&vehicle.positions.length > 1" :key="vehicle">
+                <span>{{getDistance(vehicle.positions[vehicle.positions.length-1], position)}} NM</span>
+                <span>- {{vehicle.doc.properties.name}}</span>
+              </li>
+            </template>
           </ul>
         </el-collapse-item>
     </el-collapse>

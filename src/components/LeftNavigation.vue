@@ -5,9 +5,7 @@
       <el-collapse v-model="activeCategories">
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
-            <li v-for="item in category.items.rows">
-
-
+            <li v-for="item in category.items.rows" :key="item">
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span>
@@ -237,10 +235,22 @@ nav .categories .item_name{
 }
 
 .category_list li{
+  display: flex;
   padding:2px 15px;
 }
 
 el-switch{
   margin-right:5px;
 }
+
+el-tag {
+  
+}
+
+.item_name:hover{
+  cursor: pointer;
+  font-weight: 500;
+  transition: ease-in-out 0.2s;
+}
+
 </style>

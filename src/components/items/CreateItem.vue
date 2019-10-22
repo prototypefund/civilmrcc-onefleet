@@ -23,7 +23,7 @@
             <input type="number" step="any" name="lon" placeholder="Longitude" v-model="position_data.positions[0].lon">
           </div>
 
-          <div v-for="field in template_data.fields">
+          <div v-for="field in template_data.fields" :key="field">
             <span>{{field.title}}</span>
             <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
             <select v-if="field.type == 'select'" class="select-css" v-model="form_data.properties[field.name]">
@@ -93,7 +93,7 @@ export default {
       });
       e.preventDefault();
     },
-    loadTemplate: function (event) {
+    loadTemplate: function () {
       console.log(this.form_data.template);
       var template = templates.get(this.form_data.template);
       this.template_data = template;
@@ -105,7 +105,6 @@ export default {
     }
   },
   mounted: function() {
-    var self = this;
   }
 }
 </script>
