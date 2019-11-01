@@ -41,8 +41,6 @@ export default {
       activeCategories: ['Vehicles']
     }
   },
-  computed: {
-  },
   methods:{
     isShown: function(identifier){
       return this.shown_items[identifier];
@@ -80,7 +78,8 @@ export default {
     var self = this;
     var all_templates = templates.get('all');
     for(var template in all_templates){
-      //I actually like js, but sometimes...
+
+      //i actually like js, but sometimes...
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
                 if(error)

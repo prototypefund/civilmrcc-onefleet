@@ -44,8 +44,6 @@ export default {
       if(change.direction == 'push'){
         change.change.docs.forEach(function(item) {
               let identifier = 'VEHICLE_'+item.item_identifier;
-              let lat = item.lat;
-              let lon = item.lon;
 
               if(self.shown_items[identifier] == 'true'){
               

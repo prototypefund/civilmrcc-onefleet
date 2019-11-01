@@ -52,7 +52,6 @@ export default {
     }
   },
   mounted: function() {
-    var self = this;
     this.$data.db_remote_host = localStorage.db_remote_host||config.db_remote_host;
     this.$data.db_remote_port = localStorage.db_remote_port||config.db_remote_port;
   }

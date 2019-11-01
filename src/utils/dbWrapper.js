@@ -1,12 +1,10 @@
 import pouchwrapper from 'pouchwrapper'
-import { serverBus } from '../main';
 import config from '../../config/config.js';
 
 pouchwrapper.setConfig(config);
 
 pouchwrapper.getPositionsForItem = function(identifier,cb){
         var self = this;
-        let result  = [];
         this.getDB('positions').allDocs({
           include_docs: true,
           attachments: true,
@@ -143,14 +141,14 @@ pouchwrapper.getItemsByTemplate = function(template,cb){
 pouchwrapper.getVehicles = function(cb){
         this.getItemsByTemplate('VEHICLE',cb);
     }
-pouchwrapper.appendItemsToMap = function(map, options){
+pouchwrapper.appendItemsToMap = function(map){
       this.getItems(function(err,result){
         for(var i in result.rows){
           var item = result.rows[i];
           //add onclick option to itemobject
 
           map.addItemToMap(item);
-        };
+        }
       });
     }
 

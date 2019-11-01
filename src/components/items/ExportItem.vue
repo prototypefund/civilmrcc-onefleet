@@ -42,7 +42,7 @@ export default {
     }
   },
   watch: { 
-        exportItemId: function(newVal, oldVal) { // watch it
+        exportItemId: function(newVal) { // watch it
           var self = this;
           //load doc
           this.$db.getItem(newVal,function(item){
@@ -80,16 +80,16 @@ export default {
             new Date(this.position_data.positions[i].doc.timestamp) < new Date(this.stop_time)){
 
             var item = [];
-            if(typeof this.position_data.positions[i].doc.timestamp)
+            if(typeof this.position_data.positions[i].doc.timestamp !== 'undefined')
               item.push(this.position_data.positions[i].doc.timestamp)
-            if(typeof this.position_data.positions[i].doc.lat)
+            if(typeof this.position_data.positions[i].doc.lat !== 'undefined')
               item.push(this.position_data.positions[i].doc.lat)
-            if(typeof this.position_data.positions[i].doc.lon)
+            if(typeof this.position_data.positions[i].doc.lon !== 'undefined')
               item.push(this.position_data.positions[i].doc.lon)
-            if(typeof this.position_data.positions[i].doc.heading)
-              item.push(this.position_data.positions[i].doc.heading)
-            if(typeof this.position_data.positions[i].doc.speed)
-              item.push(this.position_data.positions[i].doc.speed)
+            if(typeof this.position_data.positions[i].doc.heading !== 'undefined')
+              item.push(this.position_data.positions[i].doc.heading !== 'undefined')
+            if(typeof this.position_data.positions[i].doc.speed !== 'undefined')
+              item.push(this.position_data.positions[i].doc.speed !== 'undefined')
             data.push(item);
            }
         }

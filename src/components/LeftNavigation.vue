@@ -57,11 +57,6 @@ export default {
       activeCategories: ['Vehicles']
     }
   },
-  computed: {
-    searcher() {  
-
-    }
-  },
   methods:{
 
     isShown: function(identifier){
@@ -73,7 +68,7 @@ export default {
         serverBus.$emit('shown_items', this.shown_items);
 
     },
-    toggleItem: function(identifier,event){       
+    toggleItem: function(){       
         serverBus.$emit('shown_items', this.shown_items);
     },
 
@@ -165,7 +160,6 @@ export default {
     var self = this;
     var all_templates = templates.get('all');
     for(var template in all_templates){
-      var all_templates = all_templates;
       //i actually like js, but sometimes...
       (function(template_index) {
               self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){

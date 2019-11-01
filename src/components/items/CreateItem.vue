@@ -103,8 +103,6 @@ export default {
      // Using the service bus
      serverBus.$emit('modal_modus', '');
     }
-  },
-  mounted: function() {
   }
 }
 </script>
