@@ -1,9 +1,12 @@
 <template>
    <div class="air" v-on:click.self="closeModal">
     <ul>
-      <li v-for="vehicle in vehicles" v-if="vehicle.doc.properties.air == 'true'">
-        <h2><i data-v-19f9f8c9="" class="fas fa-plane"></i> {{vehicle.doc.properties.name}}</h2>
-        <Position v-bind:position="vehicle.positions[vehicle.positions.length-1].doc"></Position>
+      <li v-for="vehicle in vehicles">
+        <div v-if="vehicle.doc.properties.air == 'true'">
+          <h2>
+            <i data-v-19f9f8c9="" class="fas fa-plane"></i> {{vehicle.doc.properties.name}}</h2>
+           <Position v-bind:position="vehicle.positions[vehicle.positions.length-1].doc"></Position>
+        </div>
       </li>
     </ul>
     <div id="chartContainer" style="clear:both; height: 200px; width: 100%;"></div>
@@ -13,6 +16,11 @@
 <script>
 import Position from './items/Position'
 import { serverBus } from '../main';
+
+
+if(typeof CanvasJS === 'undefined');
+  let CanvasJS;
+
 export default {
   name: 'Cockpit',
   components: {

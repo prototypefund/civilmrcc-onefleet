@@ -11,7 +11,7 @@
               <span>{{field.title}}</span>
               <input v-if="field.type != 'select'" v-model="form_data.properties[field.name]" :name="field.name" :placeholder="field.title" :type="field.type" :step="field.step" />
               <select v-if="field.type == 'select'" v-model="form_data.properties[field.name]" class="select-css">
-                <option v-for="option in field.options":value="field.options[option]">{{option}}</option>
+                <option v-for="option in field.options" :value="field.options[option]">{{option}}</option>
               </select>
 
             </div>
@@ -48,7 +48,8 @@ export default {
     }
   },
   watch: { 
-        itemId: function(newVal, oldVal) { // watch it
+        itemId: function(newVal) { // watch it
+
           var self = this;
           //load doc
           this.$db.getItem(newVal,function(item){
@@ -101,10 +102,8 @@ export default {
           changes.push({old:this.historical_form_data.properties[i],new:this.form_data.properties[i]});
         }
       }
-      console.log(changes)
-
       for(let i in changes){
-        this.$db.addItemLog(itemId, changes[i]);
+        this.$db.addItemLog(this.itemId, changes[i]);
       }
 
       this.$db.createItem(this.form_data,function(err,result){

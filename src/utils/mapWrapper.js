@@ -9,6 +9,7 @@ var mapWrapper = function(){
       mapcenter = JSON.parse(storage.get('mapcenter'));
     }
     catch(e){
+      console.log('could not load mapcenter and zoom from localstorage')
     }
     if(mapcenter == null)
       var mapcenter = [38.575655,10.710734];
@@ -96,6 +97,9 @@ var mapWrapper = function(){
         // Generate popup content based on layer type
         // - Returns HTML string, or null if unknown object
         var getPopupContent = function(layer) {
+            let latlngs,
+            distance,
+            area;
             // Marker - add lat/long
             if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
                 return strLatLng(layer.getLatLng());
@@ -107,14 +111,14 @@ var mapWrapper = function(){
                       +"Radius: "+_round(radius, 2)+" m";
             // Rectangle/Polygon - area
             } else if (layer instanceof L.Polygon) {
-                var latlngs = layer._defaultShape ? layer._defaultShape() : layer.getLatLngs(),
+                    latlngs = layer._defaultShape ? layer._defaultShape() : layer.getLatLngs(),
                     area = L.GeometryUtil.geodesicArea(latlngs);
                     let html = '<a href="#">Get historic ais data for this area</a><br><a href="#">add sighting</a><br>'
 
                 return html+"Area: "+L.GeometryUtil.readableArea(area, true);
             // Polyline - distance
             } else if (layer instanceof L.Polyline) {
-                var latlngs = layer._defaultShape ? layer._defaultShape() : layer.getLatLngs(),
+                    latlngs = layer._defaultShape ? layer._defaultShape() : layer.getLatLngs(),
                     distance = 0;
                 if (latlngs.length < 2) {
                     return "Distance: N/A";
@@ -204,10 +208,10 @@ var mapWrapper = function(){
     return item;
   };
   this.clearMap = function(){
-    var i = 0;
+    let i = 0;
     this.map.eachLayer(function (layer) {
             if(i > 0)
-              map.map.removeLayer(layer);
+              this.map.removeLayer(layer);
             i++;
     });
   }
@@ -228,7 +232,7 @@ var mapWrapper = function(){
         if(v.doc.lat&&v.doc.lon)
         pointList.push([v.doc.lat, v.doc.lon]);
         //pointList.push()
-      };
+      }
 
       var color;
       if(typeof item.doc.properties.color != 'undefined')
@@ -250,12 +254,8 @@ var mapWrapper = function(){
     var positions = item.positions;
     for(var i in positions){
               var v = positions[i];
-              //first position
-              if(i == 0){
-
-              }
               //last position
-              if(positions.length == 1 || i == positions.length-1){
+              if(positions.length == 1||i == positions.length-1){
 
                 var width = 16;
                 var height = 16;
@@ -271,13 +271,12 @@ var mapWrapper = function(){
                 }
                 
               }
-      };
+      }
   }
   this.addItemToMap = function(item){
     item = this.loadTemplatedItem(item);
     this.loaded_items[item.id] = {};
 
-    var self = this;
     var line = false;
     var marker = false;
 
