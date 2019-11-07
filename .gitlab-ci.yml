@@ -19,19 +19,19 @@ install:
       - services/location/node_modules
     expire_in: 1 day
   script:
-   - npm install --no-save --unsafe-perm
+    - npm install --no-save --unsafe-perm
 
 build:
   stage: build
   artifacts:
     paths:
       - dist
-    expire_in: 1 day  
+    expire_in: 1 day
   script:
-   - npm run build
+    - npm run build
 
 lint:
   stage: lint
   allow_failure: true
   script:
-   - npm run lint
+    - npm run lint
