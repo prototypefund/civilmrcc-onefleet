@@ -4,9 +4,9 @@ stages:
   - install
   - build
   - lint
+  - docker
   # - test
   # - code_formatting
-  # - docker
 
 install:
   stage: install
@@ -35,3 +35,10 @@ lint:
   allow_failure: true
   script:
     - npm run lint
+
+docker-ais:
+  stage: docker
+  allow_failure: true
+  script:
+    - cd services/ais
+    - docker build -t onefleet/ais .
