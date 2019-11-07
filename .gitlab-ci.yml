@@ -8,33 +8,33 @@ stages:
   # - test
   # - code_formatting
 
-install:
-  stage: install
-  artifacts:
-    paths:
-      - node_modules
-      - services/ais/node_modules
-      - services/bootstrap/node_modules
-      - services/database/node_modules
-      - services/location/node_modules
-    expire_in: 1 day
-  script:
-    - npm install --no-save --unsafe-perm
+# install:
+#   stage: install
+#   artifacts:
+#     paths:
+#       - node_modules
+#       - services/ais/node_modules
+#       - services/bootstrap/node_modules
+#       - services/database/node_modules
+#       - services/location/node_modules
+#     expire_in: 1 day
+#   script:
+#     - npm install --no-save --unsafe-perm
 
-build:
-  stage: build
-  artifacts:
-    paths:
-      - dist
-    expire_in: 1 day
-  script:
-    - npm run build
+# build:
+#   stage: build
+#   artifacts:
+#     paths:
+#       - dist
+#     expire_in: 1 day
+#   script:
+#     - npm run build
 
-lint:
-  stage: lint
-  allow_failure: true
-  script:
-    - npm run lint
+# lint:
+#   stage: lint
+#   allow_failure: true
+#   script:
+#     - npm run lint
 
 docker-ais:
   stage: docker
