@@ -1,4 +1,4 @@
-image: node:8.12.0
+image: centigrade/gitlab-ci-node-angular
 
 stages:
   - install
@@ -40,5 +40,9 @@ docker-ais:
   stage: docker
   allow_failure: true
   script:
+    # create image
     - cd services/ais
     - docker build -t onefleet/ais .
+
+    # push image
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
