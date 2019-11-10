@@ -1,4 +1,6 @@
-image: centigrade/gitlab-ci-node-angular
+# image: node:8.12.0
+# image: centigrade/gitlab-ci-node-angular
+image: docker:19.03.1
 
 stages:
   - install
@@ -45,4 +47,5 @@ docker-ais:
     - docker build -t onefleet/ais .
 
     # push image
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
