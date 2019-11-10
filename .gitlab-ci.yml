@@ -13,18 +13,18 @@ stages:
   # - test
   # - code_formatting
 
-# install:
-#   stage: install
-#   artifacts:
-#     paths:
-#       - node_modules
-#       - services/ais/node_modules
-#       - services/bootstrap/node_modules
-#       - services/database/node_modules
-#       - services/location/node_modules
-#     expire_in: 1 day
-#   script:
-#     - npm install --no-save --unsafe-perm
+install:
+  stage: install
+  artifacts:
+    paths:
+      - node_modules
+      - services/ais/node_modules
+      - services/bootstrap/node_modules
+      - services/database/node_modules
+      - services/location/node_modules
+    expire_in: 1 day
+  script:
+    - npm install --no-save --unsafe-perm
 
 # build:
 #   stage: build
@@ -51,4 +51,5 @@ docker-ais:
 
     # push image
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push onefleet/ais
+    # TODO check gitlab permissions to push to registry
+    # - docker push onefleet/ais
