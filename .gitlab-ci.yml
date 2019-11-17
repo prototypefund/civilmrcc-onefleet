@@ -41,6 +41,9 @@ stages:
 #   script:
 #     - npm run lint
 
+variables:
+  IMAGE_NAME: $CI_REGISTRY/niczem/onefleet/master
+
 docker-ais:
   stage: docker
   image: docker:stable
@@ -49,11 +52,13 @@ docker-ais:
     # create image
     - cd services/ais
     # - docker build -t onefleet/ais .
-    - docker build -t registry.gitlab.com/niczem/onefleet/master .
+    # - docker build -t registry.gitlab.com/niczem/onefleet/master .
+    - docker build -t $IMAGE_NAME .
 
     # push image
     - echo $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
     # TODO check gitlab permissions to push to registry
-    - docker push registry.gitlab.com/niczem/onefleet/master
+    # - docker push registry.gitlab.com/niczem/onefleet/master
+    - docker push $IMAGE_NAME
