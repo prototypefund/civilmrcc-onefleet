@@ -52,5 +52,6 @@ docker-ais:
 
     # push image
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
     # TODO check gitlab permissions to push to registry
-    # - docker push onefleet/ais
+    - docker push onefleet/ais
