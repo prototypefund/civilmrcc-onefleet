@@ -1,5 +1,5 @@
-# image: node:8.12.0
-image: centigrade/gitlab-ci-node-angular
+image: node:8.12.0
+# image: centigrade/gitlab-ci-node-angular
 # image: docker:19.03.1
 
 services:
@@ -13,18 +13,18 @@ stages:
   # - test
   # - code_formatting
 
-# install:
-#   stage: install
-#   artifacts:
-#     paths:
-#       - node_modules
-#       - services/ais/node_modules
-#       - services/bootstrap/node_modules
-#       - services/database/node_modules
-#       - services/location/node_modules
-#     expire_in: 1 day
-#   script:
-#     - npm install --no-save --unsafe-perm
+install:
+  stage: install
+  artifacts:
+    paths:
+      - node_modules
+      - services/ais/node_modules
+      - services/bootstrap/node_modules
+      - services/database/node_modules
+      - services/location/node_modules
+    expire_in: 1 day
+  script:
+    - npm install --no-save --unsafe-perm
 
 # build:
 #   stage: build
@@ -43,6 +43,7 @@ stages:
 
 docker-ais:
   stage: docker
+  image: docker:stable
   allow_failure: true
   script:
     # create image
