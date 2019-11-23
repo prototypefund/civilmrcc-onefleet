@@ -79,3 +79,21 @@ docker-compose exec app npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Manage docker containers
+
+[Portainer](https://www.portainer.io/) is a simple UI tool to manage Docker containers and images. It has the same functionality as the Docker CLI tool, but is much more convenient to use.
+
+To deploy Portainer on a Linux machine you simply have to execute these two commands:
+
+```
+docker volume create portainer_data
+docker run -d -p 9000:9000 -p 8000:8000 --name portainer --restart always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+```
+
+After that the Portainer interface should be available at `http://<your-ip>:9000`. Before you can fully use Portainer you have to perform two more steps: 
+
+- Set a password for the Admin-user
+- Select "Local" as Docker environment.
+
+For more information see the [documentation](https://portainer.readthedocs.io/en/stable/deployment.html).
