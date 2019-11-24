@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 volumes:
   data:
@@ -32,14 +32,8 @@ services:
       - data:/database
 
   app:
-    build:
-      context: .
-      dockerfile: ./docker/Dockerfile.app
     ports:
-      - "8080:8080" # vue serve
-    volumes:
-      - ./:/app:cached
-      - /app/node_modules
+      - "8080:8080"
     links:
       - location
 

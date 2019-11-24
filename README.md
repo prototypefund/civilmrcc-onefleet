@@ -51,7 +51,7 @@ npm run start
 
 ### Run development environment
 ```
-docker-compose up
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
 ### Run prod environment
@@ -59,8 +59,10 @@ docker-compose up
 Copy the file `.env.template` to `.env`. Replace placeholder values in `.env` with real values. Then start the docker containers with:
 
 ```
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
+
+**NOTE**: The option `-d` means the the containers will be started in a "detached mode", meaning they will keep running even if the user session is closed.
 
 ### Compiles and minifies for production
 ```
