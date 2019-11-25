@@ -1,9 +1,4 @@
 image: node:8.12.0
-# image: centigrade/gitlab-ci-node-angular
-# image: docker:19.03.1
-
-services:
-  - docker:dind
 
 stages:
   - install
