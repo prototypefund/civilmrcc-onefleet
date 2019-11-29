@@ -9,13 +9,15 @@
           <table>
             <thead>
               <th>id</th>
-              <th v-for="field in category.fields" :key="field">{{field.name}}</th>
+              <th>created</th>
+              <th v-for="field in category.fields">{{field.name}}</th>
             </thead>
 
-            <tr v-for="item in category.items.rows" :key="item">
+            <tr v-for="item in category.items.rows">
 
               <td>{{item.doc._id}}</td>
-              <td v-for="field in category.fields" :key="field">{{item.doc.properties[field.name]}}</td>
+              <td v-if="item.positions&&item.positions[0]">{{item.positions[0].doc.timestamp}}</td>
+              <td v-for="field in category.fields" :key="field.name">{{item.doc.properties[field.name]}}</td>
               <!--<span>{{vehicle.positions}}</span>-->
             </tr>
           </table>
@@ -85,9 +87,7 @@ export default {
                 if(error)
                   throw('an error occured reading the template for the leftnav! ');
 
-                console.log('all_templates[template_index]');
-                console.log(all_templates[template_index]);
-
+                
                 self.categories.push({
                   title:template_index,
                   plural:all_templates[template_index].plural,
