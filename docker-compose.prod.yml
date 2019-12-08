@@ -2,8 +2,9 @@ version: "3"
 
 services:
   app:
-    command: npm run http-server
     image: registry.gitlab.com/niczem/onefleet/master:latest
+    environment:
+      - NGINX_PORT=8080
 
   bootstrap:
     environment:
