@@ -66,6 +66,8 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 To update the prod environment first pull a new docker image with `docker pull registry.gitlab.com/niczem/onefleet/master` and then execute the deployment command again.
 
+**NOTE**: The file `deploy.sh` does exactly this.
+
 ### Compiles and minifies for production
 ```
 docker-compose exec app npm run build
