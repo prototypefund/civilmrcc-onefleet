@@ -68,6 +68,21 @@ To update the prod environment first pull a new docker image with `docker pull r
 
 **NOTE**: The file `deploy.sh` does exactly this.
 
+An example output of the deployment script looks like this:
+
+```
+$ sh deploy.sh
+latest: Pulling from niczem/onefleet/master
+Digest: sha256:7b4e73b0843a50d3ed22bdb1470ac716593d34fa594f81cb8db9708fa266d427
+Status: Image is up to date for registry.gitlab.com/niczem/onefleet/master:latest
+registry.gitlab.com/niczem/onefleet/master:latest
+onefleet_database_1 is up-to-date
+onefleet_ais_1 is up-to-date
+Starting onefleet_bootstrap_1 ... done
+Starting onefleet_location_1  ... done
+Creating onefleet_app_1       ... done
+```
+
 ### Compiles and minifies for production
 ```
 docker-compose exec app npm run build
