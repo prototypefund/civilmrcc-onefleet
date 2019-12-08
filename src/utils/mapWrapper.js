@@ -267,6 +267,17 @@ var mapWrapper = function(){
 
                   marker = L.marker([v.doc.lat,v.doc.lon], {icon: icon});
                   marker.on('click',L.bind(self.clickItem, null,item.id));
+                  let popupcontent = item.doc.identifier;
+                  if(item.doc.properties.name){
+                    popupcontent += ' - '+item.doc.properties.name;
+                  }
+                  marker.bindPopup(popupcontent);
+                  marker.on('mouseover', function () {
+                      this.openPopup();
+                  });
+                  marker.on('mouseout', function () {
+                      this.closePopup();
+                  });
                   return marker;
                 }
                 
