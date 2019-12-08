@@ -64,6 +64,8 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 **NOTE**: The option `-d` means the the containers will be started in a "detached mode", meaning they will keep running even if the user session is closed.
 
+To update the prod environment first pull a new docker image with `docker pull registry.gitlab.com/niczem/onefleet/master` and then execute the deployment command again.
+
 ### Compiles and minifies for production
 ```
 docker-compose exec app npm run build
