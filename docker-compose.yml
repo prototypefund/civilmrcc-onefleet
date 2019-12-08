@@ -32,8 +32,6 @@ services:
       - data:/database
 
   app:
-    ports:
-      - "8080:8080"
     links:
       - location
 
