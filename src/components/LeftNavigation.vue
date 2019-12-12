@@ -5,11 +5,11 @@
       <el-collapse v-model="activeCategories">
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
-            <li v-for="(item, index) in category.items.rows" :key="index">
+            <li class="list_item" v-for="(item, index) in category.items.rows" :key="index">
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
-              <span><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
-              <span style="float:right;">
+              <span class="list_item_tag"><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
+              <span class="list_item_switch">
                 <el-switch
                 v-model="shown_items[item.id]"
                 :active-color="getItemColor(item.id)"
@@ -20,7 +20,6 @@
                 >
                 </el-switch>
               </span>
-              <!--<span>{{vehicle.positions}}</span>-->
             </li>
           </ul>
 
@@ -204,7 +203,6 @@ nav{
 nav .categories .item_name{
     margin-left: 5px;
     font-size: 15px;
-    min-width: 170px;
     display: inline-block;
 }
 
@@ -217,9 +215,23 @@ el-switch{
   margin-right:5px;
 }
 
-el-tag {
-  
+.list_item {
+  display: inline-flex;
 }
+
+.list_item_tag {
+
+}
+
+.list_item_switch {
+  align-self: flex-end;
+}
+
+.item_name {
+  background-color: red;
+  word-wrap: break-word;
+}
+
 
 .item_name:hover{
   cursor: pointer;
