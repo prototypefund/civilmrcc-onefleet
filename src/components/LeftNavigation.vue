@@ -6,9 +6,19 @@
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
             <li class="list_item" v-for="(item, index) in category.items.rows" :key="index">
-              <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
-              <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
-              <span class="list_item_tag"><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">{{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
+
+
+              <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">
+                {{item.doc.properties.name}}</span>
+              <span class="item_name" @click="clickItem(item.id)" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
+
+
+              <span class="list_item_tag"><el-tag size="small" :type="getTimeTagType(item)" style="width:100px" 
+              v-if="item.positions&&item.positions.length>0&&item.positions[item.positions.length-1]">
+              {{showTimeTag(item)}} ago</el-tag><el-tag size="small" type="info" style="width:100px" 
+              v-if="!item.positions||item.positions.length==0">no positions</el-tag></span>
+
+
               <span class="list_item_switch">
                 <el-switch
                 v-model="shown_items[item.id]"
@@ -228,7 +238,6 @@ el-switch{
 }
 
 .item_name {
-  background-color: red;
   word-wrap: break-word;
 }
 
