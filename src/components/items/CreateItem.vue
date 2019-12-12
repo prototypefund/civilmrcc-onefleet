@@ -59,38 +59,51 @@ export default {
       var self = this;
 
       this.form_data._id = String(this.form_data.template+'_'+this.form_data.identifier).toUpperCase();
-      this.$db.createItem(this.form_data,function(err,result){
+      console.log(this.template_data.add_initial_position + "this.template_data.add_initial_position");
+      console.log('this.template_data.add_initial_position');
+      if(this.template_data.add_initial_position==false
+        ||this.position_data.positions[0].lat
+        &&this.position_data.positions[0].lon){
+         this.$db.createItem(this.form_data,function(err,result){
 
-        if(err){
-          if(err.name == 'conflict')
-            alert('The id is already taken, please choose another one');
-          else
-            alert('An unknown error occured while creating the item');
+          if(err){
+            if(err.name == 'conflict')
+              alert('The id is already taken, please choose another one');
+            else
+              alert('An unknown error occured while creating the item');
 
-            console.log(err.name);
-        }else{
-          if(result.ok == true)
-            alert('case created');
+              console.log(err.name);
+          }
+          else if(result.ok == true){
+              alert('item created');
 
-            var position = {
-              "_id": self.form_data.identifier+"_"+new Date().toISOString(),
-              "lat": self.position_data.positions[0].lat,
-              "lon": self.position_data.positions[0].lon,
-              "item_identifier":self.form_data.identifier,
-               "source":"onefleet",
-               "timestamp":new Date().toISOString()
-            }
-            self.$db.createPosition(position,function(err,result){
-              if(err){
-                alert('error!')
-              }else{
-                if(result.ok)
-                  alert('position created')
+              if(self.position_data.positions[0].lat&&self.position_data.positions[0].lon){
+                let position = {
+                  "_id": self.form_data.identifier+"_"+new Date().toISOString(),
+                  "lat": self.position_data.positions[0].lat,
+                  "lon": self.position_data.positions[0].lon,
+                  "item_identifier":self.form_data.identifier,
+                   "source":"onefleet",
+                   "timestamp":new Date().toISOString()
+                }
+                self.$db.createPosition(position,function(err,result){
+                  if(err){
+                    alert('error!')
+                  }else{
+                    if(result.ok)
+                      alert('position created');
+                      self.closeModal();
+                  }
+                })
+
               }
-            })
-        }
+          }
 
-      });
+        });      
+       }else{
+        alert('please enter a valid position');
+       }
+ 
       e.preventDefault();
     },
     loadTemplate: function () {
