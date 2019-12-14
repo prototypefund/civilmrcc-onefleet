@@ -5,7 +5,7 @@
       <el-collapse v-model="activeCategories">
         <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
           <ul class="category_list">
-            <li v-for="item in category.items.rows" :key="item">
+            <li v-for="item in category.items.rows">
               <span class="item_name" @click="clickItem(item.id)" v-if="item.doc.properties.name">{{item.doc.properties.name}}</span>
               <span class="item_name" v-if="!item.doc.properties.name">{{item.doc._id}}</span>
               <span>
@@ -147,57 +147,62 @@ export default {
         return interval + " minutes";
       }
       return Math.floor(seconds) + " seconds";
+    },
+    loadVehicles:function(){
+      let self = this;
+      let all_templates = templates.get('all');
+      self.categories = [];
+      for(var template in all_templates){
+        //i actually like js, but sometimes...
+        //this is the easiest way to avoid async race conditions
+        (function(template_index) {
+                self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
+                  if(error)
+                    throw('an error occured reading the template for the leftnav! ');
+
+                  self.categories.push({
+                    title:template_index,
+                    plural:all_templates[template_index].plural,
+                    items: result
+                  });
+                });
+        })(template);
+      }
+
+      this.$db.getVehicles(function(err,result){
+          self.$data.vehicles = result.rows;
+          for(var category_index in self.$data.categories){
+            //get all items within a category
+            for(var item in self.$data.categories[category_index].items.rows){
+              
+              let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
+
+              let identifier = self.$data.categories[category_index].items.rows[item].id
+
+              self.initItem(identifier,is_active);
+            }
+          }
+      });
+
     }
 
   },
   mounted: function() {
 
+
     serverBus.$on('shown_items', (shown_items) => {
       this.shown_items = shown_items;
     });
 
-    //load templates to append them as categories to the left navigation
-    var self = this;
-    var all_templates = templates.get('all');
-    for(var template in all_templates){
-      //i actually like js, but sometimes...
-      (function(template_index) {
-              self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
-                if(error)
-                  throw('an error occured reading the template for the leftnav! ');
+    //load vehicles
+    this.loadVehicles();
 
-                self.categories.push({
-                  title:template_index,
-                  plural:all_templates[template_index].plural,
-                  items: result
-                });
+    let self = this;
 
-              });
-      })(template);
-
-    }
-
-    this.$db.getVehicles(function(err,result){
-        self.$data.vehicles = result.rows;
-        for(var category_index in self.$data.categories){
-
-          //get all items within a category
-          for(var item in self.$data.categories[category_index].items.rows){
-            
-            let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
-
-            let identifier = self.$data.categories[category_index].items.rows[item].id
-
-            self.initItem(identifier,is_active);
-          }
-        }
-    });
-
-    this.$db.setOnChange('items', 'leftnav_chage', function(){
-      console.log('change detected, rerender vehicles!');
-        self.$db.getVehicles(function(err,result){
-              self.$data.vehicles = result.rows;
-        });
+    //set on change listener
+    this.$db.setOnChange('items', 'leftnav_change', function(){
+      //reload vehicles if change is detected
+      self.loadVehicles();
     });
   }
 }
