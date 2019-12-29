@@ -74,16 +74,9 @@ export default {
   mounted: function() {
     var self = this;
     this.$db.getItemsByTemplate('VEHICLE', function(err, result) {
-      console.log('got items by template');
-      console.log(err, result);
       let airrows = [];
       let diagram_points = [];
       for (let row in result.rows) {
-        console.log(123);
-        console.log(
-          result.rows[row].doc.properties.name,
-          result.rows[row].doc.properties.air
-        );
         if (result.rows[row].doc.properties.air == 'true') {
           for (let pos in result.rows[row].positions) {
             if (result.rows[row].positions[pos].doc) {
@@ -105,16 +98,7 @@ export default {
       self.renderChart(self.$data.diagramdata);
 
       self.$data.vehicles = airrows;
-      console.log('airrows');
-      console.log(airrows);
     });
-    /*this.$db.setOnChange('items',function(){
-      console.log('change detected, rerender vehicles!');
-        self.$db.getVehicles(function(err,result){
-
-              self.$data.vehicles = result.rows;
-        });
-    });*/
   }
 };
 </script>

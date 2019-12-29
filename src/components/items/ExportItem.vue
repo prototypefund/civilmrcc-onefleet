@@ -82,7 +82,6 @@ export default {
   methods: {
     exportItem: function(e) {
       e.preventDefault();
-      console.log(this.position_data.positions.length);
       var data = [];
       data.push(['Timestamp', 'Lat', 'Lng', 'Heading', 'Speed']);
 
@@ -173,8 +172,7 @@ export default {
             alert('The id is already taken, please choose another one');
           else alert('An unknown error occured while creating the item');
 
-          console.log(err.name);
-          console.log(err);
+          console.error(err);
         } else {
           if (result.ok == true) self.exportItemId = false;
           alert('The item has been updated');

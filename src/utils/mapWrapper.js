@@ -7,8 +7,8 @@ var mapWrapper = function() {
     try {
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
-    } catch (e) {
-      console.log('could not load mapcenter and zoom from localstorage');
+    } catch (err) {
+      console.error('could not load mapcenter and zoom from localstorage', err);
     }
     if (mapcenter == null) var mapcenter = [38.575655, 10.710734];
     if (mapzoom == null) var mapzoom = 5;
@@ -63,11 +63,9 @@ var mapWrapper = function() {
         JSON.stringify([self.map.getCenter().lat, self.map.getCenter().lng])
       );
     });
-    console.log('map initted');
   };
 
   this.flyTo = function(positions) {
-    console.log('flyto in MapWrapper', self, this);
     this.map.flyTo(positions);
   };
 

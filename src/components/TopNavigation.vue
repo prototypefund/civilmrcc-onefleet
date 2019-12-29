@@ -77,8 +77,6 @@ export default {
       serverBus.$emit('app_modus', value);
     },
     openModal: function(value) {
-      console.log(value);
-      console.log('asdasd');
       // Using the service bus
       serverBus.$emit('modal_modus', value);
     },

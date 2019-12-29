@@ -73,13 +73,11 @@ export default {
   },
   methods: {
     showItemDetails: function(item_id) {
-      console.log('show item with item', item_id);
       this.itemid = 3;
     }
   },
   created: function() {
     serverBus.$on('app_modus', app_modus => {
-      console.log(app_modus);
       this.$data.modus = app_modus;
     });
 
@@ -87,7 +85,6 @@ export default {
       this.$data.modal = modal_modus;
     });
     serverBus.$on('show_air', show_air => {
-      console.log('show_air', show_air);
       this.$data.show_air = show_air;
     });
     serverBus.$on('itemId', itemId => {

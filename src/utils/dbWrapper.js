@@ -34,8 +34,6 @@ pouchwrapper.createPosition = function(obj, cb) {
   this.getDB('positions')
     .put(obj)
     .then(function(response) {
-      console.log('position created');
-      console.log(response);
       cb(null, response);
     })
     .catch(function(err) {
@@ -47,8 +45,6 @@ pouchwrapper.createItem = function(obj, cb) {
   itemDB
     .put(obj)
     .then(function(response) {
-      console.log('item created');
-      console.log(response);
       cb(null, response);
     })
     .catch(function(err) {
@@ -75,7 +71,7 @@ pouchwrapper.getItem = function(itemId, cb) {
       });
     })
     .catch(function(err) {
-      console.log(err);
+      console.error(err);
     });
 };
 pouchwrapper.getItems = function(cb) {
@@ -107,8 +103,6 @@ pouchwrapper.getItems = function(cb) {
 pouchwrapper.getItemsByTemplate = function(template, cb) {
   var self = this;
 
-  console.log('getItemsByTemplate');
-  console.log(template);
   this.getDB('items')
     .allDocs({
       include_docs: true,
@@ -133,8 +127,7 @@ pouchwrapper.getItemsByTemplate = function(template, cb) {
       // handle result
     })
     .catch(function(err) {
-      console.log('err');
-      console.log(err);
+      console.error(err);
       cb(err);
     });
 };

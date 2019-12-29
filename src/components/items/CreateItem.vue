@@ -93,11 +93,6 @@ export default {
       this.form_data._id = String(
         this.form_data.template + '_' + this.form_data.identifier
       ).toUpperCase();
-      console.log(
-        this.template_data.add_initial_position +
-          'this.template_data.add_initial_position'
-      );
-      console.log('this.template_data.add_initial_position');
       if (
         this.template_data.add_initial_position == false ||
         (this.position_data.positions[0].lat &&
@@ -109,7 +104,7 @@ export default {
               alert('The id is already taken, please choose another one');
             else alert('An unknown error occured while creating the item');
 
-            console.log(err.name);
+            console.error(err);
           } else if (result.ok == true) {
             alert('item created');
 
@@ -143,7 +138,6 @@ export default {
       e.preventDefault();
     },
     loadTemplate: function() {
-      console.log(this.form_data.template);
       var template = templates.get(this.form_data.template);
       this.template_data = template;
       this.$nextTick();

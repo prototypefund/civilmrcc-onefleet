@@ -24,7 +24,6 @@ export default {
       });
 
       serverBus.$on('fly_to_position', position => {
-        console.log('fylTo receive', self.$map);
         self.$map.flyTo(position);
       });
     });
@@ -44,7 +43,6 @@ export default {
 
           if (self.shown_items[identifier] == 'true') {
             self.$db.getItem(identifier, function(item) {
-              console.log('update Position now!');
               self.$map.updateItemPosition(self.$map.loadTemplatedItem(item));
             });
           }
@@ -52,9 +50,7 @@ export default {
       }
     });
   },
-  created: function() {
-    console.log('created');
-  }
+  created: function() {}
 };
 </script>
 

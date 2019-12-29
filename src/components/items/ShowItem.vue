@@ -129,8 +129,7 @@ export default {
             alert('The id is already taken, please choose another one');
           else alert('An unknown error occured while creating the item');
 
-          console.log(err.name);
-          console.log(err);
+          console.error(err);
         } else {
           if (result.ok == true) self.itemId = false;
           alert('The item has been updated');
