@@ -16,8 +16,11 @@
     "maptiles:extract": "extract-zip data/MapTiles.zip $(pwd)/public/"
   },
   "dependencies": {
+    "@datenpate/leaflet.polylinemeasure": "^1.0.0",
+    "canvasjs": "github:vasilrimar/canvasjs",
     "element-ui": "^2.4.11",
     "leaflet": "^1.3.4",
+    "leaflet-draw": "^1.0.4",
     "pouchdb-authentication": "^1.1.3",
     "pouchdb-browser": "^7.0.0",
     "pouchwrapper": "0.0.4",

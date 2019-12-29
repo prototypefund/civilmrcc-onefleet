@@ -14,12 +14,10 @@
 </template>
 
 <script>
+
+import * as CanvasJS from 'canvasjs'
 import Position from './items/Position'
 import { serverBus } from '../main';
-
-
-if(typeof CanvasJS === 'undefined');
-  let CanvasJS;
 
 export default {
   name: 'Cockpit',
