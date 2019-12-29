@@ -50,27 +50,24 @@ export default {
   components: {
     Position
   },
-  data: function() {
-    return {
-      template: '',
-      vehicles: [],
-      template_data: {},
-      last_position: {},
-      form_data: { properties: {} },
-      historical_form_data: {}, //will be used for change log comparison
-      position_data: {
-        positions: [{}]
-      }
-    };
-  },
+  data: () => ({
+    template: '',
+    vehicles: [],
+    template_data: {},
+    last_position: {},
+    form_data: { properties: {} },
+    historical_form_data: {}, //will be used for change log comparison
+    position_data: {
+      positions: [{}]
+    }
+  }),
   watch: {
     itemId: function(newVal) {
       // watch it
-
-      var self = this;
+      const self = this;
       //load doc
       this.$db.getItem(newVal, function(item) {
-        var doc = item.doc;
+        const doc = item.doc;
         //load template for doc
         self.loadTemplate(doc.template);
 
@@ -104,9 +101,7 @@ export default {
     },
     storeItem: function(e) {
       e.preventDefault();
-      var self = this;
-
-      let changes = [];
+      const changes = [];
       //compare the changed form data with historic properties to identify changes
       for (let i in this.form_data.properties) {
         if (
@@ -137,6 +132,6 @@ export default {
       });
     }
   },
-  mounted: function() {}
+  mounted: () => {}
 };
 </script>

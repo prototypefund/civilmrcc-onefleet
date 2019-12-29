@@ -55,24 +55,21 @@ export default {
     Login,
     Settings
   },
-  data: function() {
-    return {
-      modus: 'map',
-      modal: '',
-      show_air: false,
-      itemId: false,
-      exportItemId: false,
-      show_chat: false
-    };
-  },
+  data: () => ({
+    modus: 'map',
+    modal: '',
+    show_air: false,
+    itemId: false,
+    exportItemId: false,
+    show_chat: false
+  }),
   computed: {
     chatWindowClass: function() {
-      var windowClass = this.show_chat ? 'show_chat' : 'hide_chat';
-      return windowClass;
+      return this.show_chat ? 'show_chat' : 'hide_chat';
     }
   },
   methods: {
-    showItemDetails: function(item_id) {
+    showItemDetails: () => {
       this.itemid = 3;
     }
   },
@@ -132,6 +129,7 @@ body {
   background: #fff;
 }
 #chat {
+  display: none; /* hide for now */
   position: fixed;
   width: 20vw;
   right: 0;
