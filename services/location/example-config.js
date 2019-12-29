@@ -4,6 +4,7 @@ module.exports = {
     dbUrl: process.env.DB_URL,
     dbUser: process.env.DB_USER,
     dbPassword: process.env.DB_PASSWORD,
+    dbPrefix: process.env.DB_PREFIX,
     marine_traffic_exportvessel_api_key:process.env.marine_traffic_exportvessel_api_key,
     marine_traffic_exportvesseltrack_api_key:process.env.marine_traffic_exportvesseltrack_api_key,
     /*mailservice.js*/
