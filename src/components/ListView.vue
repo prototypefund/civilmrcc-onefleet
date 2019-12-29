@@ -1,137 +1,144 @@
 <template>
-   <div id="listview">
-      <h2>Items</h2>
-      
+  <div id="listview">
+    <h2>Items</h2>
 
+    <el-collapse v-model="activeCategories">
+      <el-collapse-item
+        v-for="category in categories"
+        class="categories"
+        :title="category.plural"
+        :name="category.plural"
+        :key="category.plural"
+      >
+        <table>
+          <thead>
+            <th>id</th>
+            <th>created</th>
+            <th v-for="field in category.fields">{{ field.name }}</th>
+          </thead>
 
-      <el-collapse v-model="activeCategories">
-        <el-collapse-item v-for="category in categories" class="categories" :title="category.plural" :name="category.plural" :key="category.plural">
-          <table>
-            <thead>
-              <th>id</th>
-              <th>created</th>
-              <th v-for="field in category.fields">{{field.name}}</th>
-            </thead>
-
-            <tr v-for="item in category.items.rows">
-
-              <td>{{item.doc._id}}</td>
-              <td v-if="item.positions&&item.positions[0]">{{item.positions[0].doc.timestamp}}</td>
-              <td v-for="field in category.fields" :key="field.name">{{item.doc.properties[field.name]}}</td>
-              <!--<span>{{vehicle.positions}}</span>-->
-            </tr>
-          </table>
-
-        </el-collapse-item>
-      </el-collapse>
-
-   </div>
+          <tr v-for="item in category.items.rows">
+            <td>{{ item.doc._id }}</td>
+            <td v-if="item.positions && item.positions[0]">
+              {{ item.positions[0].doc.timestamp }}
+            </td>
+            <td v-for="field in category.fields" :key="field.name">
+              {{ item.doc.properties[field.name] }}
+            </td>
+            <!--<span>{{vehicle.positions}}</span>-->
+          </tr>
+        </table>
+      </el-collapse-item>
+    </el-collapse>
+  </div>
 </template>
 
 <script>
-
-import templates from './items/templates.js'
+import templates from './items/templates.js';
 import { serverBus } from '../main';
 export default {
   name: 'ListView',
 
-  data: function () {
+  data: function() {
     return {
       vehicles: [],
-      shown_items:[],
-      categories:[],
+      shown_items: [],
+      categories: [],
       activeCategories: ['Vehicles']
-    }
+    };
   },
-  methods:{
-    isShown: function(identifier){
+  methods: {
+    isShown: function(identifier) {
       return this.shown_items[identifier];
     },
-    initItem: function(identifier,active){
-        this.shown_items[identifier] = active
-        serverBus.$emit('shown_items', this.shown_items);
+    initItem: function(identifier, active) {
+      this.shown_items[identifier] = active;
+      serverBus.$emit('shown_items', this.shown_items);
     },
-    toggleItem: function(){
-        serverBus.$emit('shown_items', this.shown_items);
+    toggleItem: function() {
+      serverBus.$emit('shown_items', this.shown_items);
     },
-    getItemColor: function(itemid){
+    getItemColor: function(itemid) {
       var item = this.getItemById(itemid);
-      if(item&& typeof item.doc.properties != 'undefined'&& typeof item.doc.properties.color != 'undefined') 
+      if (
+        item &&
+        typeof item.doc.properties != 'undefined' &&
+        typeof item.doc.properties.color != 'undefined'
+      )
         return item.doc.properties.color;
-      else 
-        return '#13ce66';
+      else return '#13ce66';
     },
-    getItemById:function(itemid){
-      for(var i in this.vehicles){
-        if(this.vehicles[i].id == itemid)
-          return this.vehicles[i];
+    getItemById: function(itemid) {
+      for (var i in this.vehicles) {
+        if (this.vehicles[i].id == itemid) return this.vehicles[i];
       }
-      return false
+      return false;
     }
-
   },
   mounted: function() {
-
-    serverBus.$on('shown_items', (shown_items) => {
+    serverBus.$on('shown_items', shown_items => {
       this.shown_items = shown_items;
     });
 
     //load templates to append them as categories to the left navigation
     var self = this;
     var all_templates = templates.get('all');
-    for(var template in all_templates){
-
+    for (var template in all_templates) {
       //i actually like js, but sometimes...
       (function(template_index) {
-              self.$db.getItemsByTemplate(all_templates[template_index].pouch_identifier,function(error, result){
-                if(error)
-                  throw('an error occured reading the template for the leftnav! ');
+        self.$db.getItemsByTemplate(
+          all_templates[template_index].pouch_identifier,
+          function(error, result) {
+            if (error)
+              throw 'an error occured reading the template for the leftnav! ';
 
-                
-                self.categories.push({
-                  title:template_index,
-                  plural:all_templates[template_index].plural,
-                  items: result,
-                  fields:all_templates[template_index].fields
-                });
-
-              });
+            self.categories.push({
+              title: template_index,
+              plural: all_templates[template_index].plural,
+              items: result,
+              fields: all_templates[template_index].fields
+            });
+          }
+        );
       })(template);
     }
 
-    this.$db.getVehicles(function(err,result){
-        self.$data.vehicles = result.rows;
-        for(var category_index in self.$data.categories){
+    this.$db.getVehicles(function(err, result) {
+      self.$data.vehicles = result.rows;
+      for (var category_index in self.$data.categories) {
+        //get all items within a category
+        for (var item in self.$data.categories[category_index].items.rows) {
+          let is_active =
+            self.$data.categories[category_index].items.rows[item].doc
+              .properties.active;
 
-          //get all items within a category
-          for(var item in self.$data.categories[category_index].items.rows){
-            
-            let is_active = self.$data.categories[category_index].items.rows[item].doc.properties.active
+          let identifier =
+            self.$data.categories[category_index].items.rows[item].id;
 
-            let identifier = self.$data.categories[category_index].items.rows[item].id
-
-            self.initItem(identifier,is_active);
-          }
+          self.initItem(identifier, is_active);
         }
+      }
     });
-    this.$db.setOnChange('items','list_view',function(){
+    this.$db.setOnChange('items', 'list_view', function() {
       console.log('change detected, rerender vehicles!');
-        self.$db.getVehicles(function(err,result){
-              self.$data.vehicles = result.rows;
-        });
+      self.$db.getVehicles(function(err, result) {
+        self.$data.vehicles = result.rows;
+      });
     });
   }
-}
+};
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 .el-collapse-item__header {
-  font-size:22px;
+  font-size: 22px;
 }
 </style>
 <style scoped>
-table{
-  width:100%;
+table {
+  width: 100%;
 }
-tr:nth-child(even) {background-color: #f2f2f2;}
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
 </style>
