@@ -122,11 +122,17 @@ docker-compose exec app npm run test
 docker-compose exec app npm run lint
 ```
 
-#### Debugging with Visual Studio Code
+#### Debugging JavaScript files with Visual Studio Code and Chrome
 
-Start the application with `npm run serve`. Open Chrome and navigate to http://localhost:8080/ to open the application. 
+Enable remote debugging in Chrome. You can do that by starting Chrome with `chrome.exe --remote-debugging-port=9222`. If you are using Windows you can simply [edit the Chrome shortcut](https://stackoverflow.com/a/56457835/2306587) to start Chrome with remote debugging enabled.
 
-Open the project in Visual Studio Code and launch the task "Attach to Chrome" to start the debugger. If the debugger is running you can add break points to your code to pause script execution.
+Start the vue application with `npm run serve` and navigate to http://localhost:8080/ in Chrome. 
+
+Open the project in Visual Studio Code and launch the task "Attach to Chrome" to start the debugger. If the debugger successfully attached to chrome you should see some console output in the tab "DEBUG CONSOLE".
+
+Now you can add break points to your JavaScript files to pause script execution.
+
+**NOTE**: Currently debugging works for .js files, but not for .vue files.
 
 #### Customize configuration
 
