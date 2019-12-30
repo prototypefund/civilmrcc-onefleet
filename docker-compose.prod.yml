@@ -1,6 +1,11 @@
-version: '3'
+version: "3"
 
 services:
+  app:
+    image: registry.gitlab.com/niczem/onefleet/master:latest
+    ports:
+      - "8080:80"
+
   bootstrap:
     environment:
       - DB_URL=${DB_URL}
