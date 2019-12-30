@@ -122,6 +122,12 @@ docker-compose exec app npm run test
 docker-compose exec app npm run lint
 ```
 
+#### Debugging with Visual Studio Code
+
+Start the application with `npm run serve`. Open Chrome and navigate to http://localhost:8080/ to open the application. 
+
+Open the project in Visual Studio Code and launch the task "Attach to Chrome" to start the debugger. If the debugger is running you can add break points to your code to pause script execution.
+
 #### Customize configuration
 
 See [Configuration Reference](https://cli.vuejs.org/config/).
