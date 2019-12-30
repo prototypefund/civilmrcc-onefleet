@@ -48,7 +48,8 @@ docker-app:
   stage: docker
   image: docker:stable
   allow_failure: true
-  only: master
+  only:
+    - master
   script:
     - docker build -t $IMAGE_NAME .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
