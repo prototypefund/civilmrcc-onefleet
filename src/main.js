@@ -7,6 +7,12 @@ import '@fortawesome/fontawesome-free/js/fontawesome'
 import '@fortawesome/fontawesome-free/js/solid'
 import '@fortawesome/fontawesome-free/js/regular'
 
+import '@datenpate/leaflet.polylinemeasure/Leaflet.PolylineMeasure.js'
+import '@datenpate/leaflet.polylinemeasure/Leaflet.PolylineMeasure.css'
+
+import 'leaflet-draw';
+import 'leaflet-draw/dist/leaflet.draw.css'
+
 import App from './App.vue'
 
 import dbWrapper from './utils/dbWrapper'

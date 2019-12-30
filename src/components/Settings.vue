@@ -35,11 +35,9 @@
 </template>
 
 <script>
-
 import { serverBus } from '../main';
 export default {
   name: 'Settings',
-
   data: function () {
     return {
       show:true,
@@ -74,17 +72,6 @@ export default {
       window.location.reload();
 
     }
-  },
-  mounted: function() {
-
-
-    var self = this;
-
-
-    serverBus.$on('modal_modus', (modal_modus) => {
-      console.log('modalmodus')
-    });
-
   }
 }
 </script>
