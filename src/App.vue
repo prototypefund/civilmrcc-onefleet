@@ -53,7 +53,7 @@ export default {
     ExportItem,
     ListView,
     Login,
-    Settings
+    Settings,
   },
   data: () => ({
     modus: 'map',
@@ -61,17 +61,17 @@ export default {
     show_air: false,
     itemId: false,
     exportItemId: false,
-    show_chat: false
+    show_chat: false,
   }),
   computed: {
     chatWindowClass: function() {
       return this.show_chat ? 'show_chat' : 'hide_chat';
-    }
+    },
   },
   methods: {
     showItemDetails: () => {
       this.itemid = 3;
-    }
+    },
   },
   created: function() {
     serverBus.$on('app_modus', app_modus => {
@@ -90,7 +90,7 @@ export default {
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
-  }
+  },
 };
 </script>
 

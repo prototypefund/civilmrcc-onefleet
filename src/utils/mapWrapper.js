@@ -29,7 +29,7 @@ var mapWrapper = function() {
       attribution:
         'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
       maxZoom: 18,
-      id: 'groundtile'
+      id: 'groundtile',
     }).addTo(this.map);
 
     if (localStorage.settings_openseamap == 'true') {
@@ -37,7 +37,7 @@ var mapWrapper = function() {
         attribution: '',
         maxZoom: 18,
         id: 'openseamap',
-        accessToken: ''
+        accessToken: '',
       }).addTo(this.map);
     }
 
@@ -50,7 +50,7 @@ var mapWrapper = function() {
         showBearings: true,
         clearMeasurementsOnStop: false,
         showClearControl: true,
-        showUnitControl: true
+        showUnitControl: true,
       })
       .addTo(this.map);
 
@@ -77,15 +77,15 @@ var mapWrapper = function() {
         edit: {
           featureGroup: drawnItems,
           poly: {
-            allowIntersection: true
-          }
+            allowIntersection: true,
+          },
         },
         draw: {
           polygon: {
             allowIntersection: true,
-            showArea: true
-          }
-        }
+            showArea: true,
+          },
+        },
       })
     );
 
@@ -248,7 +248,7 @@ var mapWrapper = function() {
         color: color,
         weight: 3,
         opacity: 0.5,
-        smoothFactor: 1
+        smoothFactor: 1,
       });
     }
   };
@@ -277,7 +277,7 @@ var mapWrapper = function() {
           'px;';
         var icon = L.divIcon({
           className: 'vehicle-marker',
-          html: '<img src="/gfx/icons/cursor.png" style="' + style + '">'
+          html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
         });
 
         if (
@@ -346,7 +346,7 @@ var mapWrapper = function() {
         if (lat && lon) this.loaded_items[item.id].line.addLatLng([lat, lon]);
 
         this.loaded_items[item.id].line.setStyle({
-          opacity: 1
+          opacity: 1,
         });
       }
     }
@@ -354,7 +354,7 @@ var mapWrapper = function() {
   this.hideItem = function(item_id) {
     if (typeof this.loaded_items[item_id] !== 'undefined') {
       this.loaded_items[item_id].line.setStyle({
-        opacity: 0
+        opacity: 0,
       });
       this.loaded_items[item_id].marker.setOpacity(0).update();
     }

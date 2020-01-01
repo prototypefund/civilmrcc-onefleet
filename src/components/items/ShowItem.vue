@@ -48,7 +48,7 @@ export default {
   name: 'ShowItem',
   props: ['itemId'],
   components: {
-    Position
+    Position,
   },
   data: () => ({
     template: '',
@@ -58,8 +58,8 @@ export default {
     form_data: { properties: {} },
     historical_form_data: {}, //will be used for change log comparison
     position_data: {
-      positions: [{}]
-    }
+      positions: [{}],
+    },
   }),
   watch: {
     itemId: function(newVal) {
@@ -83,7 +83,7 @@ export default {
           }
         });
       });
-    }
+    },
   },
   methods: {
     loadTemplate: function(template_name) {
@@ -110,7 +110,7 @@ export default {
         ) {
           changes.push({
             old: this.historical_form_data.properties[i],
-            new: this.form_data.properties[i]
+            new: this.form_data.properties[i],
           });
         }
       }
@@ -130,8 +130,8 @@ export default {
           alert('The item has been updated');
         }
       });
-    }
+    },
   },
-  mounted: () => {}
+  mounted: () => {},
 };
 </script>

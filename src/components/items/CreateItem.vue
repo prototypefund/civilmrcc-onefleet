@@ -82,8 +82,8 @@ export default {
       template_data: '',
       form_data: { properties: {} },
       position_data: {
-        positions: [{}]
-      }
+        positions: [{}],
+      },
     };
   },
   methods: {
@@ -118,7 +118,7 @@ export default {
                 lon: self.position_data.positions[0].lon,
                 item_identifier: self.form_data.identifier,
                 source: 'onefleet',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
               };
               self.$db.createPosition(position, function(err, result) {
                 if (err) {
@@ -145,8 +145,8 @@ export default {
     closeModal: function() {
       // Using the service bus
       serverBus.$emit('modal_modus', '');
-    }
-  }
+    },
+  },
 };
 </script>
 
