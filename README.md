@@ -31,6 +31,10 @@ We would love for you to contribute to OneFleet and help make it even better tha
 - [Issue Reporting Guidelines](#Issue-Reporting-Guidelines)
 - [Pull Request Guidelines](#Pull-Request-Guidelines)
 
+## Development
+
+Recommended editor is [Visual Studio Code](https://code.visualstudio.com/) with the extension [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) to support `.vue` files.
+
 ## **Installation Guide**
 
 ### Clone the Repo
@@ -126,7 +130,7 @@ docker-compose exec app npm run lint
 
 Enable remote debugging in Chrome. You can do that by starting Chrome with `chrome.exe --remote-debugging-port=9222`. If you are using Windows you can simply [edit the Chrome shortcut](https://stackoverflow.com/a/56457835/2306587) to start Chrome with remote debugging enabled.
 
-Start the vue application with `npm run serve` and navigate to http://localhost:8080/ in Chrome. 
+Start the vue application with `npm run serve` and navigate to http://localhost:8080/ in Chrome.
 
 Open the project in Visual Studio Code and launch the task "Attach to Chrome" to start the debugger. If the debugger successfully attached to chrome you should see some console output in the tab "DEBUG CONSOLE".
 

@@ -51,8 +51,8 @@ export default {
       stop_time: '',
       form_data: { properties: {} },
       position_data: {
-        positions: [{}]
-      }
+        positions: [{}],
+      },
     };
   },
   watch: {
@@ -77,7 +77,7 @@ export default {
           }
         });
       });
-    }
+    },
   },
   methods: {
     exportItem: function(e) {
@@ -132,7 +132,7 @@ export default {
           // IE10
           navigator.msSaveBlob(
             new Blob([content], {
-              type: mimeType
+              type: mimeType,
             }),
             fileName
           );
@@ -140,7 +140,7 @@ export default {
           //html5 A[download]
           a.href = URL.createObjectURL(
             new Blob([content], {
-              type: mimeType
+              type: mimeType,
             })
           );
           a.setAttribute('download', fileName);
@@ -178,9 +178,9 @@ export default {
           alert('The item has been updated');
         }
       });
-    }
+    },
   },
-  mounted: function() {}
+  mounted: function() {},
 };
 </script>
 

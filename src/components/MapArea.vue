@@ -10,7 +10,7 @@ export default {
   name: 'MapArea',
   data: function() {
     return {
-      map_initialized: false
+      map_initialized: false,
     };
   },
   mounted: function() {
@@ -20,7 +20,7 @@ export default {
       self.shown_items = shown_items;
       self.$db.updateShownItemsOnMap(this.$map, {
         shown_items: shown_items,
-        map: self.$map
+        map: self.$map,
       });
 
       serverBus.$on('fly_to_position', position => {
@@ -34,7 +34,7 @@ export default {
     };
     this.$db.updateShownItemsOnMap(this.$map, {
       shown_items: self.shown_items,
-      map: this.$map
+      map: this.$map,
     });
     this.$db.setOnChange('positions', 'map_area', function(change) {
       if (change.direction == 'push') {
@@ -50,7 +50,7 @@ export default {
       }
     });
   },
-  created: function() {}
+  created: function() {},
 };
 </script>
 

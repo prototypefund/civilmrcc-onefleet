@@ -9,6 +9,7 @@ stages:
   - install
   - build
   - lint
+  - code_formatting
   - docker
   # - test
   # - code_formatting
@@ -25,6 +26,12 @@ install:
     expire_in: 1 day
   script:
     - npm install --no-save --unsafe-perm
+
+code_formatting:
+  stage: code_formatting
+  allow_failure: true
+  script:
+    - npm run prettier:check
 
 build:
   stage: build

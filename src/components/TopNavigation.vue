@@ -68,7 +68,7 @@ export default {
     return {
       show_air: false,
       username: '',
-      password: ''
+      password: '',
     };
   },
   methods: {
@@ -87,11 +87,11 @@ export default {
     logout: function() {
       localStorage.clear();
       window.location.reload();
-    }
+    },
   },
   created: function() {
     this.username = localStorage.username || 'guest';
-  }
+  },
 };
 </script>
 

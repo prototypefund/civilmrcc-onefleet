@@ -8,11 +8,13 @@
     "build": "vue-cli-service build",
     "http-server": "http-server dist -i -p 8080",
     "install-ais": "cd services/ais && npm install --no-save",
-    "install-boostrap": "cd services/bootstrap && npm install --no-save",
+    "install-bootstrap": "cd services/bootstrap && npm install --no-save",
     "install-database": "cd services/database && npm install --no-save",
     "install-location": "cd services/location && npm install --no-save",
-    "postinstall": "npm run -s install-ais && npm run -s install-boostrap && npm run -s install-database && npm run -s install-location",
+    "postinstall": "npm run -s install-ais && npm run -s install-bootstrap && npm run -s install-database && npm run -s install-location",
     "lint": "vue-cli-service lint",
+    "prettier:check": "prettier --check {src,services}/**/*.{vue,js,ts}",
+    "prettier:write": "prettier --write {src,services}/**/*.{vue,js,ts}",
     "maptiles:clean": "rimraf dist/MapQuest",
     "maptiles:extract": "extract-zip data/MapTiles.zip $(pwd)/public/"
   },
@@ -37,6 +39,7 @@
     "eslint": "^5.8.0",
     "eslint-plugin-vue": "^5.0.0-0",
     "extract-zip": "^1.6.7",
+    "prettier": "^1.19.1",
     "vue-template-compiler": "^2.5.17"
   },
   "eslintConfig": {

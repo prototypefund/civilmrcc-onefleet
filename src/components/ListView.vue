@@ -44,7 +44,7 @@ export default {
       vehicles: [],
       shown_items: [],
       categories: [],
-      activeCategories: ['Vehicles']
+      activeCategories: ['Vehicles'],
     };
   },
   methods: {
@@ -73,7 +73,7 @@ export default {
         if (this.vehicles[i].id == itemid) return this.vehicles[i];
       }
       return false;
-    }
+    },
   },
   mounted: function() {
     serverBus.$on('shown_items', shown_items => {
@@ -96,7 +96,7 @@ export default {
               title: template_index,
               plural: all_templates[template_index].plural,
               items: result,
-              fields: all_templates[template_index].fields
+              fields: all_templates[template_index].fields,
             });
           }
         );
@@ -124,7 +124,7 @@ export default {
         self.$data.vehicles = result.rows;
       });
     });
-  }
+  },
 };
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->

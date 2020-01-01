@@ -13,7 +13,7 @@ pouchwrapper.getPositionsForItem = function(identifier, cb) {
       endkey: identifier + '\uffff',
       limit: 10000,
       skip: 0,
-      descending: false
+      descending: false,
     })
     .then(function(result) {
       //quick fix
@@ -65,7 +65,7 @@ pouchwrapper.getItem = function(itemId, cb) {
         var item = {
           id: doc._id,
           doc: doc,
-          positions: positions.rows
+          positions: positions.rows,
         };
         cb(item);
       });
@@ -80,7 +80,7 @@ pouchwrapper.getItems = function(cb) {
   items
     .allDocs({
       include_docs: true,
-      attachments: true
+      attachments: true,
     })
     .then(function(result) {
       if (result.error) return self.fetchError(result);
@@ -108,7 +108,7 @@ pouchwrapper.getItemsByTemplate = function(template, cb) {
       include_docs: true,
       attachments: true,
       startkey: template,
-      endkey: template + '\uffff'
+      endkey: template + '\uffff',
     })
     .then(function(result) {
       if (result.error) return self.fetchError(result);

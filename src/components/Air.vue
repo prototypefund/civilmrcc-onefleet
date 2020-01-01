@@ -30,14 +30,14 @@ import { serverBus } from '../main';
 export default {
   name: 'Cockpit',
   components: {
-    Position
+    Position,
   },
   data: function() {
     return {
       username: '',
       password: '',
       vehicles: [],
-      diagramdata: []
+      diagramdata: [],
     };
   },
   methods: {
@@ -57,19 +57,19 @@ export default {
         {
           axisX: {
             title: 'timeline',
-            gridThickness: 1
+            gridThickness: 1,
           },
           axisY: {
-            title: 'Altitude'
+            title: 'Altitude',
           },
           backgroundColor: 'rgb(55,60,68)',
           theme: 'dark1',
-          data: data
+          data: data,
         }
       );
 
       chart.render();
-    }
+    },
   },
   mounted: function() {
     var self = this;
@@ -83,14 +83,14 @@ export default {
               let positionObj = result.rows[row].positions[pos].doc;
               diagram_points.push({
                 x: new Date(positionObj.timestamp),
-                y: parseFloat(positionObj.altitude)
+                y: parseFloat(positionObj.altitude),
               });
             }
           }
           airrows.push(result.rows[row]);
           self.$data.diagramdata.push({
             type: 'line',
-            dataPoints: diagram_points
+            dataPoints: diagram_points,
           });
         }
       }
@@ -99,7 +99,7 @@ export default {
 
       self.$data.vehicles = airrows;
     });
-  }
+  },
 };
 </script>
 
