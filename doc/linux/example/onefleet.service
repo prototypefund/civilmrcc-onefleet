@@ -1,0 +1,13 @@
+[Unit]
+Description=OneFleet
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/npm run serve
+WorkingDirectory=/opt/onefleet
+User=onefleet
+Group=onefleet
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
