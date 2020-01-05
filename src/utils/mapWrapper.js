@@ -1,8 +1,13 @@
 import storage from './storageWrapper';
+import { SARZones } from '../constants/sar-zones';
 
 var mapWrapper = function() {
+  //** local variables */
   this.map;
   this.loaded_items = {};
+  this.sarZoneLayerGroup = L.layerGroup();
+  this.sarZoneIsVisible = true;
+
   this.init = function(mapId) {
     try {
       mapzoom = storage.get('mapzoom');
@@ -15,6 +20,7 @@ var mapWrapper = function() {
 
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
+    /** Title setup */
     let tile_url;
     switch (localStorage.settings_maptiles) {
       default:
@@ -41,8 +47,8 @@ var mapWrapper = function() {
       }).addTo(this.map);
     }
 
+    /** Control setup */
     L.control.scale({ imperial: false }).addTo(this.map);
-
     L.control
       .polylineMeasure({
         position: 'topleft',
@@ -54,7 +60,12 @@ var mapWrapper = function() {
       })
       .addTo(this.map);
 
+    //** SAR Zones setup */
+    this.createSarZoneFeatureGroup(SARZones, this.map);
+
+    //** Init draws on the map after startup. */
     this.initDraw();
+
     var self = this;
     this.map.on('move', function() {
       storage.set('mapzoom', self.map._zoom);
@@ -63,8 +74,41 @@ var mapWrapper = function() {
         JSON.stringify([self.map.getCenter().lat, self.map.getCenter().lng])
       );
     });
+
+    console.log('map initted');
   };
 
+  /** Creates a featureGroup with polygons of each given SAR Zone from the parameter.
+   * Return a leaflet L.featureGroup.
+   */
+  this.createSarZoneFeatureGroup = function(sarZones, map) {
+    map.addLayer(this.sarZoneLayerGroup);
+
+    for (let sarZoneObject of sarZones) {
+      const coordinates = sarZoneObject.coordinates;
+      const color = sarZoneObject.color;
+      const tooltip = sarZoneObject.name;
+
+      let sarZonePolygon = L.polygon(coordinates)
+        //** fill the polygon with minimal transparency to force that the tooltip also opens, if user hovers over the whole SAR sone and not only over the colored bounding borders. */
+        .setStyle({
+          color: color,
+          fill: true,
+          fillColor: '#000000FF',
+          fillOpacity: 0.01,
+          weight: 2,
+          dashArray: '4',
+        })
+        .bindTooltip(tooltip + ' SAR Zone');
+
+      this.sarZoneLayerGroup.addLayer(sarZonePolygon);
+    }
+  };
+
+  /** Method calls the flyTo method from leaflet.js
+   * See also: https://leafletjs.com/reference-1.0.0.html
+   * Sets the view of the map (geographical center and zoom) performing a smooth pan-zoom animation.
+   */
   this.flyTo = function(positions) {
     this.map.flyTo(positions);
   };
@@ -72,6 +116,67 @@ var mapWrapper = function() {
   this.initDraw = function() {
     let drawnItems = new L.FeatureGroup();
     this.map.addLayer(drawnItems);
+
+    //** Add a toggle for sar zones in map controls list */
+    var toggleSarZoneControl = L.Control.extend({
+      options: {
+        position: 'topleft',
+      },
+
+      onAdd: () => {
+        var container = L.DomUtil.create(
+          'div',
+          'leaflet-bar leaflet-control leaflet-control-custom'
+        );
+
+        container.style.backgroundColor = 'white';
+        container.style.backgroundSize = '30px 30px';
+        container.style.width = '30px';
+        container.style.height = '30px';
+
+        let aTag = L.DomUtil.create(
+          'a',
+          'polyline-measure-unicode-icon',
+          container
+        );
+        aTag.title = 'Turn on/off sar zones.';
+        // Set icon
+        L.DomUtil.addClass(aTag, 'polyline-measure-controlOnBgColor');
+        L.DomUtil.addClass(aTag, 'el-icon-close');
+
+        // We must prevent the double click of the button, otherwise the map zoomes in if button is double clicked.
+        container.ondblclick = e => e.stopImmediatePropagation();
+
+        // Toggles the sar zone group visibility.
+        container.onclick = () => {
+          if (this.sarZoneLayerGroup === undefined) {
+            return;
+          }
+
+          // if sarZones are visible, remove sar zone layer group from map and set sarZoneIsVisible = false
+          if (this.map.hasLayer(this.sarZoneLayerGroup)) {
+            this.map.removeLayer(this.sarZoneLayerGroup);
+            L.DomUtil.removeClass(aTag, 'polyline-measure-controlOnBgColor');
+
+            // Change icon
+            L.DomUtil.addClass(aTag, 'el-icon-view');
+            L.DomUtil.removeClass(aTag, 'el-icon-close');
+          } else {
+            this.map.addLayer(this.sarZoneLayerGroup);
+            L.DomUtil.addClass(aTag, 'polyline-measure-controlOnBgColor');
+
+            // Change icon
+            L.DomUtil.removeClass(aTag, 'el-icon-view');
+            L.DomUtil.addClass(aTag, 'el-icon-close');
+          }
+        };
+
+        return container;
+      },
+    });
+    this.map.addControl(new toggleSarZoneControl());
+
+    //** Add the standard Map actions. */
     this.map.addControl(
       new L.Control.Draw({
         edit: {
