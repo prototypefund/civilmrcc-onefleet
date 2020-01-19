@@ -312,12 +312,12 @@ var mapWrapper = function() {
     //polygon: series of points
     switch (item.doc.template) {
       case 'vehicle':
-        item.doc.template = 'line';
+        item.doc.base_template = 'line';
         if (typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
         break;
       case 'case':
-        item.doc.template = 'point';
+        //item.doc.template = 'point';
         if (typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
         break;
@@ -380,10 +380,20 @@ var mapWrapper = function() {
           'px;margin-top:-' +
           height / 2 +
           'px;';
-        var icon = L.divIcon({
-          className: 'vehicle-marker',
-          html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
-        });
+          
+        if(item.doc.template!='case'&&
+          item.doc.template!='vehicle'&&
+          item.doc.properties.icon !== 'undefined'){
+          var icon = L.divIcon({
+            className: 'vehicle-marker',
+            html: '<div><span class="el-icon-'+item.doc.properties.icon+'"></span></div>',
+          });
+        }else{
+          var icon = L.divIcon({
+            className: 'vehicle-marker',
+            html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
+          });
+        }
 
         if (
           typeof v.doc.lat !== 'undefined' &&
@@ -425,7 +435,7 @@ var mapWrapper = function() {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
       }
-      if (item.doc.template == 'line' && line) {
+      if (item.doc.base_template == 'line' && line) {
         this.loaded_items[item.id].line = line;
         this.loaded_items[item.id].line.addTo(this.map);
       }

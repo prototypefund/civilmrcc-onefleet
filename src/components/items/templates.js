@@ -183,10 +183,10 @@ export default {
           },
         ],
       },
-      sighting: {
-        plural: 'Sightings',
-        pouch_identifier: 'SIGHTING',
-        add_initial_position: false,
+      landmark: {
+        plural: 'Landmarks',
+        pouch_identifier: 'LANDMARK',
+        add_initial_position: true,
         type: 'line',
         fields: [
           {
@@ -200,14 +200,9 @@ export default {
             type: 'text',
           },
           {
-            name: 'color',
-            title: 'Color',
-            type: 'select',
-            options: {
-              red: 'red',
-              yellow: 'yellow',
-              blue: 'blue',
-            },
+            name: 'icon',
+            title: 'icon',
+            type: 'icon'
           },
         ],
       },
