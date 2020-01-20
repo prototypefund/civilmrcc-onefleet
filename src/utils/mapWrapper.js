@@ -380,18 +380,32 @@ var mapWrapper = function() {
           'px;margin-top:-' +
           height / 2 +
           'px;';
-          
-        if(item.doc.template!='case'&&
-          item.doc.template!='vehicle'&&
-          item.doc.properties.icon !== 'undefined'){
-          var icon = L.divIcon({
+
+
+        let icon;
+        let caption = '';
+        console.log(item.doc);
+        if(localStorage.settings_showcaptions === 'true'&&
+          typeof item.doc.properties.name !== undefined){
+          caption = '<span class="itemCaption">'+item.doc.properties.name+'</span>';
+        }
+
+        if (
+          item.doc.template !== 'case' &&
+          item.doc.template !== 'vehicle' &&
+          typeof item.doc.properties.icon !== undefined
+        ) {
+          icon = L.divIcon({
             className: 'vehicle-marker',
-            html: '<div><span class="el-icon-'+item.doc.properties.icon+'"></span></div>',
+            html:
+              '<div><span class="el-icon-' +
+              item.doc.properties.icon +
+              '"></span>'+caption+'</div>',
           });
-        }else{
-          var icon = L.divIcon({
+        } else {
+          icon = L.divIcon({
             className: 'vehicle-marker',
-            html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
+            html: '<div><img src="/gfx/icons/cursor.png" style="' + style + '">'+caption+'</div>',
           });
         }
 

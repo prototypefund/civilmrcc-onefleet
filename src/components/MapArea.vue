@@ -66,4 +66,15 @@ export default {
   margin-left: 0 !important;
   margin-top: 0 !important;
 }
+
+.itemCaption{
+  background: rgba(0,0,0,0.8);
+  color: #FFF;
+  padding: 3px;
+  width: 80px;
+  display: block;
+  margin-left: -43px;
+  text-align: center;
+  font-size: 10px;
+}
 </style>
