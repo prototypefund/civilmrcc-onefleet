@@ -273,6 +273,7 @@ var mapWrapper = function() {
     });
   };
   this.loadTemplatedItem = function(item) {
+    console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -295,8 +296,10 @@ var mapWrapper = function() {
           return min_date < new Date(position.doc.timestamp);
         });
       } else if (max_track_type == 'date_range') {
+    
         let min_date = new Date(localStorage.settings_track_startdate);
         let max_date = new Date(localStorage.settings_track_enddate);
+        console.log('loadTemplatedItem',min_date,max_date);
         item.positions = item.positions.filter(function(position) {
           let date = new Date(position.doc.timestamp);
           return max_date > date && date > min_date;
@@ -433,7 +436,6 @@ var mapWrapper = function() {
   };
   this.addItemToMap = function(item) {
     item = this.loadTemplatedItem(item);
-    this.loaded_items[item.id] = {};
 
     var line = false;
     var marker = false;
@@ -441,13 +443,15 @@ var mapWrapper = function() {
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
     }
-
     if (typeof item.positions != 'undefined' && item.positions.length > 0) {
       line = this.generateLine(item);
       marker = this.generateMarker(item);
+
+      this.loaded_items[item.id] = {};
       if (marker) {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
+
       }
       if (item.doc.base_template == 'line' && line) {
         this.loaded_items[item.id].line = line;
@@ -456,12 +460,22 @@ var mapWrapper = function() {
     }
   };
   this.updateItemPosition = function(item) {
+    let self = this;
+    console.log('updateItemPosition');
+    console.log(item);
     if (item.positions.length < 1) {
+      console.log('no positions available')
       return false;
     }
     if (typeof this.loaded_items[item.id] == 'undefined') {
+
+      console.log('add item');
       this.addItemToMap(item);
+
+
     } else {
+
+      console.log('update item', this.loaded_items[item.id]);
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {

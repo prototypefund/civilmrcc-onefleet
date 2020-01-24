@@ -1,11 +1,20 @@
 <template>
-      <form @submit="startReplay" class="TimeControl form-style-6">
-            <input type="datetime-local" placeholder="date from" :value="replayData.startDate">
-            <input type="datetime-local" placeholder="date to" v-model="replayData.endDate">
-            <input type="number" placeholder="hours per frame" style="width:40%" v-model="replayData.hoursPerFrame">
-            <input type="number" placeholder="frame length in s" style="width:40%; float:right:" v-model="replayData.frameLength">
-            <el-button type="success" icon="el-icon-video-play" circle @click="startReplay"></el-button>
-      </form>
+      <div>
+        <div v-if="showReplayMode" class="timeControl replay">
+          <p>Replay ongoing</p>
+          <div>
+            {{startDate}} - 
+            {{endDate}}
+          </div>
+        </div>
+        <form @submit="startReplay" class="timeControl form-style-6" v-if="!showReplayMode">
+              <input type="datetime-local" placeholder="date from" :value="replayData.startDate">
+              <input type="datetime-local" placeholder="date to" v-model="replayData.endDate">
+              <input type="number" placeholder="hours per frame" style="width:40%" v-model="replayData.hoursPerFrame">
+              <input type="number" placeholder="frame length in s" style="width:40%; float:right:" v-model="replayData.frameLength">
+              <el-button type="success" icon="el-icon-video-play" circle @click="startReplay"></el-button>
+        </form>
+      </div>
 </template>
 
 <script>
@@ -22,7 +31,10 @@ export default {
           endDate:moment().format('YYYY-MM-DTHH:MM'),
           hoursPerFrame:4,
           frameLength:10
-      }
+      },
+      showReplayMode:false,
+      startDate:0,
+      endDate:0
     };
   },
   methods: {
@@ -32,17 +44,39 @@ export default {
     }
   },
   mounted: function() {
+    let self = this;
 
-  },
+    serverBus.$on('replay_started', () => {
+      self.showReplayMode = true;
+      self.startdate = localStorage.settings_track_startdate;
+      self.enddate = localStorage.settings_track_enddate;
+    });
+
+    serverBus.$on('replay_next_tick', () => {
+      console.log('localStorage.settings_track_enddate');
+      console.log(localStorage.settings_track_enddate);
+      self.endDate = localStorage.settings_track_enddate;
+    });
+
+    serverBus.$on('replay_finished', () => {
+      self.showReplayMode = false;
+    });
+
+  }
 };
 </script>
 <style scoped>
-.TimeControl{
+.timeControl{
+    background:#FFF;
     width: 400px;
     position: absolute;
     z-index: 999;
     left: 50%;
     margin-left: -200px;
     margin-top: 60px;
+}
+
+.timeControl.replay{
+  padding:5px;
 }
 </style>
