@@ -2,6 +2,10 @@ const PouchDB = require('pouchdb');
 const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
+
+const fs = require('fs');
+const path = require('path');
+const csv = require('fast-csv');
 // test line endings
 
 const MailListener = require('mail-listener2');
@@ -12,6 +16,7 @@ const program = require('commander');
 program
   .option('-t <min>', 'run interval')
   .option('-c <number>', 'generate testcases')
+  .option('-i <filename>', 'import from csv file')
   .option('-l', 'fetches locations once')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
@@ -507,6 +512,21 @@ let service = new (function() {
     }
     console.log(objects);
   };
+  this.importFromCSV = function(filename){
+    console.log(path.resolve(__dirname, '', filename));
+
+
+
+
+    
+    fs.createReadStream(path.resolve(__dirname, '', filename))
+        .pipe(csv.parse({ headers: true }))
+        .on('error', error => console.error(error))
+        .on('data', row => {
+          console.log(row);
+        })
+        .on('end', rowCount => console.log(`Parsed ${rowCount} rows`));
+  };
 })();
 
 console.log(program.opts());
@@ -522,6 +542,9 @@ if (program.mail) {
 }
 if (program.C) {
   service.generateTestCases(program.C);
+}
+if (program.I) {
+  service.importFromCSV(program.I);
 }
 
 //service.initMail();
