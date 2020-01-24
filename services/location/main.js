@@ -147,14 +147,14 @@ let service = new (function() {
       console.log('there was an error getting the position for ' + identifier);
     }
   };
-  this.getVehicles = function(callback) {
+  this.getItems = function(identifier,callback) {
     var items = this.itemDB;
     var self = this;
     items
       .allDocs({
         include_docs: true,
         attachments: true,
-        startkey: 'VEHICLE',
+        startkey: identifier,
       })
       .then(function(result) {
         if (result.error) callback(err);
@@ -169,8 +169,7 @@ let service = new (function() {
     this.initDBs();
     //this.initMail();
     var self = this;
-
-    this.getVehicles(function(err, res) {
+    this.getVehicles('VEHICLE',function(err, res) {
       if (err) {
         console.log(err);
       } else {
@@ -345,7 +344,7 @@ let service = new (function() {
 
     console.log('getting vehicles...');
 
-    this.getVehicles(function(err, res) {
+    this.getItems('VEHICLE',function(err, res) {
       console.log('got items');
       if (err) console.log(err);
 
@@ -518,7 +517,7 @@ let service = new (function() {
 
 
 
-    
+
     fs.createReadStream(path.resolve(__dirname, '', filename))
         .pipe(csv.parse({ headers: true }))
         .on('error', error => console.error(error))
