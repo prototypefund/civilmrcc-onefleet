@@ -62,9 +62,9 @@ export default {
         openseamap: localStorage.settings_openseamap == 'true' || false,
         showcaptions: localStorage.settings_showcaptions == 'true' || false,
         max_track_length: localStorage.settings_map_track_length || 100,
-        max_track_type:
-          localStorage.settings_max_track_type || 'number_of_positions',
-        track_startdate: new Date().toLocaleDateString(),
+        max_track_type: localStorage.settings_max_track_type || 'number_of_positions',
+        track_startdate: localStorage.settings_track_startdate || new Date().toLocaleString('en-US'),
+        track_enddate: localStorage.settings_track_enddate || new Date().toLocaleString('en-US')
       },
     };
   },
