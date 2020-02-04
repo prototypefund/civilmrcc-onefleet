@@ -147,6 +147,17 @@ let service = new (function() {
       console.log('there was an error getting the position for ' + identifier);
     }
   };
+  this.insertItem = function(obj, cb) {
+    var itemDB = this.itemDB;
+    itemDB
+      .put(obj)
+      .then(function(response) {
+        cb(null, response);
+      })
+      .catch(function(err) {
+        cb(err);
+      });
+  };
   this.getItems = function(identifier,callback) {
     var items = this.itemDB;
     var self = this;
@@ -511,20 +522,118 @@ let service = new (function() {
     }
     console.log(objects);
   };
+
   this.importFromCSV = function(filename){
-    console.log(path.resolve(__dirname, '', filename));
 
+    let self = this;
 
+    this.initDBs();
+    //get all vehicles from db
+    this.getItems('VEHICLE',function(err, res) {
+      console.log('got items');
+      if (err) throw(err);
 
+      //restore items with mmsi as identifier
+      let vehiclesByMMSI = {}
+      for(let i in res){
+        if(typeof res[i].doc.properties.MMSI != 'undefined'){
+          vehiclesByMMSI[res[i].doc.properties.MMSI] = res[i];
+        }
+      }
 
-
-    fs.createReadStream(path.resolve(__dirname, '', filename))
+      //loop one time over import.csv to add all items upfront
+      /*fs.createReadStream(path.resolve(__dirname, '', filename))
         .pipe(csv.parse({ headers: true }))
         .on('error', error => console.error(error))
         .on('data', row => {
-          console.log(row);
+
+
+
+
+          if(row.callsign.length === 0)
+            row.callsign = row.mmsi;
+          if(row.name.length === 0)
+            row.name = row.callsign;
+
+          console.log('get vehicle with mmsi '+row.mmsi);
+          if(!vehiclesByMMSI[parseInt(row.mmsi)]){
+            let identifier = String('VEHICLE' + '_' + row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')).toUpperCase();
+            console.log('no found! create item '+identifier);
+            let item = {
+              //generate id like VEHICLE_SHIPSNAME
+              _id: identifier,
+              template:'vehicle',
+              identifier:identifier,
+              properties:{
+                MMSI:row.mmsi,
+                active: "true",
+                air: "false",
+                get_historical_data_since: "0",
+                name: row.name,
+                tracking_type: "ais"
+              }
+            }
+            self.insertItem(item, function(err, result) {
+              if (err) {
+                if (err.name == 'conflict')
+                  console.log('The id is already taken, please choose another one');
+                else console.log('An unknown error occured while creating the item');
+              } else if (result.ok == true) {
+                vehiclesByMMSI[parseInt(row.mmsi)] = item;
+                console.log(`Vehicle ${row.name} created. add position...`);
+              }else{
+                console.log(result);
+              }
+            });
+          }else{
+            console.log('vehicle exists')
+          }
         })
-        .on('end', rowCount => console.log(`Parsed ${rowCount} rows`));
+        .on('end', rowCount => function(){
+          insertPositions(vehiclesByMMSI);
+        });*/
+
+      insertPositions(vehiclesByMMSI);
+
+    });
+
+    function insertPositions(vehiclesByMMSI){
+
+
+            fs.createReadStream(path.resolve(__dirname, '', filename))
+            .pipe(csv.parse({ headers: true }))
+            .on('error', error => console.error(error))
+            .on('data', row => {
+              let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+              let pos = {
+                timestamp: new Date(row.timestamp),
+                latitude: parseFloat(row.lat),
+                longitude: parseFloat(row.lon),
+                altitude: null,
+                speed: parseFloat(row.speed),
+                course: parseFloat(row.course),
+                source: 'import',
+              }
+
+              if(vehiclesByMMSI[parseInt(row.mmsi)]){
+
+                if(row.callsign.length === 0)
+                  row.callsign = row.mmsi;
+                if(row.name.length === 0)
+                  row.name = row.callsign;
+
+                let identifier = String('VEHICLE' + '_' + row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')).toUpperCase();
+                let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+                console.log(`vehicle ${row.name} exists in db. add position...`);
+                self.insertLocation(vehicle.doc.identifier, pos);
+              }
+            })
+            .on('end', rowCount2 => function(){
+
+              console.log('fin.')
+
+            });
+    }
   };
 })();
 
