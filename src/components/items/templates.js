@@ -132,6 +132,16 @@ export default {
             type: 'text',
           },
           {
+            name: 'category',
+            title: 'Category',
+            type: 'select',
+            options: {
+              civilfleet: 'Civilfleet',
+              import: 'Import',
+              other: 'Other',
+            },
+          },
+          {
             name: 'air',
             title: 'Air',
             type: 'select',
