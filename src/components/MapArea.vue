@@ -78,7 +78,7 @@ export default {
   margin-top: 0 !important;
 }
 
-.itemCaption{
+.itemCaption,.lineCaption{
   background: rgba(0,0,0,0.8);
   color: #FFF;
   padding: 3px;
@@ -87,5 +87,9 @@ export default {
   margin-left: -43px;
   text-align: center;
   font-size: 10px;
+}
+.lineCaption{    
+  width: 70px!important;
+  font-size: 7px;
 }
 </style>
