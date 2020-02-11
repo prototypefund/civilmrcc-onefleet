@@ -474,7 +474,7 @@ var mapWrapper = function() {
       marker = this.generateMarker(item);
 
       //load linecaptions only if it is set in settings
-      if(localStorage.settings_showcaptions)
+      if(localStorage.settings_positiontimestamps == 'true')
         lineCaptions = this.generateLineCaption(item,true);
 
       this.loaded_items[item.id] = {};
