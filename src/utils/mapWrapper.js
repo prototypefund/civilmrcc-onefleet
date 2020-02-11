@@ -336,6 +336,31 @@ var mapWrapper = function() {
   };
   this.showItem = function() {};
   this.clickItem = function() {};
+  this.generateLineCaption = function(item) {
+    /*let max_length = 5;
+    item.positions.slice(-1 * max_length);*/
+    var markers = [];
+    if (item.positions.length > 0) {
+      for (var i in item.positions) {
+        var v = item.positions[i];
+        if (v.doc.lat && v.doc.lon){
+          let date = new Date(v.doc.timestamp);
+          let caption = date.toISOString().slice(0,10)+' - '+String(date.getHours()).padStart(2, "0")+':'+String(date.getMinutes()).padStart(2, "0");
+          let icon = L.divIcon({
+            className: 'lineCaption',
+            html: '<div>'+caption+'</div>',
+          });
+          //let marker = new L.marker([v.doc.lat, v.doc.lon], { opacity: 0.5 }); //opacity may be set to zero
+
+          let marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
+          markers.push(marker);
+        }
+        //pointList.push()
+      }
+
+      return markers;
+    }
+  };
   this.generateLine = function(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
@@ -437,8 +462,9 @@ var mapWrapper = function() {
   this.addItemToMap = function(item) {
     item = this.loadTemplatedItem(item);
 
-    var line = false;
-    var marker = false;
+    var line = false,
+    marker = false,
+    lineCaptions = false;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
@@ -447,11 +473,21 @@ var mapWrapper = function() {
       line = this.generateLine(item);
       marker = this.generateMarker(item);
 
+      //load linecaptions only if it is set in settings
+      if(localStorage.settings_showcaptions)
+        lineCaptions = this.generateLineCaption(item,true);
+
       this.loaded_items[item.id] = {};
       if (marker) {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
 
+      }
+      if (lineCaptions) {
+        this.loaded_items[item.id].lineCaptions = lineCaptions;
+        for(let i in this.loaded_items[item.id].lineCaptions){
+          this.loaded_items[item.id].lineCaptions[i].addTo(this.map);
+        }
       }
       if (item.doc.base_template == 'line' && line) {
         this.loaded_items[item.id].line = line;
@@ -492,6 +528,13 @@ var mapWrapper = function() {
           opacity: 1,
         });
       }
+
+
+      if(this.loaded_items[item.id].lineCaptions){
+        for(let i in this.loaded_items[item.id].lineCaptions){
+            this.loaded_items[item.id].lineCaptions[i].setOpacity(1).update();
+        }
+      }
     }
   };
   this.hideItem = function(item_id) {
@@ -500,6 +543,11 @@ var mapWrapper = function() {
         opacity: 0,
       });
       this.loaded_items[item_id].marker.setOpacity(0).update();
+
+
+      for(let i in this.loaded_items[item_id].lineCaptions){
+          this.loaded_items[item_id].lineCaptions[i].setOpacity(0).update();
+      }
     }
   };
   this.getDistance = function(point1, point2) {
