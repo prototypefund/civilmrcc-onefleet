@@ -525,6 +525,19 @@ let service = new (function() {
 
   this.importFromCSV = function(filename){
 
+    /*
+    usage for large csv:
+    1. split up file to smaller filers:
+    split -l 100 import.csv split/
+    2. read header:
+      FILES=./split/*
+      for f in $FILES
+      do
+        echo -e "\"timestamp\",\"mmsi\",\"lat\",\"lon\",\"status\",\"course\",\"speed\",\"heading\",\"name\",\"callsign\",\"imo\",\"vt_id\",\"vt_code\",\"vt_verbose\",\"destination\",\"eta\",\"draught\",\"length\",\"width\",\"timestamp_svd\",\"sat\"\n$(cat $f)" > $f
+      done
+    */
+
+
     let self = this;
 
     this.initDBs();
@@ -541,13 +554,14 @@ let service = new (function() {
         }
       }
 
+      console.log(path.resolve(__dirname, '', filename));
       //loop one time over import.csv to add all items upfront
       /*fs.createReadStream(path.resolve(__dirname, '', filename))
         .pipe(csv.parse({ headers: true }))
-        .on('error', error => console.error(error))
+        .on('error', error => console.error('ERRRRROR',error))
         .on('data', row => {
 
-
+          console.log('DATA123');
 
 
           if(row.callsign.length === 0)
