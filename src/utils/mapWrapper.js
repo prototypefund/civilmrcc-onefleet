@@ -480,7 +480,7 @@ var mapWrapper = function() {
         // with binding its first parameter to the item's ID:
         marker.on('click', L.bind(self.clickItem, null, item.id));
         // Use the item's identifier (and its name if applicable) as Pop-up
-        let popupcontent = item.doc.identifier;
+        let popupcontent = item.doc.identifier.toString();
         if (item.doc.properties.name) {
           popupcontent += ' - ' + item.doc.properties.name;
         }
