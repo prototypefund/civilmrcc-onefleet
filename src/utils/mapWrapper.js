@@ -1,6 +1,10 @@
 import storage from './storageWrapper';
 import { SARZones } from '../constants/sar-zones';
 
+/**
+ * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
+ * It also provides some convenience methods for recurring map-related tasks.
+ */
 var mapWrapper = function() {
   //** local variables */
   this.map;
@@ -8,6 +12,10 @@ var mapWrapper = function() {
   this.sarZoneLayerGroup = L.layerGroup();
   this.sarZoneIsVisible = true;
 
+  /**
+   * Initialises the map backend component.
+   * @param {string} mapId
+   */
   this.init = function(mapId) {
     try {
       mapzoom = storage.get('mapzoom');
@@ -20,7 +28,7 @@ var mapWrapper = function() {
 
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
-    /** Title setup */
+    /** Tile setup */
     let tile_url;
     switch (localStorage.settings_maptiles) {
       default:
@@ -80,6 +88,13 @@ var mapWrapper = function() {
 
   /** Creates a featureGroup with polygons of each given SAR Zone from the parameter.
    * Return a leaflet L.featureGroup.
+   * @param {Object[]} sarZones The constant sarZones object that is stored separately.
+   * @param {string} sarZones.name The name of the SAR zone. Used as tooltip.
+   * @param {string} sarZones.color A color by a SAR zone can be quickly identified on the map.
+   * @param {Object[]} sarZones.coordinates An array of lat/lon coordinates.
+   * @param {number} sarZones.coordinates.lat A latitude coordinate.
+   * @param {number} sarZones.coordinates.lon A longitude coordinate.
+   * @param {L.Map} map The map to which the sarZones should be added.
    */
   this.createSarZoneFeatureGroup = function(sarZones, map) {
     map.addLayer(this.sarZoneLayerGroup);
@@ -108,11 +123,15 @@ var mapWrapper = function() {
   /** Method calls the flyTo method from leaflet.js
    * See also: https://leafletjs.com/reference-1.0.0.html
    * Sets the view of the map (geographical center and zoom) performing a smooth pan-zoom animation.
+   * @param {[number, number]} positions The latitude/longitude coordinates.
    */
   this.flyTo = function(positions) {
     this.map.flyTo(positions);
   };
 
+  /**
+   * Initialise the SAR-zone-toggle and popups and keep track of drawn items.
+   */
   this.initDraw = function() {
     let drawnItems = new L.FeatureGroup();
     this.map.addLayer(drawnItems);
@@ -272,6 +291,21 @@ var mapWrapper = function() {
       });
     });
   };
+
+  /**
+   * Prepares the given item for UI by converting templates to known base
+   * templates, defining icons, and cropping the loaded number of positions
+   * to an amount that can be handled by interactive display.
+   * @param {Object} item The item that should be updated.
+   * @param {Object} item.doc The item's database document object.
+   * @param {string} item.doc.template The template of the item
+   * @param {Object} item.doc.properties The item's properties.
+   * @param {string} item.doc.properties.icon The icon file name for the item
+   * @param {Object[]} item.positions The array of positions of the item.
+   * @param {Object} item.positions.doc A position's database document object.
+   * @param {number} item.positions.doc.timestamp The timestamp of a position.
+   * @returns
+   */
   this.loadTemplatedItem = function(item) {
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
@@ -281,35 +315,33 @@ var mapWrapper = function() {
       max_positions = parseInt(max_positions);
 
     if (max_track_type == 'number_of_positions') {
-      //filter out positions by number of positions
-      //cut number of positions only keep
+      // filter out positions by number of positions (default: 100 positions)
       if (item.positions.length > max_positions) {
+        // crop number of positions to max_positions
         item.positions.splice(0, item.positions.length - max_positions);
       }
-    } else {
-      //filter out positions by date
-      if (max_track_type == 'number_of_days') {
-        let min_date = new Date();
-        min_date.setDate(min_date.getDate() - max_positions);
-        item.positions = item.positions.filter(function(position) {
-          return min_date < new Date(position.doc.timestamp);
-        });
-      } else if (max_track_type == 'date_range') {
-        let min_date = new Date(localStorage.settings_track_startdate);
-        let max_date = new Date(localStorage.settings_track_enddate);
-        item.positions = item.positions.filter(function(position) {
-          let date = new Date(position.doc.timestamp);
-          return max_date > date && date > min_date;
-        });
-      }
+    } else if (max_track_type == 'number_of_days') {
+      // filter out positions by number of days in the past (defaut: 100 days)
+      let min_date = new Date();
+      min_date.setDate(min_date.getDate() - max_positions);
+      item.positions = item.positions.filter(function(position) {
+        return min_date < new Date(position.doc.timestamp);
+      });
+    } else if (max_track_type == 'date_range') {
+      // filter out positions by date range from local storage
+      let min_date = new Date(localStorage.settings_track_startdate);
+      let max_date = new Date(localStorage.settings_track_enddate);
+      item.positions = item.positions.filter(function(position) {
+        let date = new Date(position.doc.timestamp);
+        return max_date > date && date > min_date;
+      });
     }
 
-    //every item is based on one of the following
-    //base templates:
-    //point: a single point
-    //line: a series of n points
-    //track: series of n points with a main point
-    //polygon: series of points
+    // Every item is based on one of the following base templates:
+    // point: a single point
+    // line: a series of n points
+    // track: series of n points with a main point
+    // polygon: series of points
     switch (item.doc.template) {
       case 'vehicle':
         item.doc.template = 'line';
@@ -324,6 +356,10 @@ var mapWrapper = function() {
     }
     return item;
   };
+
+  /**
+   * Removes all layers from the map, thereby clearing it.
+   */
   this.clearMap = function() {
     let i = 0;
     this.map.eachLayer(function(layer) {
@@ -331,8 +367,31 @@ var mapWrapper = function() {
       i++;
     });
   };
+
+  /**
+   * Not implemented. But see src/components/items/ShowItem.vue
+   */
   this.showItem = function() {};
+
+  /**
+   * Implemented in src/components/MapArea.vue
+   * @param {string} item_id The ID of the item that was clicked
+   */
   this.clickItem = function() {};
+
+  /**
+   * Return a new leaflet.Polyline consisting of the positions of the item.
+   * @param {Object} item The item that should be updated.
+   * @param {string} item.id The ID of the item.
+   * @param {Object} item.doc The item's database document object.
+   * @param {Object} item.doc.properties The item's properties.
+   * @param {string} item.doc.properties.color The item's color.
+   * @param {Object[]} item.positions The array of positions of the item.
+   * @param {Object} item.positions.doc A position's database document object.
+   * @param {number} item.positions.doc.lat The latitude coordinate.
+   * @param {number} item.positions.doc.lon The longitude coordinate.
+   * @returns L.Polyline
+   */
   this.generateLine = function(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
@@ -356,57 +415,110 @@ var mapWrapper = function() {
         smoothFactor: 1,
       });
     }
+    // return 'undefined' if the item has no positions
   };
+
+  /**
+   * Return a new leaflet.Marker at the last position of the item.
+   * The marker uses a "cursor" icon and is rotated to reflect the heading
+   * of the item at its last known position.
+   *
+   * This function also configures the following event handlers:
+   * @see this.clickItem() The function to call when clicking on the marker.
+   * @see L.Marker.openPopup() The function to call on mouseover.
+   * @see L.Marker.closePopup() The function to call on mouseout.
+   *
+   * @param {Object} item The item that should be updated.
+   * @param {string} item.id The ID of the item.
+   * @param {Object} item.doc The item's database document object.
+   * @param {string} item.doc.identifier The item's identifier.
+   * @param {Object} item.doc.properties The item's properties.
+   * @param {string} item.doc.properties.name The item's name.
+   * @param {Object[]} item.positions The array of positions of the item.
+   * @param {Object} item.positions.doc A position's database document object.
+   * @param {number} item.positions.doc.lat The latitude coordinate.
+   * @param {number} item.positions.doc.lon The longitude coordinate.
+   * @param {number} item.positions.doc.heading The heading direction at a position.
+   * @returns L.Marker
+   */
   this.generateMarker = function(item) {
     var self = this;
     var marker;
-    var positions = item.positions;
-    for (var i in positions) {
-      var v = positions[i];
-      //last position
-      if (positions.length == 1 || i == positions.length - 1) {
-        var width = 16;
-        var height = 16;
-        var rotation = v.doc.heading;
-        var style =
-          'transform: rotate(' +
-          rotation +
-          'deg);width: ' +
-          width +
-          'px; height:' +
-          height +
-          'px;margin-left:-' +
-          width / 2 +
-          'px;margin-top:-' +
-          height / 2 +
-          'px;';
-        var icon = L.divIcon({
-          className: 'vehicle-marker',
-          html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
-        });
 
-        if (
-          typeof v.doc.lat !== 'undefined' &&
-          typeof v.doc.lon !== 'undefined'
-        ) {
-          marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
-          marker.on('click', L.bind(self.clickItem, null, item.id));
-          let popupcontent = item.doc.identifier;
-          if (item.doc.properties.name) {
-            popupcontent += ' - ' + item.doc.properties.name;
-          }
-          marker.bindPopup(popupcontent);
-          marker.on('mouseover', function() {
-            this.openPopup();
-          });
-          marker.on('mouseout', function() {
-            this.closePopup();
-          });
-          return marker;
+    if (item.positions.length > 0) {
+      // place the marker at the last known position:
+      var v = item.positions[item.positions.length - 1];
+
+      var width = 16;
+      var height = 16;
+      var rotation = v.doc.heading;
+      var style =
+        'transform: rotate(' +
+        rotation +
+        'deg);width: ' +
+        width +
+        'px; height:' +
+        height +
+        'px;margin-left:-' +
+        width / 2 +
+        'px;margin-top:-' +
+        height / 2 +
+        'px;';
+      var icon = L.divIcon({
+        className: 'vehicle-marker',
+        html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
+      });
+
+      if (
+        typeof v.doc.lat !== 'undefined' &&
+        typeof v.doc.lon !== 'undefined'
+      ) {
+        // create a new marker with the given lat/lon position and icon
+        marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
+        // on click, call this mapWrapper's clickItem() function
+        // without overwriting its "this" module (?), but
+        // with binding its first parameter to the item's ID:
+        marker.on('click', L.bind(self.clickItem, null, item.id));
+        // Use the item's identifier (and its name if applicable) as Pop-up
+        let popupcontent = item.doc.identifier.toString();
+        if (item.doc.properties.name) {
+          popupcontent += ' - ' + item.doc.properties.name;
         }
+        // bind the popupcontent to the marker. Used by openPopup() below
+        marker.bindPopup(popupcontent);
+        // on mouseover, the marker's openPopup() function shall be called
+        marker.on('mouseover', function() {
+          // call leaflet's Marker.openPopup() function, displaying the
+          // popupcontent that has been bound to this marker just above.
+          this.openPopup();
+        });
+        // on mouseout, the marker's closePopup() function shall be called
+        marker.on('mouseout', function() {
+          // call leaflet's Marker.closePopup() function
+          this.closePopup();
+        });
+        return marker;
       }
+      // return 'undefined' if lat or lon are 'undefined'
     }
+    // return 'undefined' if the item has no positions
   };
+
+  /**
+   * Adds the given item onto the map.
+   * The given item will be prepared and replaces any previous
+   * instances of this item on the map.
+   *
+   * @see this.loadTemplatedItem() Used to prepare item for display on map.
+   * @see this.generateLine() Used to generate a polyline for the item.
+   * @see this.generateMarker() Used to generate a marker for the item
+   *
+   * @param {Object} item The item that should be updated.
+   * @param {string} item.id The ID of the item.
+   * @param {Object} item.doc The item's database document object.
+   * @param {string} item.doc.template The template of the item
+   * @param {Object[]} item.positions The array of positions of the item.
+   */
   this.addItemToMap = function(item) {
     item = this.loadTemplatedItem(item);
     this.loaded_items[item.id] = {};
@@ -431,6 +543,20 @@ var mapWrapper = function() {
       }
     }
   };
+
+  /**
+   * Updates a loaded item's position on the map and ensures it is visible.
+   *
+   * @see this.addItemToMap() Used to add an item to the map if not present.
+   *
+   * @param {Object} item The item that should be updated.
+   * @param {string} item.id The ID of the item.
+   * @param {Object[]} item.positions The array of positions of the item.
+   * @param {Object} item.positions.doc A position's database document object.
+   * @param {number} item.positions.doc.lat The latitude coordinate.
+   * @param {number} item.positions.doc.lon The longitude coordinate.
+   * @returns {boolean} False if the item has no positions; undefined otherwise.
+   */
   this.updateItemPosition = function(item) {
     if (item.positions.length < 1) {
       return false;
@@ -456,6 +582,11 @@ var mapWrapper = function() {
       }
     }
   };
+
+  /**
+   * Hides the given item from the map.
+   * @param {string} item_id The ID of the item that should be hidden
+   */
   this.hideItem = function(item_id) {
     if (typeof this.loaded_items[item_id] !== 'undefined') {
       this.loaded_items[item_id].line.setStyle({
@@ -464,6 +595,17 @@ var mapWrapper = function() {
       this.loaded_items[item_id].marker.setOpacity(0).update();
     }
   };
+
+  /**
+   * Calculates the geographical distance between two points on the map, in meters.
+   * @param {Object} point1 The first point for distance calculation
+   * @param {number} point1.lat Latitude of first point
+   * @param {number} point1.lon Longitude of first point
+   * @param {Object} point2 The second point for distance calculation
+   * @param {number} point2.lat Latitude of second point
+   * @param {number} point2.lon Longitude of second point
+   * @returns {number} The distance in meters (CI unit)
+   */
   this.getDistance = function(point1, point2) {
     let latlng1 = L.latLng(point1.lat, point1.lon);
     let latlng2 = L.latLng(point2.lat, point2.lon);
