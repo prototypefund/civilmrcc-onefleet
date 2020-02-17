@@ -369,12 +369,12 @@ var mapWrapper = function() {
   };
 
   /**
-   * Not implemented.
+   * Not implemented. But see src/components/items/ShowItem.vue
    */
   this.showItem = function() {};
 
   /**
-   * Not implemented.
+   * Implemented in src/components/MapArea.vue
    * @param {string} item_id The ID of the item that was clicked
    */
   this.clickItem = function() {};
