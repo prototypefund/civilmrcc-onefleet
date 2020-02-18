@@ -15,8 +15,8 @@
     "lint": "vue-cli-service lint",
     "prettier:check": "prettier --check {src,services}/**/*.{vue,js,ts}",
     "prettier:write": "prettier --write {src,services}/**/*.{vue,js,ts}",
-    "maptiles:clean": "rimraf dist/MapQuest",
-    "maptiles:extract": "extract-zip data/MapTiles.zip $(pwd)/public/"
+    "maptiles:clean": "rimraf dist/MapTiles",
+    "maptiles:extract": "cd public && extract-zip ../data/MapTiles.zip"
   },
   "dependencies": {
     "@datenpate/leaflet.polylinemeasure": "^1.0.0",
