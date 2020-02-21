@@ -19,7 +19,6 @@
     </ul>
   <div class="small">
     <line-chart :chart-data="datacollection"></line-chart>
-    <button @click="fillData()">Randomize</button>
   </div>
     <div
       id="chartContainer"
@@ -56,46 +55,6 @@ export default {
     closeModal: function() {
       // Using the service bus
       serverBus.$emit('modal_modus', '');
-    },
-    renderChart: function(data) {
-      console.log(data);
-      var chart = new CanvasJS.Chart(
-        'chartContainer',
-
-        {
-          axisX: {
-            title: 'timeline',
-            gridThickness: 1,
-          },
-          axisY: {
-            title: 'Altitude',
-          },
-          backgroundColor: 'rgb(55,60,68)',
-          theme: 'dark1',
-          data: data,
-        }
-      );
-
-      chart.render();
-    }, 
-    fillData () {
-        this.datacollection = {
-          labels: [this.getRandomInt(), this.getRandomInt()],
-          datasets: [
-            {
-              label: 'Data One',
-              backgroundColor: '#f87979',
-              data: [this.getRandomInt(), this.getRandomInt()]
-            }, {
-              label: 'Data One',
-              backgroundColor: '#f87979',
-              data: [this.getRandomInt(), this.getRandomInt()]
-            }
-          ]
-        }
-    },
-    getRandomInt () {
-        return Math.floor(Math.random() * (50 - 5 + 1)) + 5
     }
   },
   mounted:function(){
