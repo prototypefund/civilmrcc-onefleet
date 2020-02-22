@@ -8,27 +8,18 @@
               <i data-v-19f9f8c9="" class="fas fa-plane"></i>
               {{ vehicle.doc.properties.name }}
             </h2>
-            <Position
-              v-bind:position="
-                vehicle.positions[vehicle.positions.length - 1].doc
-              "
-            ></Position>
+            <Position v-bind:position="vehicle.positions[vehicle.positions.length - 1].doc"></Position>
           </div>
         </li>
       </div>
     </ul>
-  <div class="small">
-    <line-chart :chart-data="datacollection"></line-chart>
-  </div>
-    <div
-      id="chartContainer"
-      style="clear:both; height: 200px; width: 100%; min-width:100px"
-    ></div>
+    <div class="small">
+      <line-chart :chart-data="datacollection"></line-chart>
+    </div>
   </div>
 </template>
 
 <script>
-import * as CanvasJS from 'canvasjs';
 import Position from './items/Position';
   import LineChart from './lineChart.js'
 import { serverBus } from '../main';
@@ -57,17 +48,14 @@ export default {
       serverBus.$emit('modal_modus', '');
     }
   },
-  mounted:function(){
-    this.fillData()
-  },
   created: function() {
     var self = this;
     this.$db.getItemsByTemplate('VEHICLE', function(err, result) {
 
 
-      let airrows = [];
       let diagram_points = [];
       let labels = [];
+      let datasets = []
       for (let row in result.rows) {
         if (result.rows[row].doc.properties.air == 'true') {
           for (let pos in result.rows[row].positions) {
@@ -81,25 +69,19 @@ export default {
               });
             }
           }
-          airrows.push(result.rows[row]);
+          datasets.push({
+              label:result.rows[row].doc.properties.name,
+              backgroundColor: '#f87979',
+              data: diagram_points
+          });
         }
       }
 
+
       self.datacollection = {
         labels: labels,
-        datasets: [
-          {
-            label: 'Data One',
-            backgroundColor: '#f87979',
-            data: diagram_points.reverse()
-          }
-        ]
+        datasets: datasets
       }
-
-      self.$data.diagramdata.push({
-        type: 'line',
-        dataPoints: diagram_points,
-      });
 
       if(err){
         console.log('err');
@@ -109,8 +91,6 @@ export default {
       console.log(result);
 
       self.$data.properties.vehicles = result.rows;
-
-      self.renderChart(self.$data.diagramdata);
     });
   },
 };
@@ -137,9 +117,16 @@ export default {
 }
 .air li {
   float: left;
-  width: 14vw;
-  padding: 10px 15px;
+  width: 100%;
+  padding-bottom: 30px;
   float: left;
+}
+.air li:empty {
+  height:0;
+}
+
+h2{
+  margin: 5px 0;
 }
 
   .small {
