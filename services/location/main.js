@@ -400,6 +400,7 @@ let service = new (function() {
                       source: 'iridium_mailservice',
                     });
                   } else {
+                    // TODO: alke + jula: Add else branch for DropPoint
                     console.log('not a position update, so a new case!');
                   }
                 } else {
