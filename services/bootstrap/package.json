@@ -6,6 +6,6 @@
     "start": "npm install && node seed.js"
   },
   "dependencies": {
-    "pouchdb": "^7.0.0"
+    "pouchdb": "^7.2.1"
   }
 }

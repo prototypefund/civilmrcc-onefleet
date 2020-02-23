@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "ais-scraper": "git://github.com/transparency-everywhere/ais-api.git",
-    "puppeteer": "^1.13.0"
+    "puppeteer": "^1.20.0"
   }
 }
