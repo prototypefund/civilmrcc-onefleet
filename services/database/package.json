@@ -7,6 +7,6 @@
     "start": "pouchdb-server -p 5984 -o 0.0.0.0 --dir data"
   },
   "dependencies": {
-    "pouchdb-server": "^4.1.0"
+    "pouchdb-server": "^4.2.0"
   }
 }
