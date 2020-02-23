@@ -1,14 +1,20 @@
 <template>
   <div class="air" v-on:click.self="closeModal">
     <ul>
-      <div v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles">
+      <div
+        v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles"
+      >
         <li v-for="vehicle in properties.vehicles">
           <div v-if="vehicle.doc.properties.air == 'true'">
             <h2>
               <i data-v-19f9f8c9="" class="fas fa-plane"></i>
               {{ vehicle.doc.properties.name }}
             </h2>
-            <Position v-bind:position="vehicle.positions[vehicle.positions.length - 1].doc"></Position>
+            <Position
+              v-bind:position="
+                vehicle.positions[vehicle.positions.length - 1].doc
+              "
+            ></Position>
           </div>
         </li>
       </div>
@@ -21,47 +27,47 @@
 
 <script>
 import Position from './items/Position';
-  import LineChart from './lineChart.js'
+import LineChart from './lineChart.js';
 import { serverBus } from '../main';
 
 export default {
   name: 'Cockpit',
   components: {
     Position,
-    LineChart
+    LineChart,
   },
   data: function() {
     return {
-      properties:{
-        vehicles:[]
+      properties: {
+        vehicles: [],
       },
       username: 'sdf',
       password: '',
       vehiclesArray: [],
       diagramdata: [],
-      datacollection: null
+      datacollection: null,
     };
   },
   methods: {
     closeModal: function() {
       // Using the service bus
       serverBus.$emit('modal_modus', '');
-    }
+    },
   },
   created: function() {
     var self = this;
     this.$db.getItemsByTemplate('VEHICLE', function(err, result) {
-
-
       let diagram_points = [];
       let labels = [];
-      let datasets = []
+      let datasets = [];
       for (let row in result.rows) {
         if (result.rows[row].doc.properties.air == 'true') {
           for (let pos in result.rows[row].positions) {
             if (result.rows[row].positions[pos].doc) {
               let positionObj = result.rows[row].positions[pos].doc;
-              labels.push(new Date(positionObj.timestamp).toTimeString().split(' ')[0]);
+              labels.push(
+                new Date(positionObj.timestamp).toTimeString().split(' ')[0]
+              );
               diagram_points.push({
                 x: pos,
                 t: new Date(positionObj.timestamp),
@@ -70,20 +76,19 @@ export default {
             }
           }
           datasets.push({
-              label:result.rows[row].doc.properties.name,
-              backgroundColor: '#f87979',
-              data: diagram_points
+            label: result.rows[row].doc.properties.name,
+            backgroundColor: '#f87979',
+            data: diagram_points,
           });
         }
       }
 
-
       self.datacollection = {
         labels: labels,
-        datasets: datasets
-      }
+        datasets: datasets,
+      };
 
-      if(err){
+      if (err) {
         console.log('err');
         console.log(err);
       }
@@ -122,15 +127,15 @@ export default {
   float: left;
 }
 .air li:empty {
-  height:0;
+  height: 0;
 }
 
-h2{
+h2 {
   margin: 5px 0;
 }
 
-  .small {
-    max-width: 600px;
-    margin:  150px auto;
-  }
+.small {
+  max-width: 600px;
+  margin: 150px auto;
+}
 </style>
