@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm install && npm run start",
-    "start": "node main.js"
+    "start": "node main.js -t 15"
   },
   "dependencies": {
     "commander": "^4.1.1",
