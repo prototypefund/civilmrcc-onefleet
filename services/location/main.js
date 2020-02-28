@@ -2,6 +2,10 @@ const PouchDB = require('pouchdb');
 const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
+
+const fs = require('fs');
+const path = require('path');
+const csv = require('fast-csv');
 // test line endings
 
 const MailListener = require('mail-listener2');
@@ -12,6 +16,7 @@ const program = require('commander');
 program
   .option('-t <min>', 'run interval')
   .option('-c <number>', 'generate testcases')
+  .option('-i <filename>', 'import from csv file')
   .option('-l', 'fetches locations once')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
@@ -142,14 +147,25 @@ let service = new (function() {
       console.log('there was an error getting the position for ' + identifier);
     }
   };
-  this.getVehicles = function(callback) {
+  this.insertItem = function(obj, cb) {
+    var itemDB = this.itemDB;
+    itemDB
+      .put(obj)
+      .then(function(response) {
+        cb(null, response);
+      })
+      .catch(function(err) {
+        cb(err);
+      });
+  };
+  this.getItems = function(identifier,callback) {
     var items = this.itemDB;
     var self = this;
     items
       .allDocs({
         include_docs: true,
         attachments: true,
-        startkey: 'VEHICLE',
+        startkey: identifier,
       })
       .then(function(result) {
         if (result.error) callback(err);
@@ -164,8 +180,7 @@ let service = new (function() {
     this.initDBs();
     //this.initMail();
     var self = this;
-
-    this.getVehicles(function(err, res) {
+    this.getVehicles('VEHICLE',function(err, res) {
       if (err) {
         console.log(err);
       } else {
@@ -340,7 +355,7 @@ let service = new (function() {
 
     console.log('getting vehicles...');
 
-    this.getVehicles(function(err, res) {
+    this.getItems('VEHICLE',function(err, res) {
       console.log('got items');
       if (err) console.log(err);
 
@@ -508,6 +523,133 @@ let service = new (function() {
     }
     console.log(objects);
   };
+
+  this.importFromCSV = function(filename){
+
+    /*
+    usage for large csv:
+    1. split up file to smaller filers:
+    split -l 100 import.csv split/
+    2. read header:
+      FILES=./split/*
+      for f in $FILES
+      do
+        echo -e "\"timestamp\",\"mmsi\",\"lat\",\"lon\",\"status\",\"course\",\"speed\",\"heading\",\"name\",\"callsign\",\"imo\",\"vt_id\",\"vt_code\",\"vt_verbose\",\"destination\",\"eta\",\"draught\",\"length\",\"width\",\"timestamp_svd\",\"sat\"\n$(cat $f)" > $f
+      done
+    */
+
+
+    let self = this;
+
+    this.initDBs();
+    //get all vehicles from db
+    this.getItems('VEHICLE',function(err, res) {
+      console.log('got items');
+      if (err) throw(err);
+
+      //restore items with mmsi as identifier
+      let vehiclesByMMSI = {}
+      for(let i in res){
+        if(typeof res[i].doc.properties.MMSI != 'undefined'){
+          vehiclesByMMSI[res[i].doc.properties.MMSI] = res[i];
+        }
+      }
+
+      console.log(path.resolve(__dirname, '', filename));
+      //loop one time over import.csv to add all items upfront
+      /*fs.createReadStream(path.resolve(__dirname, '', filename))
+        .pipe(csv.parse({ headers: true }))
+        .on('error', error => console.error('ERRRRROR',error))
+        .on('data', row => {
+
+          console.log('DATA123');
+
+
+          if(row.callsign.length === 0)
+            row.callsign = row.mmsi;
+          if(row.name.length === 0)
+            row.name = row.callsign;
+
+          console.log('get vehicle with mmsi '+row.mmsi);
+          if(!vehiclesByMMSI[parseInt(row.mmsi)]){
+            let identifier = String('VEHICLE' + '_' + row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')).toUpperCase();
+            console.log('no found! create item '+identifier);
+            let item = {
+              //generate id like VEHICLE_SHIPSNAME
+              _id: identifier,
+              template:'vehicle',
+              identifier:identifier,
+              properties:{
+                MMSI:row.mmsi,
+                active: "true",
+                air: "false",
+                get_historical_data_since: "0",
+                name: row.name,
+                tracking_type: "ais"
+              }
+            }
+            self.insertItem(item, function(err, result) {
+              if (err) {
+                if (err.name == 'conflict')
+                  console.log('The id is already taken, please choose another one');
+                else console.log('An unknown error occured while creating the item');
+              } else if (result.ok == true) {
+                vehiclesByMMSI[parseInt(row.mmsi)] = item;
+                console.log(`Vehicle ${row.name} created. add position...`);
+              }else{
+                console.log(result);
+              }
+            });
+          }else{
+            console.log('vehicle exists')
+          }
+        })
+        .on('end', rowCount => function(){
+          insertPositions(vehiclesByMMSI);
+        });*/
+
+      insertPositions(vehiclesByMMSI);
+
+    });
+
+    function insertPositions(vehiclesByMMSI){
+
+
+            fs.createReadStream(path.resolve(__dirname, '', filename))
+            .pipe(csv.parse({ headers: true }))
+            .on('error', error => console.error(error))
+            .on('data', row => {
+              let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+              let pos = {
+                timestamp: new Date(row.timestamp),
+                latitude: parseFloat(row.lat),
+                longitude: parseFloat(row.lon),
+                altitude: null,
+                speed: parseFloat(row.speed),
+                course: parseFloat(row.course),
+                source: 'import',
+              }
+
+              if(vehiclesByMMSI[parseInt(row.mmsi)]){
+
+                if(row.callsign.length === 0)
+                  row.callsign = row.mmsi;
+                if(row.name.length === 0)
+                  row.name = row.callsign;
+
+                let identifier = String('VEHICLE' + '_' + row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')).toUpperCase();
+                let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+                console.log(`vehicle ${row.name} exists in db. add position...`);
+                self.insertLocation(vehicle.doc.identifier, pos);
+              }
+            })
+            .on('end', rowCount2 => function(){
+
+              console.log('fin.')
+
+            });
+    }
+  };
 })();
 
 console.log(program.opts());
@@ -523,6 +665,9 @@ if (program.mail) {
 }
 if (program.C) {
   service.generateTestCases(program.C);
+}
+if (program.I) {
+  service.importFromCSV(program.I);
 }
 
 //service.initMail();

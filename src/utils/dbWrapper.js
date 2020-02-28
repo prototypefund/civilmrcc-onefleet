@@ -1,6 +1,8 @@
 import pouchwrapper from 'pouchwrapper';
+import * as moment from 'moment';
 import config from '../../config/config.js';
 
+import { serverBus } from '../main';
 pouchwrapper.setConfig(config);
 
 pouchwrapper.getPositionsForItem = function(identifier, cb) {
@@ -22,8 +24,7 @@ pouchwrapper.getPositionsForItem = function(identifier, cb) {
         result.rows = result.rows.splice(-1000);
       }
       if (result.error) return self.fetchError(result);
-
-      cb(result);
+      cb(result); 
       // handle result
     })
     .catch(function(err) {
@@ -160,4 +161,125 @@ pouchwrapper.updateShownItemsOnMap = function(map, options) {
     else options.map.hideItem(identifier);
   }
 };
+
+/** Method starts timelapse replay
+* @param {Object} options.map
+* @param {String} options.startDate       starting datetime of the replay
+* @param {String} options.endDate         ending datetime of the replay
+* @param {Number} options.minutesPerFrame minutesPerFrame added to the animation per frame update
+* @param {Number} options.frameLength     length in s in which a frame is shown
+*/
+pouchwrapper.startReplay = function(options,cb){
+    console.log('Start replay with following options:',options);
+    let self = this;
+    //store old tracking type to
+    //to reset map after replay
+    let old_tracking_value = {};
+    if(localStorage.settings_max_track_type){
+      old_tracking_value = {
+        tracking_type:localStorage.settings_max_track_type
+      }
+      if(localStorage.settings_track_startdate)
+        old_tracking_value.settings_track_startdate = localStorage.settings_track_startdate;
+      if(localStorage.settings_track_enddate)
+        old_tracking_value.settings_track_enddate = localStorage.settings_track_enddate;
+      if(localStorage.settings_map_track_length)
+        old_tracking_value.settings_map_track_length = localStorage.settings_map_track_length;
+    }
+    
+    //set tracking type, start_date and end_date
+    localStorage.settings_max_track_type = 'date_range';
+    localStorage.settings_track_startdate = options.startDate;
+    localStorage.settings_track_enddate = options.endDate;
+
+
+    //cleanup old positions
+    for(let o in options.map.loaded_items){
+      if(options.map.loaded_items[o].marker)
+        options.map.loaded_items[o].marker.remove();
+      if(options.map.loaded_items[o].line)
+        options.map.loaded_items[o].line.remove();
+
+      delete options.map.loaded_items[o];
+    }
+
+
+    //get total numbers of items to call start_interval()
+    //once they are loaded async
+    let total_items = 0;
+    for (let identifier in options.shown_items) {
+      total_items++;
+    }
+
+
+    let i = 0;
+    let replay_items = []
+    //loop through items
+    for (let identifier in options.shown_items) {
+      if (options.shown_items[identifier] == 'true'){
+        self.getItem(identifier, function(result) {
+         
+          replay_items.push(result);
+
+          i++;
+          if(i === total_items){
+            start_interval(replay_items);
+          }
+
+        });
+      }
+      else{
+          options.map.hideItem(identifier)
+          i++;
+          if(i === total_items){
+            start_interval(replay_items);
+          }
+      };
+    }
+
+
+    let start_interval = function(items){
+      console.log(replay_items);
+      let currentDate = moment(options.startDate);
+      
+      let interval = setInterval(()=>{
+
+        console.log(replay_items);
+
+        currentDate.add(options.minutesPerFrame, 'hours');
+        localStorage.settings_track_enddate = currentDate.format('YYYY-MM-DTHH:MM');
+
+        serverBus.$emit('replay_next_tick',currentDate);
+
+        for(let i in replay_items){
+
+          //options.map.updateItemPosition(replay_items[i]);
+          console.log(replay_items[i]);
+
+          self.getItem(replay_items[i].id, function(loadeditem) {
+              let templatedItem = options.map.loadTemplatedItem(loadeditem);
+              console.log(templatedItem);
+              options.map.updateItemPosition(templatedItem);
+          });
+        }
+
+        if(currentDate.unix() >= moment(options.endDate).unix()){
+          alert('replay finished');
+          clearInterval(interval);
+          localStorage.settings_max_track_type = old_tracking_value.tracking_type;
+          if(old_tracking_value.settings_track_startdate)
+            localStorage.settings_track_startdate = old_tracking_value.settings_track_startdate;
+          if(old_tracking_value.settings_track_enddate)
+            localStorage.settings_track_enddate = old_tracking_value.settings_track_enddate;
+          if(old_tracking_value.settings_map_track_length)
+            localStorage.settings_map_track_length = old_tracking_value.settings_map_track_length;
+          cb();
+        }
+
+      }, Number(options.frameLength)*1000);
+
+
+    }
+
+  }
 export default pouchwrapper;

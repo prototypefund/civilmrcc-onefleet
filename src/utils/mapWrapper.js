@@ -307,6 +307,7 @@ var mapWrapper = function() {
    * @returns
    */
   this.loadTemplatedItem = function(item) {
+    console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -344,12 +345,12 @@ var mapWrapper = function() {
     // polygon: series of points
     switch (item.doc.template) {
       case 'vehicle':
-        item.doc.template = 'line';
+        item.doc.base_template = 'line';
         if (typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
         break;
       case 'case':
-        item.doc.template = 'point';
+        //item.doc.template = 'point';
         if (typeof item.doc.properties.icon !== 'undefined')
           item.doc.properties.icon = './vehicle.png';
         break;
@@ -379,6 +380,32 @@ var mapWrapper = function() {
    */
   this.clickItem = function() {};
 
+
+  this.generateLineCaption = function(item) {
+    /*let max_length = 5;
+    item.positions.slice(-1 * max_length);*/
+    var markers = [];
+    if (item.positions.length > 0) {
+      for (var i in item.positions) {
+        var v = item.positions[i];
+        if (v.doc.lat && v.doc.lon){
+          let date = new Date(v.doc.timestamp);
+          let caption = date.toISOString().slice(0,10)+' - '+String(date.getHours()).padStart(2, "0")+':'+String(date.getMinutes()).padStart(2, "0");
+          let icon = L.divIcon({
+            className: 'lineCaption',
+            html: '<div>'+caption+'</div>',
+          });
+          //let marker = new L.marker([v.doc.lat, v.doc.lon], { opacity: 0.5 }); //opacity may be set to zero
+
+          let marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
+          markers.push(marker);
+        }
+        //pointList.push()
+      }
+
+      return markers;
+    }
+  };
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
    * @param {Object} item The item that should be updated.
@@ -406,7 +433,7 @@ var mapWrapper = function() {
       var color;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
-      else color = ['red', 'yellow', 'blue'][Math.floor(Math.random() * 2)];
+      else color = ["AliceBlue", "AntiqueWhite", "Aqua", "Aquamarine", "Azure", "Beige", "Bisque", "Black", "BlanchedAlmond", "Blue", "BlueViolet", "Brown", "BurlyWood", "CadetBlue", "Chartreuse", "Chocolate", "Coral", "CornflowerBlue", "Cornsilk", "Crimson", "Cyan", "DarkBlue", "DarkCyan", "DarkGoldenRod", "DarkGray", "DarkGrey", "DarkGreen", "DarkKhaki", "DarkMagenta", "DarkOliveGreen", "DarkOrange", "DarkOrchid", "DarkRed", "DarkSalmon", "DarkSeaGreen", "DarkSlateBlue", "DarkSlateGray", "DarkSlateGrey", "DarkTurquoise", "DarkViolet", "DeepPink", "DeepSkyBlue", "DimGray", "DimGrey", "DodgerBlue", "FireBrick", "FloralWhite", "ForestGreen", "Fuchsia", "Gainsboro", "GhostWhite", "Gold", "GoldenRod", "Gray", "Grey", "Green", "GreenYellow", "HoneyDew", "HotPink", "IndianRed", "Indigo", "Ivory", "Khaki", "Lavender", "LavenderBlush", "LawnGreen", "LemonChiffon", "LightBlue", "LightCoral", "LightCyan", "LightGoldenRodYellow", "LightGray", "LightGrey", "LightGreen", "LightPink", "LightSalmon", "LightSeaGreen", "LightSkyBlue", "LightSlateGray", "LightSlateGrey", "LightSteelBlue", "LightYellow", "Lime", "LimeGreen", "Linen", "Magenta", "Maroon", "MediumAquaMarine", "MediumBlue", "MediumOrchid", "MediumPurple", "MediumSeaGreen", "MediumSlateBlue", "MediumSpringGreen", "MediumTurquoise", "MediumVioletRed", "MidnightBlue", "MintCream", "MistyRose", "Moccasin", "NavajoWhite", "Navy", "OldLace", "Olive", "OliveDrab", "Orange", "OrangeRed", "Orchid", "PaleGoldenRod", "PaleGreen", "PaleTurquoise", "PaleVioletRed", "PapayaWhip", "PeachPuff", "Peru", "Pink", "Plum", "PowderBlue", "Purple", "RebeccaPurple", "Red", "RosyBrown", "RoyalBlue", "SaddleBrown", "Salmon", "SandyBrown", "SeaGreen", "SeaShell", "Sienna", "Silver", "SkyBlue", "SlateBlue", "SlateGray", "SlateGrey", "Snow", "SpringGreen", "SteelBlue", "Tan", "Teal", "Thistle", "Tomato", "Turquoise", "Violet", "Wheat", "White", "WhiteSmoke", "Yellow", "YellowGreen" ][Math.floor(Math.random() * 148)];
 
       return new L.Polyline(pointList, {
         color: color,
@@ -444,60 +471,85 @@ var mapWrapper = function() {
   this.generateMarker = function(item) {
     var self = this;
     var marker;
+    var positions = item.positions;
+    for (var i in positions) {
+      var v = positions[i];
+      //last position
+      if (positions.length == 1 || i == positions.length - 1) {
+        var width = 16;
+        var height = 16;
+        var rotation = v.doc.heading;
+        var style =
+          'transform: rotate(' +
+          rotation +
+          'deg);width: ' +
+          width +
+          'px; height:' +
+          height +
+          'px;margin-left:-' +
+          width / 2 +
+          'px;margin-top:-' +
+          height / 2 +
+          'px;';
 
-    if (item.positions.length > 0) {
-      // place the marker at the last known position:
-      var v = item.positions[item.positions.length - 1];
 
-      var width = 16;
-      var height = 16;
-      var rotation = v.doc.heading;
-      var style =
-        'transform: rotate(' +
-        rotation +
-        'deg);width: ' +
-        width +
-        'px; height:' +
-        height +
-        'px;margin-left:-' +
-        width / 2 +
-        'px;margin-top:-' +
-        height / 2 +
-        'px;';
-      var icon = L.divIcon({
-        className: 'vehicle-marker',
-        html: '<img src="/gfx/icons/cursor.png" style="' + style + '">',
-      });
-
-      if (
-        typeof v.doc.lat !== 'undefined' &&
-        typeof v.doc.lon !== 'undefined'
-      ) {
-        // create a new marker with the given lat/lon position and icon
-        marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
-        // on click, call this mapWrapper's clickItem() function
-        // without overwriting its "this" module (?), but
-        // with binding its first parameter to the item's ID:
-        marker.on('click', L.bind(self.clickItem, null, item.id));
-        // Use the item's identifier (and its name if applicable) as Pop-up
-        let popupcontent = item.doc.identifier.toString();
-        if (item.doc.properties.name) {
-          popupcontent += ' - ' + item.doc.properties.name;
+        let icon;
+        let caption = '';
+        console.log(item.doc);
+        if(localStorage.settings_showcaptions === 'true'&&
+          typeof item.doc.properties.name !== undefined){
+          caption = '<span class="itemCaption">'+item.doc.properties.name+'</span>';
         }
-        // bind the popupcontent to the marker. Used by openPopup() below
-        marker.bindPopup(popupcontent);
-        // on mouseover, the marker's openPopup() function shall be called
-        marker.on('mouseover', function() {
-          // call leaflet's Marker.openPopup() function, displaying the
-          // popupcontent that has been bound to this marker just above.
-          this.openPopup();
-        });
-        // on mouseout, the marker's closePopup() function shall be called
-        marker.on('mouseout', function() {
-          // call leaflet's Marker.closePopup() function
-          this.closePopup();
-        });
-        return marker;
+
+        if (
+          item.doc.template !== 'case' &&
+          item.doc.template !== 'vehicle' &&
+          typeof item.doc.properties.icon !== undefined
+        ) {
+          icon = L.divIcon({
+            className: 'vehicle-marker',
+            html:
+              '<div><span class="el-icon-' +
+              item.doc.properties.icon +
+              '"></span>'+caption+'</div>',
+          });
+        } else {
+          icon = L.divIcon({
+            className: 'vehicle-marker',
+            html: '<div><img src="/gfx/icons/cursor.png" style="' + style + '">'+caption+'</div>',
+          });
+        }
+
+        if (
+          typeof v.doc.lat !== 'undefined' &&
+          typeof v.doc.lon !== 'undefined'
+        ) {
+          // create a new marker with the given lat/lon position and icon
+          marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
+          // on click, call this mapWrapper's clickItem() function
+          // without overwriting its "this" module (?), but
+          // with binding its first parameter to the item's ID:
+          marker.on('click', L.bind(self.clickItem, null, item.id));
+          // Use the item's identifier (and its name if applicable) as Pop-up
+          let popupcontent = item.doc.identifier.toString();
+          if (item.doc.properties.name) {
+            popupcontent += ' - ' + item.doc.properties.name;
+          }
+          // bind the popupcontent to the marker. Used by openPopup() below
+          marker.bindPopup(popupcontent);
+          // on mouseover, the marker's openPopup() function shall be called
+          marker.on('mouseover', function() {
+            // call leaflet's Marker.openPopup() function, displaying the
+            // popupcontent that has been bound to this marker just above.
+            this.openPopup();
+          });
+          // on mouseout, the marker's closePopup() function shall be called
+          marker.on('mouseout', function() {
+            // call leaflet's Marker.closePopup() function
+            this.closePopup();
+          });
+          return marker;
+        }
       }
       // return 'undefined' if lat or lon are 'undefined'
     }
@@ -521,23 +573,35 @@ var mapWrapper = function() {
    */
   this.addItemToMap = function(item) {
     item = this.loadTemplatedItem(item);
-    this.loaded_items[item.id] = {};
 
-    var line = false;
-    var marker = false;
+    var line = false,
+    marker = false,
+    lineCaptions = false;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
     }
-
     if (typeof item.positions != 'undefined' && item.positions.length > 0) {
       line = this.generateLine(item);
       marker = this.generateMarker(item);
+
+      //load linecaptions only if it is set in settings
+      if(localStorage.settings_positiontimestamps == 'true')
+        lineCaptions = this.generateLineCaption(item,true);
+
+      this.loaded_items[item.id] = {};
       if (marker) {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
+
       }
-      if (item.doc.template == 'line' && line) {
+      if (lineCaptions) {
+        this.loaded_items[item.id].lineCaptions = lineCaptions;
+        for(let i in this.loaded_items[item.id].lineCaptions){
+          this.loaded_items[item.id].lineCaptions[i].addTo(this.map);
+        }
+      }
+      if (item.doc.base_template == 'line' && line) {
         this.loaded_items[item.id].line = line;
         this.loaded_items[item.id].line.addTo(this.map);
       }
@@ -558,12 +622,22 @@ var mapWrapper = function() {
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   this.updateItemPosition = function(item) {
+    let self = this;
+    console.log('updateItemPosition');
+    console.log(item);
     if (item.positions.length < 1) {
+      console.log('no positions available')
       return false;
     }
     if (typeof this.loaded_items[item.id] == 'undefined') {
+
+      console.log('add item');
       this.addItemToMap(item);
+
+
     } else {
+
+      console.log('update item', this.loaded_items[item.id]);
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {
@@ -580,6 +654,13 @@ var mapWrapper = function() {
           opacity: 1,
         });
       }
+
+
+      if(this.loaded_items[item.id].lineCaptions){
+        for(let i in this.loaded_items[item.id].lineCaptions){
+            this.loaded_items[item.id].lineCaptions[i].setOpacity(1).update();
+        }
+      }
     }
   };
 
@@ -593,6 +674,11 @@ var mapWrapper = function() {
         opacity: 0,
       });
       this.loaded_items[item_id].marker.setOpacity(0).update();
+
+
+      for(let i in this.loaded_items[item_id].lineCaptions){
+          this.loaded_items[item_id].lineCaptions[i].setOpacity(0).update();
+      }
     }
   };
 
