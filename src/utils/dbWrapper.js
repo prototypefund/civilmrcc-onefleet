@@ -166,7 +166,7 @@ pouchwrapper.updateShownItemsOnMap = function(map, options) {
 * @param {Object} options.map
 * @param {String} options.startDate       starting datetime of the replay
 * @param {String} options.endDate         ending datetime of the replay
-* @param {Number} options.minutesPerFrame minutesPerFrame added to the animation per frame update
+* @param {Number} options.hoursPerFrame   hoursPerFrame added to the animation per frame update
 * @param {Number} options.frameLength     length in s in which a frame is shown
 */
 pouchwrapper.startReplay = function(options,cb){
@@ -207,7 +207,8 @@ pouchwrapper.startReplay = function(options,cb){
     //get total numbers of items to call start_interval()
     //once they are loaded async
     let total_items = 0;
-    for (let identifier in options.shown_items) {
+    /* eslint-disable-next-line */
+    for (let identifier in options.shown_items) { 
       total_items++;
     }
 
@@ -234,28 +235,21 @@ pouchwrapper.startReplay = function(options,cb){
           if(i === total_items){
             start_interval(replay_items);
           }
-      };
+      }
     }
 
 
-    let start_interval = function(items){
-      console.log(replay_items);
+    let start_interval = function(){
       let currentDate = moment(options.startDate);
       
       let interval = setInterval(()=>{
 
-        console.log(replay_items);
-
-        currentDate.add(options.minutesPerFrame, 'hours');
+        currentDate.add(options.hoursPerFrame, 'hours');
         localStorage.settings_track_enddate = currentDate.format('YYYY-MM-DTHH:MM');
 
         serverBus.$emit('replay_next_tick',currentDate);
 
         for(let i in replay_items){
-
-          //options.map.updateItemPosition(replay_items[i]);
-          console.log(replay_items[i]);
-
           self.getItem(replay_items[i].id, function(loadeditem) {
               let templatedItem = options.map.loadTemplatedItem(loadeditem);
               console.log(templatedItem);

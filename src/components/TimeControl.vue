@@ -10,7 +10,7 @@
         <form @submit="startReplay" class="timeControl form-style-6" v-if="!showReplayMode">
               <input type="datetime-local" placeholder="date from" v-model="replayData.startDate">
               <input type="datetime-local" placeholder="date to" v-model="replayData.endDate">
-              <input type="number" placeholder="minutes per frame" style="width:40%" v-model="replayData.minutesPerFrame">
+              <input type="number" placeholder="hours per frame" style="width:40%" v-model="replayData.hoursPerFrame">
               <input type="number" placeholder="frame length in s" style="width:40%; float:right:" v-model="replayData.frameLength">
               <el-button type="success" icon="el-icon-video-play" circle @click="startReplay"></el-button>
         </form>
@@ -19,9 +19,8 @@
 
 <script>
 import * as moment from 'moment';
-
 import { serverBus } from '../main';
-import config from '../../config/config.js';
+
 let staticStartDate = moment().subtract(1, 'days').format('YYYY-MM-DTHH:MM');
 export default {
   name: 'TimeControl',
@@ -30,8 +29,8 @@ export default {
       replayData:{
           startDate:staticStartDate,
           endDate:moment().format('YYYY-MM-DTHH:MM'),
-          minutesPerFrame:15,
-          frameLength:10
+          hoursPerFrame:1,
+          frameLength:3
       },
       showReplayMode:false,
       startDate:0,
