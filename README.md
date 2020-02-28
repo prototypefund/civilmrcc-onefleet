@@ -4,12 +4,12 @@
 
 ## **Backround Information**
 
-A Maritime Rescue Coordination Center (MRCC) is a state run facilty to coordinate and provide Search-and-Rescue (SAR) operations for distress cases at sea. They are responsible for a geographic area. In the Central Mediterranean Italy, Malta and Libya are running this MRCCs. With the new government in Italy (2018) the priorities in the coordination slowly shifted from an effective, fast & safe rescue to push backs to Libya by any means necessary. This development turns the Libyan SAR region into a deadly blackbox. Nowadays distress cases are often not coordinated at all and information is not shared in a way to make a fast & safe rescue possible. If a rescue takes place and people are not pushed back to Libya in violation of the Geneva refugee convention, often disembarkation is denied for days or even weeks. The result is that more and more merchant vessels do not react to distress cases any more or carry out illegal push back themselves.
+A Maritime Rescue Coordination Center (MRCC) is a state run facilty to coordinate and provide Search-and-Rescue (SAR) operations for distress cases at sea. They are responsible for a geographic area. In the Central Mediterranen Italy, Malta and Libya are running this MRCCs. With the new government in Italy (2018) the priorities in the coordination slowly shifted from an effective, fast & safe rescue to push backs to Libya by any means necessary. This development turns the Libyan SAR region into a deadly blackbox. Nowadays distress cases are often not coordinated at all and information is not shared in a way to make a fast & safe rescue possible. If a rescue takes place and people are not pushed back to Libya in violation of the Geneva refugee convention, often disembarkation is denied for days or even weeks. The result is that more and more merchant vessel do not react to distress cases any more or carry out illegal push back themselves.
 We do not want to accept a human rights free zone on the mediterranean. Therefore both issues, the coordination of distress cases in the moment they occur, as well as the monitoring and follow-up of human rights violations at sea, have to be addressed.
 
 ## **Goal**
 
-For the better coordination of distress cases in the Mediterranean, as well as the monitoring and follow-up of human rights violations at sea a civil maritime rescue coordination center (cMRCC), we set up this App as an OpenSource project and call it OneFleet. It is a platform providing a geo-information-system (GIS), a database and a communication infrastructure for NGOs who are operating in the field of Search-and-Rescue in the Mediterranean. OneFleet facilitates exchange between the different organizations involved so that they can become more efficient and flexible in their operations. Moreover, the application will provide the public with information on the activities in the Mediterranean. Its open infrastructure allows to easily exchange information.
+For the better coordination of distress cases in the Mediterranean, as well as the monitoring and follow-up of human rights violations at sea a civil maritime rescue coordination center (cMRCC), we set up this App as an OpenSource project and call it OneFleet. It is a platform providing a geo-information-syste (GIS), a database and a communication infrastructure for NGOs who are operating in the field of Search and Rescue in the Mediterranean. OneFleet facilitates exchange between the different organizations involved so that they can become more efficient and flexible in their operations. Moreover, the application will provide the public with information on the activities in the Mediterranean. Its open infrastructure allows to easily exchange information.
 ![](https://i.imgur.com/HYG0Dus.png)
 
 ## **Technical development**
@@ -21,6 +21,34 @@ For a detailed listing about all the requested functions and features see the ba
 ## **About this Repo**
 
 This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are stored and the location-service which gathers e.g. ship locations to store them in the database. The location-service and the database have to run when you start the app
+
+
+```mermaid
+classDiagram
+      CouchDB <|--> Client1: sync
+      CouchDB <|--> Client2: sync
+      CouchDB <|-- Client3: sync
+      CouchDB <|-- LocationServices
+      HistoricalDatabase <|-- CouchDB
+      CouchDB : contains live data
+      class Client1{
+          runs onefleet in browser
+      }
+      class Client2{
+          runs onefleet in browser
+      }
+      class Client3{
+          runs onefleet in browser
+      }
+      class LocationServices{
+          +ais service
+          +mail service
+      }
+      class HistoricalDatabase{
+          contains historical data
+          (not part of this repo)
+      }
+```
 
 ## **Contributing Guide**
 
@@ -61,7 +89,7 @@ npm run start
 
 #### Start Database
 
-The database in this repo is a pouchdb-server instance. We highly recommend to use couchdb in production.
+The database in this repo is a pouchdb-server instance. We highly recomend to use couchdb in production.
 
 ```
 cd services/database
