@@ -622,7 +622,6 @@ var mapWrapper = function() {
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   this.updateItemPosition = function(item) {
-    let self = this;
     console.log('updateItemPosition');
     console.log(item);
     if (item.positions.length < 1) {

@@ -48,7 +48,6 @@ export default {
       map: this.$map,
     });
     this.$db.setOnChange('positions', 'map_area', function(change) {
-      return null;
       if (change.direction == 'push') {
         change.change.docs.forEach(function(item) {
           let identifier = 'VEHICLE_' + item.item_identifier;
