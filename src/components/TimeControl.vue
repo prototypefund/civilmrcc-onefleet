@@ -1,47 +1,75 @@
 <template>
+  <div>
+    <div v-if="showReplayMode" class="timeControl replay">
+      <p>Replay ongoing</p>
       <div>
-        <div v-if="showReplayMode" class="timeControl replay">
-          <p>Replay ongoing</p>
-          <div>
-            {{startDate}} - 
-            {{endDate}}
-          </div>
-        </div>
-        <form @submit="startReplay" class="timeControl form-style-6" v-if="!showReplayMode">
-              <input type="datetime-local" placeholder="date from" v-model="replayData.startDate">
-              <input type="datetime-local" placeholder="date to" v-model="replayData.endDate">
-              <input type="number" placeholder="hours per frame" style="width:40%" v-model="replayData.hoursPerFrame">
-              <input type="number" placeholder="frame length in s" style="width:40%; float:right:" v-model="replayData.frameLength">
-              <el-button type="success" icon="el-icon-video-play" circle @click="startReplay"></el-button>
-        </form>
+        {{ startDate }} -
+        {{ endDate }}
       </div>
+    </div>
+    <form
+      @submit="startReplay"
+      class="timeControl form-style-6"
+      v-if="!showReplayMode"
+    >
+      <input
+        type="datetime-local"
+        placeholder="date from"
+        v-model="replayData.startDate"
+      />
+      <input
+        type="datetime-local"
+        placeholder="date to"
+        v-model="replayData.endDate"
+      />
+      <input
+        type="number"
+        placeholder="hours per frame"
+        style="width:40%"
+        v-model="replayData.hoursPerFrame"
+      />
+      <input
+        type="number"
+        placeholder="frame length in s"
+        style="width:40%; float:right:"
+        v-model="replayData.frameLength"
+      />
+      <el-button
+        type="success"
+        icon="el-icon-video-play"
+        circle
+        @click="startReplay"
+      ></el-button>
+    </form>
+  </div>
 </template>
 
 <script>
 import * as moment from 'moment';
 import { serverBus } from '../main';
 
-let staticStartDate = moment().subtract(1, 'days').format('YYYY-MM-DTHH:MM');
+let staticStartDate = moment()
+  .subtract(1, 'days')
+  .format('YYYY-MM-DTHH:MM');
 export default {
   name: 'TimeControl',
   data: function() {
     return {
-      replayData:{
-          startDate:staticStartDate,
-          endDate:moment().format('YYYY-MM-DTHH:MM'),
-          hoursPerFrame:1,
-          frameLength:3
+      replayData: {
+        startDate: staticStartDate,
+        endDate: moment().format('YYYY-MM-DTHH:MM'),
+        hoursPerFrame: 1,
+        frameLength: 3,
       },
-      showReplayMode:false,
-      startDate:0,
-      endDate:0
+      showReplayMode: false,
+      startDate: 0,
+      endDate: 0,
     };
   },
   methods: {
     startReplay: function() {
-
       serverBus.$emit('start_replay', this.replayData);
-    }
+    },
   },
   mounted: function() {
     let self = this;
@@ -61,22 +89,21 @@ export default {
     serverBus.$on('replay_finished', () => {
       self.showReplayMode = false;
     });
-
-  }
+  },
 };
 </script>
 <style scoped>
-.timeControl{
-    background:#FFF;
-    width: 400px;
-    position: absolute;
-    z-index: 999;
-    left: 50%;
-    margin-left: -200px;
-    margin-top: 60px;
+.timeControl {
+  background: #fff;
+  width: 400px;
+  position: absolute;
+  z-index: 999;
+  left: 50%;
+  margin-left: -200px;
+  margin-top: 60px;
 }
 
-.timeControl.replay{
-  padding:5px;
+.timeControl.replay {
+  padding: 5px;
 }
 </style>

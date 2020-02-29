@@ -22,7 +22,6 @@ export default {
         shown_items: shown_items,
         map: self.$map,
       });
-
     });
 
     serverBus.$on('fly_to_position', position => {
@@ -33,9 +32,9 @@ export default {
       console.log(replayData);
       replayData.map = self.$map;
       replayData.shown_items = self.shown_items;
-      serverBus.$emit('replay_started',1);
-      self.$db.startReplay(replayData,function(){
-        serverBus.$emit('replay_finished',1);
+      serverBus.$emit('replay_started', 1);
+      self.$db.startReplay(replayData, function() {
+        serverBus.$emit('replay_finished', 1);
       });
     });
 
@@ -77,9 +76,10 @@ export default {
   margin-top: 0 !important;
 }
 
-.itemCaption,.lineCaption{
-  background: rgba(0,0,0,0.8);
-  color: #FFF;
+.itemCaption,
+.lineCaption {
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
   padding: 3px;
   width: 80px;
   display: block;
@@ -87,8 +87,8 @@ export default {
   text-align: center;
   font-size: 10px;
 }
-.lineCaption{    
-  width: 70px!important;
+.lineCaption {
+  width: 70px !important;
   font-size: 7px;
 }
 </style>

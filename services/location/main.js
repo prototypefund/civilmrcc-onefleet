@@ -2,7 +2,6 @@ const PouchDB = require('pouchdb');
 const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
-
 const fs = require('fs');
 const path = require('path');
 const csv = require('fast-csv');
@@ -158,7 +157,7 @@ let service = new (function() {
         cb(err);
       });
   };
-  this.getItems = function(identifier,callback) {
+  this.getItems = function(identifier, callback) {
     var items = this.itemDB;
     var self = this;
     items
@@ -180,7 +179,7 @@ let service = new (function() {
     this.initDBs();
     //this.initMail();
     var self = this;
-    this.getVehicles('VEHICLE',function(err, res) {
+    this.getVehicles('VEHICLE', function(err, res) {
       if (err) {
         console.log(err);
       } else {
@@ -355,7 +354,7 @@ let service = new (function() {
 
     console.log('getting vehicles...');
 
-    this.getItems('VEHICLE',function(err, res) {
+    this.getItems('VEHICLE', function(err, res) {
       console.log('got items');
       if (err) console.log(err);
 
@@ -524,8 +523,7 @@ let service = new (function() {
     console.log(objects);
   };
 
-  this.importFromCSV = function(filename){
-
+  this.importFromCSV = function(filename) {
     /*
     usage for large csv:
     1. split up file to smaller filers:
@@ -538,19 +536,18 @@ let service = new (function() {
       done
     */
 
-
     let self = this;
 
     this.initDBs();
     //get all vehicles from db
-    this.getItems('VEHICLE',function(err, res) {
+    this.getItems('VEHICLE', function(err, res) {
       console.log('got items');
-      if (err) throw(err);
+      if (err) throw err;
 
       //restore items with mmsi as identifier
-      let vehiclesByMMSI = {}
-      for(let i in res){
-        if(typeof res[i].doc.properties.MMSI != 'undefined'){
+      let vehiclesByMMSI = {};
+      for (let i in res) {
+        if (typeof res[i].doc.properties.MMSI != 'undefined') {
           vehiclesByMMSI[res[i].doc.properties.MMSI] = res[i];
         }
       }
@@ -609,45 +606,45 @@ let service = new (function() {
         });*/
 
       insertPositions(vehiclesByMMSI);
-
     });
 
-    function insertPositions(vehiclesByMMSI){
+    function insertPositions(vehiclesByMMSI) {
+      fs.createReadStream(path.resolve(__dirname, '', filename))
+        .pipe(csv.parse({ headers: true }))
+        .on('error', error => console.error(error))
+        .on('data', row => {
+          let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+          let pos = {
+            timestamp: new Date(row.timestamp),
+            latitude: parseFloat(row.lat),
+            longitude: parseFloat(row.lon),
+            altitude: null,
+            speed: parseFloat(row.speed),
+            course: parseFloat(row.course),
+            source: 'import',
+          };
 
+          if (vehiclesByMMSI[parseInt(row.mmsi)]) {
+            if (row.callsign.length === 0) row.callsign = row.mmsi;
+            if (row.name.length === 0) row.name = row.callsign;
 
-            fs.createReadStream(path.resolve(__dirname, '', filename))
-            .pipe(csv.parse({ headers: true }))
-            .on('error', error => console.error(error))
-            .on('data', row => {
-              let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
-              let pos = {
-                timestamp: new Date(row.timestamp),
-                latitude: parseFloat(row.lat),
-                longitude: parseFloat(row.lon),
-                altitude: null,
-                speed: parseFloat(row.speed),
-                course: parseFloat(row.course),
-                source: 'import',
-              }
-
-              if(vehiclesByMMSI[parseInt(row.mmsi)]){
-
-                if(row.callsign.length === 0)
-                  row.callsign = row.mmsi;
-                if(row.name.length === 0)
-                  row.name = row.callsign;
-
-                let identifier = String('VEHICLE' + '_' + row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')).toUpperCase();
-                let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
-                console.log(`vehicle ${row.name} exists in db. add position...`);
-                self.insertLocation(vehicle.doc.identifier, pos);
-              }
-            })
-            .on('end', rowCount2 => function(){
-
-              console.log('fin.')
-
-            });
+            let identifier = String(
+              'VEHICLE' +
+                '_' +
+                row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
+            ).toUpperCase();
+            let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+            console.log(`vehicle ${row.name} exists in db. add position...`);
+            self.insertLocation(vehicle.doc.identifier, pos);
+          }
+        })
+        .on(
+          'end',
+          rowCount2 =>
+            function() {
+              console.log('fin.');
+            }
+        );
     }
   };
 })();

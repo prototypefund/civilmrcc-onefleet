@@ -28,7 +28,7 @@
           </span>
         </a>
       </li>
-      <li v-on:click="show_timeControl=!show_timeControl">
+      <li v-on:click="show_timeControl = !show_timeControl">
         <a>
           <i class="fas fa-play"></i>
           <span>
@@ -37,9 +37,8 @@
         </a>
       </li>
     </ul>
-      <TimeControl v-if="show_timeControl"></TimeControl>
+    <TimeControl v-if="show_timeControl"></TimeControl>
     <ul id="nav-right">
-
       <li v-on:click="toggleAir()">
         <a>
           <i class="fas fa-plane"></i>
@@ -76,12 +75,12 @@ import { serverBus } from '../main';
 export default {
   name: 'TopNavigation',
   components: {
-    TimeControl
+    TimeControl,
   },
   data: function() {
     return {
       show_air: false,
-      show_timeControl:false,
+      show_timeControl: false,
       username: '',
       password: '',
     };
