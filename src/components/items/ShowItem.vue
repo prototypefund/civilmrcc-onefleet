@@ -13,6 +13,20 @@
         />
         <div v-for="field in template_data.fields" :key="field">
           <span>{{ field.title }}</span>
+
+          <!-- iconwrapper start -->
+          <div class="iconwrapper" v-if="field.type == 'icon'">
+            <input
+              v-model="form_data.properties[field.name]"
+              :name="field.name"
+              :placeholder="field.title"
+              type="text"
+              class="icon"
+            />
+            <span class="preview-icon" :class="'el-icon-'+form_data.properties[field.name]">&nbsp;</span>
+          </div>
+          <!-- iconwrapper end -->
+
           <input
             v-if="field.type != 'select'"
             v-model="form_data.properties[field.name]"
@@ -114,9 +128,9 @@ export default {
           });
         }
       }
-      for (let i in changes) {
-        this.$db.addItemLog(this.itemId, changes[i]);
-      }
+      /*for (let i in changes) {
+        //this.$db.addItemLog(this.itemId, changes[i]);
+      }*/
 
       this.$db.createItem(this.form_data, function(err, result) {
         if (err) {

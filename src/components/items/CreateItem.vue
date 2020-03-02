@@ -12,7 +12,7 @@
         >
           <option>case</option>
           <option>vehicle</option>
-          <option>sighting</option>
+          <option>landmark</option>
         </select>
 
         <span>Identifier</span>
@@ -45,8 +45,23 @@
 
         <div v-for="field in template_data.fields" :key="field">
           <span>{{ field.title }}</span>
+
+
+          <!-- iconwrapper start -->
+          <div class="iconwrapper" v-if="field.type == 'icon'">
+            <input
+              v-model="form_data.properties[field.name]"
+              :name="field.name"
+              :placeholder="field.title"
+              type="text"
+              class="icon"
+            />
+            <span class="preview-icon" :class="'el-icon-'+form_data.properties[field.name]">&nbsp;</span>
+          </div>
+          <!-- iconwrapper end -->
+
           <input
-            v-if="field.type != 'select'"
+            v-if="field.type != 'select'&&field.type != 'icon'"
             v-model="form_data.properties[field.name]"
             :name="field.name"
             :placeholder="field.title"
@@ -151,4 +166,5 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped></style>
+<style scoped>
+</style>

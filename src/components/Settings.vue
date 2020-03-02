@@ -40,6 +40,17 @@
         <br />
         <span>Show Openseamap</span>
         <input type="checkbox" value="true" v-model="settings.openseamap" />
+        <br />
+        <span>Always show item captions</span>
+        <input type="checkbox" value="true" v-model="settings.showcaptions" />
+        <br />
+        <span>Show position timestamps</span>
+        <input
+          type="checkbox"
+          value="true"
+          v-model="settings.positiontimestamps"
+        />
+
         <input type="submit" value="Save and reload" />
       </form>
     </div>
@@ -56,10 +67,18 @@ export default {
       settings: {
         maptiles: localStorage.settings_maptiles || 'openlayers',
         openseamap: localStorage.settings_openseamap == 'true' || false,
+        showcaptions: localStorage.settings_showcaptions == 'true' || false,
+        positiontimestamps:
+          localStorage.settings_positiontimestamps == 'true' || false,
         max_track_length: localStorage.settings_map_track_length || 100,
         max_track_type:
           localStorage.settings_max_track_type || 'number_of_positions',
-        track_startdate: new Date().toLocaleDateString(),
+        track_startdate:
+          localStorage.settings_track_startdate ||
+          new Date().toLocaleString('en-US'),
+        track_enddate:
+          localStorage.settings_track_enddate ||
+          new Date().toLocaleString('en-US'),
       },
     };
   },
@@ -72,6 +91,8 @@ export default {
     save: function() {
       localStorage.settings_maptiles = this.settings.maptiles;
       localStorage.settings_openseamap = this.settings.openseamap;
+      localStorage.settings_showcaptions = this.settings.showcaptions;
+      localStorage.settings_positiontimestamps = this.settings.positiontimestamps;
 
       localStorage.settings_max_track_type = this.settings.max_track_type;
       if (this.settings.max_track_type == 'date_range') {
