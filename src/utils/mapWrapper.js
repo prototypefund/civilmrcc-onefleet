@@ -43,6 +43,8 @@ var mapWrapper = function() {
       attribution:
         'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
       maxZoom: 18,
+      minZoom: 3,
+      noWrap: true,
       id: 'groundtile',
     }).addTo(this.map);
 
@@ -50,6 +52,8 @@ var mapWrapper = function() {
       L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
         attribution: '',
         maxZoom: 18,
+        minZoom: 3,
+        noWrap: true,
         id: 'openseamap',
         accessToken: '',
       }).addTo(this.map);
