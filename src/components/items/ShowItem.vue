@@ -23,7 +23,11 @@
               type="text"
               class="icon"
             />
-            <span class="preview-icon" :class="'el-icon-'+form_data.properties[field.name]">&nbsp;</span>
+            <span
+              class="preview-icon"
+              :class="'el-icon-' + form_data.properties[field.name]"
+              >&nbsp;</span
+            >
           </div>
           <!-- iconwrapper end -->
 
