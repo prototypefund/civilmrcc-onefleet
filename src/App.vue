@@ -276,13 +276,13 @@ ul {
   font-weight: normal;
 }
 
-.iconwrapper{
-  width:100%;
+.iconwrapper {
+  width: 100%;
 }
-.iconwrapper input{
+.iconwrapper input {
   width: 80% !important;
 }
-.preview-icon{
+.preview-icon {
   border: 1px solid #c9c9c9;
   margin-left: 10px;
   padding: 11px;

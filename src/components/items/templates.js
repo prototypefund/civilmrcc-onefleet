@@ -212,7 +212,7 @@ export default {
           {
             name: 'icon',
             title: 'icon',
-            type: 'icon'
+            type: 'icon',
           },
         ],
       },
