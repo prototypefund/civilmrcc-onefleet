@@ -9,9 +9,9 @@
   "dependencies": {
     "commander": "^4.1.1",
     "dirty-json": "^0.7.1",
-    "fast-csv": "^4.0.2",
+    "fast-csv": "^4.1.1",
     "mail-listener2": "^0.3.1",
-    "nodemailer": "^6.4.3",
+    "nodemailer": "^6.4.4",
     "nodemailer-smtp-transport": "^2.7.4",
     "pouchdb": "^7.2.1",
     "sqlite3": "^4.1.1"
