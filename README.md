@@ -22,37 +22,37 @@ For a detailed listing about all the requested functions and features see the ba
 
 This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are stored and the location-service which gathers e.g. ship locations to store them in the database. The location-service and the database have to run when you start the app
 
+<!--COMMENT START
+ 
+ This is a diagram generated with mermaid. The image was generated with 
+ https://mermaid-js.github.io/mermaid-live-editor/
+ 
+ classDiagram
+       CouchDB <|--> Client1: sync
+       CouchDB <|--> Client2: sync
+       CouchDB <|-- Client3: sync
+       CouchDB <|-- LocationServices
+       HistoricalDatabase <|-- CouchDB
+       CouchDB : contains live data
+       class Client1{
+           runs onefleet in browser
+       }
+       class Client2{
+           runs onefleet in browser
+       }
+       class Client3{
+           runs onefleet in browser
+       }
+       class LocationServices{
+           +ais service
+           +mail service
+       }
+       class HistoricalDatabase{
+           contains historical data
+           (not part of this repo)
+       }
+ -->
 
-[//]: # COMMENT START
-[//]: # 
-[//]: # This is a diagram generated with mermaid. The image was generated with 
-[//]: # https://mermaid-js.github.io/mermaid-live-editor/
-[//]: # 
-[//]: # classDiagram
-[//]: #       CouchDB <|--> Client1: sync
-[//]: #       CouchDB <|--> Client2: sync
-[//]: #       CouchDB <|-- Client3: sync
-[//]: #       CouchDB <|-- LocationServices
-[//]: #       HistoricalDatabase <|-- CouchDB
-[//]: #       CouchDB : contains live data
-[//]: #       class Client1{
-[//]: #           runs onefleet in browser
-[//]: #       }
-[//]: #       class Client2{
-[//]: #           runs onefleet in browser
-[//]: #       }
-[//]: #       class Client3{
-[//]: #           runs onefleet in browser
-[//]: #       }
-[//]: #       class LocationServices{
-[//]: #           +ais service
-[//]: #           +mail service
-[//]: #       }
-[//]: #       class HistoricalDatabase{
-[//]: #           contains historical data
-[//]: #           (not part of this repo)
-[//]: #       }
-[//]: # COMMENT END
 
 [![](https://mermaid.ink/img/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG4gICAgICBDb3VjaERCIDx8LS0-IENsaWVudDE6IHN5bmNcbiAgICAgIENvdWNoREIgPHwtLT4gQ2xpZW50Mjogc3luY1xuICAgICAgQ291Y2hEQiA8fC0tIENsaWVudDM6IHN5bmNcbiAgICAgIENvdWNoREIgPHwtLSBMb2NhdGlvblNlcnZpY2VzXG4gICAgICBIaXN0b3JpY2FsRGF0YWJhc2UgPHwtLSBDb3VjaERCXG4gICAgICBDb3VjaERCIDogY29udGFpbnMgbGl2ZSBkYXRhXG4gICAgICBjbGFzcyBDbGllbnQxe1xuICAgICAgICAgIHJ1bnMgb25lZmxlZXQgaW4gYnJvd3NlclxuICAgICAgfVxuICAgICAgY2xhc3MgQ2xpZW50MntcbiAgICAgICAgICBydW5zIG9uZWZsZWV0IGluIGJyb3dzZXJcbiAgICAgIH1cbiAgICAgIGNsYXNzIENsaWVudDN7XG4gICAgICAgICAgcnVucyBvbmVmbGVldCBpbiBicm93c2VyXG4gICAgICB9XG4gICAgICBjbGFzcyBMb2NhdGlvblNlcnZpY2Vze1xuICAgICAgICAgICthaXMgc2VydmljZVxuICAgICAgICAgICttYWlsIHNlcnZpY2VcbiAgICAgIH1cbiAgICAgIGNsYXNzIEhpc3RvcmljYWxEYXRhYmFzZXtcbiAgICAgICAgICBjb250YWlucyBoaXN0b3JpY2FsIGRhdGFcbiAgICAgICAgICAobm90IHBhcnQgb2YgdGhpcyByZXBvKVxuICAgICAgfSIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/#/edit/eyJjb2RlIjoiY2xhc3NEaWFncmFtXG4gICAgICBDb3VjaERCIDx8LS0-IENsaWVudDE6IHN5bmNcbiAgICAgIENvdWNoREIgPHwtLT4gQ2xpZW50Mjogc3luY1xuICAgICAgQ291Y2hEQiA8fC0tIENsaWVudDM6IHN5bmNcbiAgICAgIENvdWNoREIgPHwtLSBMb2NhdGlvblNlcnZpY2VzXG4gICAgICBIaXN0b3JpY2FsRGF0YWJhc2UgPHwtLSBDb3VjaERCXG4gICAgICBDb3VjaERCIDogY29udGFpbnMgbGl2ZSBkYXRhXG4gICAgICBjbGFzcyBDbGllbnQxe1xuICAgICAgICAgIHJ1bnMgb25lZmxlZXQgaW4gYnJvd3NlclxuICAgICAgfVxuICAgICAgY2xhc3MgQ2xpZW50MntcbiAgICAgICAgICBydW5zIG9uZWZsZWV0IGluIGJyb3dzZXJcbiAgICAgIH1cbiAgICAgIGNsYXNzIENsaWVudDN7XG4gICAgICAgICAgcnVucyBvbmVmbGVldCBpbiBicm93c2VyXG4gICAgICB9XG4gICAgICBjbGFzcyBMb2NhdGlvblNlcnZpY2Vze1xuICAgICAgICAgICthaXMgc2VydmljZVxuICAgICAgICAgICttYWlsIHNlcnZpY2VcbiAgICAgIH1cbiAgICAgIGNsYXNzIEhpc3RvcmljYWxEYXRhYmFzZXtcbiAgICAgICAgICBjb250YWlucyBoaXN0b3JpY2FsIGRhdGFcbiAgICAgICAgICAobm90IHBhcnQgb2YgdGhpcyByZXBvKVxuICAgICAgfSIsIm1lcm1haWQiOnsidGhlbWUiOiJkZWZhdWx0In0sInVwZGF0ZUVkaXRvciI6ZmFsc2V9)
 
