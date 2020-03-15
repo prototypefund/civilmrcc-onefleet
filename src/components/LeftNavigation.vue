@@ -17,7 +17,7 @@
                 v-if="item.doc.properties.name"
                 >{{ item.doc.properties.name }}</span
               >
-              <span class="item_name" v-if="!item.doc.properties.name">{{
+              <span class="item_name" v-if="!item.doc.properties.name" @click="clickItem(item.id)">{{
                 item.doc._id
               }}</span>
               <span>
