@@ -22,7 +22,7 @@ For a detailed listing about all the requested functions and features see the ba
 
 This repo contains all the services that you need to run to track and display vehicles and positions. It contains the main application which displays vehicles and cases on a map, the database in which locations, vehicles and positions are stored and the location-service which gathers e.g. ship locations to store them in the database. The location-service and the database have to run when you start the app
 
-<!--COMMENT START
+<!--- COMMENT START
  
  This is a diagram generated with mermaid. The image was generated with 
  https://mermaid-js.github.io/mermaid-live-editor/
