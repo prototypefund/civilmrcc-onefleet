@@ -17,9 +17,12 @@
                 v-if="item.doc.properties.name"
                 >{{ item.doc.properties.name }}</span
               >
-              <span class="item_name" v-if="!item.doc.properties.name" @click="clickItem(item.id)">{{
-                item.doc._id
-              }}</span>
+              <span
+                class="item_name"
+                v-if="!item.doc.properties.name"
+                @click="clickItem(item.id)"
+                >{{ item.doc._id }}</span
+              >
               <span>
                 <!-- use span tag to trigger click event, click event on el-tag won't work for some reason -->
                 <span v-on:click="flyToPosition(item.positions)">
