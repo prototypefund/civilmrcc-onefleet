@@ -30,18 +30,25 @@
     "pouchdb-browser": "^7.2.1",
     "pouchwrapper": "0.0.4",
     "vue": "^2.6.11",
-    "vue-chartjs": "^3.5.0"
+    "vue-chartjs": "^3.5.0",
+    "vue-class-component": "^7.2.2",
+    "vue-property-decorator": "^8.3.0"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.1",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
     "@vue/cli-plugin-babel": "^3.12.1",
     "@vue/cli-plugin-eslint": "^4.2.3",
+    "@vue/cli-plugin-typescript": "^4.2.3",
     "@vue/cli-service": "^4.2.3",
+    "@vue/eslint-config-typescript": "^5.0.1",
     "babel-eslint": "^10.1.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
     "extract-zip": "^1.6.7",
     "prettier": "^1.19.1",
+    "typescript": "^3.8.3",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
@@ -51,14 +58,15 @@
     },
     "extends": [
       "plugin:vue/essential",
-      "eslint:recommended"
+      "eslint:recommended",
+      "@vue/typescript"
     ],
     "rules": {
       "no-console": "off",
       "vue/require-v-for-key": "off"
     },
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@typescript-eslint/parser"
     },
     "globals": {
       "L": true

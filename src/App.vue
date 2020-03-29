@@ -26,7 +26,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import TopNavigation from './components/TopNavigation.vue';
 import CreateItem from './components/items/CreateItem.vue';
 import ShowItem from './components/items/ShowItem.vue';
