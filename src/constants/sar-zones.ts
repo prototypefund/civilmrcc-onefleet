@@ -3,7 +3,7 @@
  * If you need to convert some position data, here is a tool: https://www.pgc.umn.edu/apps/convert/
  */
 
-const LybianSarZoneCoordinates = [
+const LybianSarZoneCoordinates: SARCoordinates = [
   [32.366667, 11.5],
   [34.333333, 11.5],
   [34.333333, 23.583333],
@@ -12,14 +12,14 @@ const LybianSarZoneCoordinates = [
   [30.266667, 19.083333],
 ];
 
-const MalteseSarZoneCoordinates = [
+const MalteseSarZoneCoordinates: SARCoordinates = [
   [36.5, 19.0],
   [36.5, 11.5],
   [34.3333, 11.5],
   [34.3333, 23.5833],
 ];
 
-const TunesianSarZoneCoordinates = [
+const TunesianSarZoneCoordinates: SARCoordinates = [
   [32.366667, 11.5],
   [37.5, 11.5],
   [38, 10.35],
@@ -30,7 +30,7 @@ const TunesianSarZoneCoordinates = [
 ];
 
 /** Italien SAR-Zone is splitted into three sepaerate zones of italien regions. Palermo, Catania & Calabria. */
-const PalermoSarZoneCoordinates = [
+const PalermoSarZoneCoordinates: SARCoordinates = [
   [38.02, 14.18],
   [38.183333, 14.1],
   [39.2, 14.1],
@@ -46,7 +46,7 @@ const PalermoSarZoneCoordinates = [
   [38.02, 14.18],
 ];
 
-const CataniaSarZoneCoordinates = [
+const CataniaSarZoneCoordinates: SARCoordinates = [
   [38.02, 14.18],
   [38.183333, 14.1],
   [39.2, 14.1],
@@ -67,7 +67,7 @@ const CataniaSarZoneCoordinates = [
   [38.02, 14.18],
 ];
 
-const CalabriaSarZoneCoordinates = [
+const CalabriaSarZoneCoordinates: SARCoordinates = [
   [40.043333, 15.643333],
   [39.833333, 15.5],
   [39.016667, 14.816667],
@@ -88,12 +88,7 @@ const CalabriaSarZoneCoordinates = [
   [40.043333, 15.643333],
 ];
 
-/** Object of OneFleet SAR Zones with this fields/properties:
- * - coordinates: array of LatLng coordinates which describes a polygon of the SAR zone bounds.
- * - name: The name of the specific SAR zone matching to the coordinates.
- * - color: The color of the SAR zone.
- */
-export const SARZones = [
+export const SARZones: SARZone[] = [
   { coordinates: LybianSarZoneCoordinates, name: 'Lybian', color: '#CC0033' },
   {
     coordinates: TunesianSarZoneCoordinates,
@@ -110,3 +105,19 @@ export const SARZones = [
   },
   { coordinates: CataniaSarZoneCoordinates, name: 'Catania', color: '#003F83' },
 ];
+
+/**
+ * Object of OneFleet SAR Zone
+ */
+export interface SARZone {
+  /** The name of the specific SAR zone matching to the coordinates */
+  name: string;
+  /** The color of the SAR zone */
+  color: string;
+  coordinates: SARCoordinates;
+}
+
+/**
+ * Array of LatLng coordinates which describes a polygon of the SAR zone bounds
+ */
+export type SARCoordinates = [number, number][];

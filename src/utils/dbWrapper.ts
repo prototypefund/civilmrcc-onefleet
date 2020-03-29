@@ -1,5 +1,5 @@
 import pouchwrapper from 'pouchwrapper';
-import * as moment from 'moment';
+import moment from 'moment';
 import config from '../../config/config.js';
 
 import { serverBus } from '../main';
@@ -170,11 +170,48 @@ pouchwrapper.updateShownItemsOnMap = function(map, options) {
  * @param {Number} options.frameLength     length in s in which a frame is shown
  */
 pouchwrapper.startReplay = function(options, cb) {
+  let start_interval = function() {
+    let currentDate = moment(options.startDate);
+
+    let interval = setInterval(() => {
+      currentDate.add(options.hoursPerFrame, 'hours');
+      localStorage.settings_track_enddate = currentDate.format(
+        'YYYY-MM-DTHH:MM'
+      );
+
+      serverBus.$emit('replay_next_tick', currentDate);
+
+      for (let i in replay_items) {
+        self.getItem(replay_items[i].id, function(loadeditem) {
+          let templatedItem = options.map.loadTemplatedItem(loadeditem);
+          console.log(templatedItem);
+          options.map.updateItemPosition(templatedItem);
+        });
+      }
+
+      if (currentDate.unix() >= moment(options.endDate).unix()) {
+        alert('replay finished');
+        clearInterval(interval);
+        localStorage.settings_max_track_type = old_tracking_value.tracking_type;
+        if (old_tracking_value.settings_track_startdate)
+          localStorage.settings_track_startdate =
+            old_tracking_value.settings_track_startdate;
+        if (old_tracking_value.settings_track_enddate)
+          localStorage.settings_track_enddate =
+            old_tracking_value.settings_track_enddate;
+        if (old_tracking_value.settings_map_track_length)
+          localStorage.settings_map_track_length =
+            old_tracking_value.settings_map_track_length;
+        cb();
+      }
+    }, Number(options.frameLength) * 1000);
+  };
+
   console.log('Start replay with following options:', options);
   let self = this;
   //store old tracking type to
   //to reset map after replay
-  let old_tracking_value = {};
+  let old_tracking_value: any = {};
   if (localStorage.settings_max_track_type) {
     old_tracking_value = {
       tracking_type: localStorage.settings_max_track_type,
@@ -223,53 +260,16 @@ pouchwrapper.startReplay = function(options, cb) {
 
         i++;
         if (i === total_items) {
-          start_interval(replay_items);
+          start_interval();
         }
       });
     } else {
       options.map.hideItem(identifier);
       i++;
       if (i === total_items) {
-        start_interval(replay_items);
+        start_interval();
       }
     }
   }
-
-  let start_interval = function() {
-    let currentDate = moment(options.startDate);
-
-    let interval = setInterval(() => {
-      currentDate.add(options.hoursPerFrame, 'hours');
-      localStorage.settings_track_enddate = currentDate.format(
-        'YYYY-MM-DTHH:MM'
-      );
-
-      serverBus.$emit('replay_next_tick', currentDate);
-
-      for (let i in replay_items) {
-        self.getItem(replay_items[i].id, function(loadeditem) {
-          let templatedItem = options.map.loadTemplatedItem(loadeditem);
-          console.log(templatedItem);
-          options.map.updateItemPosition(templatedItem);
-        });
-      }
-
-      if (currentDate.unix() >= moment(options.endDate).unix()) {
-        alert('replay finished');
-        clearInterval(interval);
-        localStorage.settings_max_track_type = old_tracking_value.tracking_type;
-        if (old_tracking_value.settings_track_startdate)
-          localStorage.settings_track_startdate =
-            old_tracking_value.settings_track_startdate;
-        if (old_tracking_value.settings_track_enddate)
-          localStorage.settings_track_enddate =
-            old_tracking_value.settings_track_enddate;
-        if (old_tracking_value.settings_map_track_length)
-          localStorage.settings_map_track_length =
-            old_tracking_value.settings_map_track_length;
-        cb();
-      }
-    }, Number(options.frameLength) * 1000);
-  };
 };
 export default pouchwrapper;

@@ -1,22 +1,22 @@
 import storage from './storageWrapper';
-import { SARZones } from '../constants/sar-zones';
+import { SARZones, SARZone } from '../constants/sar-zones';
+import * as L from 'leaflet';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
  * It also provides some convenience methods for recurring map-related tasks.
  */
-var mapWrapper = function() {
-  //** local variables */
-  this.map;
-  this.loaded_items = {};
-  this.sarZoneLayerGroup = L.layerGroup();
-  this.sarZoneIsVisible = true;
+class mapWrapper {
+  public map;
+  public loaded_items = {};
+  public sarZoneLayerGroup = L.layerGroup();
+  public sarZoneIsVisible = true;
 
   /**
    * Initialises the map backend component.
    * @param {string} mapId
    */
-  this.init = function(mapId) {
+  public init(mapId: string): void {
     try {
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
@@ -78,17 +78,16 @@ var mapWrapper = function() {
     //** Init draws on the map after startup. */
     this.initDraw();
 
-    var self = this;
-    this.map.on('move', function() {
-      storage.set('mapzoom', self.map._zoom);
+    this.map.on('move', () => {
+      storage.set('mapzoom', this.map._zoom);
       storage.set(
         'mapcenter',
-        JSON.stringify([self.map.getCenter().lat, self.map.getCenter().lng])
+        JSON.stringify([this.map.getCenter().lat, this.map.getCenter().lng])
       );
     });
 
-    console.log('map initted');
-  };
+    console.log('map initiated');
+  }
 
   /** Creates a featureGroup with polygons of each given SAR Zone from the parameter.
    * Return a leaflet L.featureGroup.
@@ -100,7 +99,7 @@ var mapWrapper = function() {
    * @param {number} sarZones.coordinates.lon A longitude coordinate.
    * @param {L.Map} map The map to which the sarZones should be added.
    */
-  this.createSarZoneFeatureGroup = function(sarZones, map) {
+  public createSarZoneFeatureGroup(sarZones: SARZone[], map: L.Map): void {
     map.addLayer(this.sarZoneLayerGroup);
 
     for (let sarZoneObject of sarZones) {
@@ -122,21 +121,80 @@ var mapWrapper = function() {
 
       this.sarZoneLayerGroup.addLayer(sarZonePolygon);
     }
-  };
+  }
 
   /** Method calls the flyTo method from leaflet.js
    * See also: https://leafletjs.com/reference-1.0.0.html
    * Sets the view of the map (geographical center and zoom) performing a smooth pan-zoom animation.
    * @param {[number, number]} positions The latitude/longitude coordinates.
    */
-  this.flyTo = function(positions) {
+  public flyTo(positions: [number, number]) {
     this.map.flyTo(positions);
-  };
+  }
+
+  // Truncate value based on number of decimals
+  private _round(num: number, len: number): number {
+    return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
+  }
+
+  // Helper method to format LatLng object (x.xxxxxx, y.yyyyyy)
+  private strLatLng(latlng): string {
+    return (
+      '(' + this._round(latlng.lat, 6) + ', ' + this._round(latlng.lng, 6) + ')'
+    );
+  }
+
+  // Generate popup content based on layer type
+  // - Returns HTML string, or null if unknown object
+  private getPopupContent(layer): string {
+    let latlngs, distance, area;
+    // Marker - add lat/long
+    if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+      return this.strLatLng(layer.getLatLng());
+      // Circle - lat/long, radius
+    } else if (layer instanceof L.Circle) {
+      var center = layer.getLatLng(),
+        radius = layer.getRadius();
+      return (
+        'Center: ' +
+        this.strLatLng(center) +
+        '<br />' +
+        'Radius: ' +
+        this._round(radius, 2) +
+        ' m'
+      );
+      // Rectangle/Polygon - area
+    } else if (layer instanceof L.Polygon) {
+      (latlngs = layer._defaultShape
+        ? layer._defaultShape()
+        : layer.getLatLngs()),
+        (area = L.GeometryUtil.geodesicArea(latlngs));
+      let html =
+        '<a href="#">Get historic ais data for this area</a><br><a href="#">add sighting</a><br>';
+
+      return html + 'Area: ' + L.GeometryUtil.readableArea(area, true);
+      // Polyline - distance
+    } else if (layer instanceof L.Polyline) {
+      (latlngs = layer._defaultShape
+        ? layer._defaultShape()
+        : layer.getLatLngs()),
+        (distance = 0);
+      if (latlngs.length < 2) {
+        return 'Distance: N/A';
+      } else {
+        for (var i = 0; i < latlngs.length - 1; i++) {
+          distance += latlngs[i].distanceTo(latlngs[i + 1]);
+        }
+        return 'Distance: ' + this._round(distance, 2) + ' m';
+      }
+    }
+    return null;
+  }
 
   /**
    * Initialise the SAR-zone-toggle and popups and keep track of drawn items.
    */
-  this.initDraw = function() {
+  public initDraw(): void {
     let drawnItems = new L.FeatureGroup();
     this.map.addLayer(drawnItems);
 
@@ -217,66 +275,10 @@ var mapWrapper = function() {
       })
     );
 
-    // Truncate value based on number of decimals
-    var _round = function(num, len) {
-      return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
-    };
-    // Helper method to format LatLng object (x.xxxxxx, y.yyyyyy)
-    var strLatLng = function(latlng) {
-      return '(' + _round(latlng.lat, 6) + ', ' + _round(latlng.lng, 6) + ')';
-    };
-
-    // Generate popup content based on layer type
-    // - Returns HTML string, or null if unknown object
-    var getPopupContent = function(layer) {
-      let latlngs, distance, area;
-      // Marker - add lat/long
-      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-        return strLatLng(layer.getLatLng());
-        // Circle - lat/long, radius
-      } else if (layer instanceof L.Circle) {
-        var center = layer.getLatLng(),
-          radius = layer.getRadius();
-        return (
-          'Center: ' +
-          strLatLng(center) +
-          '<br />' +
-          'Radius: ' +
-          _round(radius, 2) +
-          ' m'
-        );
-        // Rectangle/Polygon - area
-      } else if (layer instanceof L.Polygon) {
-        (latlngs = layer._defaultShape
-          ? layer._defaultShape()
-          : layer.getLatLngs()),
-          (area = L.GeometryUtil.geodesicArea(latlngs));
-        let html =
-          '<a href="#">Get historic ais data for this area</a><br><a href="#">add sighting</a><br>';
-
-        return html + 'Area: ' + L.GeometryUtil.readableArea(area, true);
-        // Polyline - distance
-      } else if (layer instanceof L.Polyline) {
-        (latlngs = layer._defaultShape
-          ? layer._defaultShape()
-          : layer.getLatLngs()),
-          (distance = 0);
-        if (latlngs.length < 2) {
-          return 'Distance: N/A';
-        } else {
-          for (var i = 0; i < latlngs.length - 1; i++) {
-            distance += latlngs[i].distanceTo(latlngs[i + 1]);
-          }
-          return 'Distance: ' + _round(distance, 2) + ' m';
-        }
-      }
-      return null;
-    };
-
     // Object created - bind popup to layer, add to feature group
-    this.map.on(L.Draw.Event.CREATED, function(event) {
+    this.map.on(L.Draw.Event.CREATED, event => {
       var layer = event.layer;
-      var content = getPopupContent(layer);
+      var content = this.getPopupContent(layer);
       if (content !== null) {
         layer.bindPopup(content);
       }
@@ -284,17 +286,17 @@ var mapWrapper = function() {
     });
 
     // Object(s) edited - update popups
-    this.map.on(L.Draw.Event.EDITED, function(event) {
+    this.map.on(L.Draw.Event.EDITED, event => {
       var layers = event.layers,
         content = null;
-      layers.eachLayer(function(layer) {
-        content = getPopupContent(layer);
+      layers.eachLayer(layer => {
+        content = this.getPopupContent(layer);
         if (content !== null) {
           layer.setPopupContent(content);
         }
       });
     });
-  };
+  }
 
   /**
    * Prepares the given item for UI by converting templates to known base
@@ -310,7 +312,7 @@ var mapWrapper = function() {
    * @param {number} item.positions.doc.timestamp The timestamp of a position.
    * @returns
    */
-  this.loadTemplatedItem = function(item) {
+  public loadTemplatedItem(item) {
     console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
@@ -329,14 +331,14 @@ var mapWrapper = function() {
       // filter out positions by number of days in the past (defaut: 100 days)
       let min_date = new Date();
       min_date.setDate(min_date.getDate() - max_positions);
-      item.positions = item.positions.filter(function(position) {
+      item.positions = item.positions.filter(position => {
         return min_date < new Date(position.doc.timestamp);
       });
     } else if (max_track_type == 'date_range') {
       // filter out positions by date range from local storage
       let min_date = new Date(localStorage.settings_track_startdate);
       let max_date = new Date(localStorage.settings_track_enddate);
-      item.positions = item.positions.filter(function(position) {
+      item.positions = item.positions.filter(position => {
         let date = new Date(position.doc.timestamp);
         return max_date > date && date > min_date;
       });
@@ -360,31 +362,31 @@ var mapWrapper = function() {
         break;
     }
     return item;
-  };
+  }
 
   /**
    * Removes all layers from the map, thereby clearing it.
    */
-  this.clearMap = function() {
+  public clearMap(): void {
     let i = 0;
-    this.map.eachLayer(function(layer) {
+    this.map.eachLayer(layer => {
       if (i > 0) this.map.removeLayer(layer);
       i++;
     });
-  };
+  }
 
   /**
    * Not implemented. But see src/components/items/ShowItem.vue
    */
-  this.showItem = function() {};
+  public showItem() {}
 
   /**
    * Implemented in src/components/MapArea.vue
    * @param {string} item_id The ID of the item that was clicked
    */
-  this.clickItem = function() {};
+  public clickItem() {}
 
-  this.generateLineCaption = function(item) {
+  public generateLineCaption(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var markers = [];
@@ -413,7 +415,7 @@ var mapWrapper = function() {
 
       return markers;
     }
-  };
+  }
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
    * @param {Object} item The item that should be updated.
@@ -427,7 +429,7 @@ var mapWrapper = function() {
    * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns L.Polyline
    */
-  this.generateLine = function(item) {
+  public generateLine(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var pointList = [];
@@ -601,7 +603,7 @@ var mapWrapper = function() {
       });
     }
     // return 'undefined' if the item has no positions
-  };
+  }
 
   /**
    * Return a new leaflet.Marker at the last position of the item.
@@ -626,14 +628,13 @@ var mapWrapper = function() {
    * @param {number} item.positions.doc.heading The heading direction at a position.
    * @returns L.Marker
    */
-  this.generateMarker = function(item) {
-    var self = this;
+  public generateMarker(item) {
     var marker;
     var positions = item.positions;
     for (var i in positions) {
       var v = positions[i];
       //last position
-      if (positions.length == 1 || i == positions.length - 1) {
+      if (positions.length == 1 || i == (positions.length - 1).toString()) {
         var width = 16;
         var height = 16;
         var rotation = v.doc.heading;
@@ -696,7 +697,7 @@ var mapWrapper = function() {
           // on click, call this mapWrapper's clickItem() function
           // without overwriting its "this" module (?), but
           // with binding its first parameter to the item's ID:
-          marker.on('click', L.bind(self.clickItem, null, item.id));
+          marker.on('click', L.bind(this.clickItem, null, item.id));
           // Use the item's identifier (and its name if applicable) as Pop-up
           let popupcontent = item.doc.identifier.toString();
           if (item.doc.properties.name) {
@@ -721,7 +722,7 @@ var mapWrapper = function() {
       // return 'undefined' if lat or lon are 'undefined'
     }
     // return 'undefined' if the item has no positions
-  };
+  }
 
   /**
    * Adds the given item onto the map.
@@ -738,12 +739,12 @@ var mapWrapper = function() {
    * @param {string} item.doc.template The template of the item
    * @param {Object[]} item.positions The array of positions of the item.
    */
-  this.addItemToMap = function(item) {
+  public addItemToMap(item): void {
     item = this.loadTemplatedItem(item);
 
     var line = false,
-      marker = false,
-      lineCaptions = false;
+      marker: any = false,
+      lineCaptions: any = false;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
@@ -754,7 +755,7 @@ var mapWrapper = function() {
 
       //load linecaptions only if it is set in settings
       if (localStorage.settings_positiontimestamps == 'true')
-        lineCaptions = this.generateLineCaption(item, true);
+        lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {};
       if (marker) {
@@ -772,7 +773,7 @@ var mapWrapper = function() {
         this.loaded_items[item.id].line.addTo(this.map);
       }
     }
-  };
+  }
 
   /**
    * Updates a loaded item's position on the map and ensures it is visible.
@@ -787,7 +788,7 @@ var mapWrapper = function() {
    * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
-  this.updateItemPosition = function(item) {
+  public updateItemPosition(item): boolean {
     console.log('updateItemPosition');
     console.log(item);
     if (item.positions.length < 1) {
@@ -822,13 +823,13 @@ var mapWrapper = function() {
         }
       }
     }
-  };
+  }
 
   /**
    * Hides the given item from the map.
    * @param {string} item_id The ID of the item that should be hidden
    */
-  this.hideItem = function(item_id) {
+  public hideItem(item_id: string): void {
     if (typeof this.loaded_items[item_id] !== 'undefined') {
       this.loaded_items[item_id].line.setStyle({
         opacity: 0,
@@ -839,7 +840,7 @@ var mapWrapper = function() {
         this.loaded_items[item_id].lineCaptions[i].setOpacity(0).update();
       }
     }
-  };
+  }
 
   /**
    * Calculates the geographical distance between two points on the map, in meters.
@@ -851,11 +852,11 @@ var mapWrapper = function() {
    * @param {number} point2.lon Longitude of second point
    * @returns {number} The distance in meters (CI unit)
    */
-  this.getDistance = function(point1, point2) {
+  public getDistance(point1, point2): number {
     let latlng1 = L.latLng(point1.lat, point1.lon);
     let latlng2 = L.latLng(point2.lat, point2.lon);
     return latlng1.distanceTo(latlng2);
-  };
-};
+  }
+}
 
 export default new mapWrapper();
