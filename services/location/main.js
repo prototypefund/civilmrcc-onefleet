@@ -179,7 +179,7 @@ let service = new (function() {
     this.initDBs();
     //this.initMail();
     var self = this;
-    this.getVehicles('VEHICLE', function(err, res) {
+    this.getItems('VEHICLE', function(err, res) {
       if (err) {
         console.log(err);
       } else {
