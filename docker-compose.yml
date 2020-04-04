@@ -1,63 +1,36 @@
-version: "3"
-
-volumes:
-  data:
+version: '3.7'
 
 services:
-  bootstrap:
-    build:
-      context: .
-      dockerfile: ./services/bootstrap/Dockerfile
-    command: dockerize -wait tcp://database:5984 -timeout 5m npm run start
-    environment:
-      - DB_URL=http://database:5984
-    volumes:
-      - ./services/bootstrap/:/app:cached
-      - /app/node_modules
-    links:
-      - database
+  app:
+    container_name: onefleet.app
+    image: registry.gitlab.com/civilmrcc/onefleet/app:latest
+    ports:
+      - '8080:80'
 
   database:
-    build:
-      context: .
-      dockerfile: ./services/database/Dockerfile
+    image: scttmthsn/pouchdb-server
+    container_name: onefleet.database
     ports:
-      - "5984:5984" # fauxton UI
-    command: npm run dev
-    environment:
-      - PORT=5984
+      - 5984:5984
     volumes:
-      - ./services/database/:/app:cached
-      - /app/node_modules
-      - data:/database
-
-  app:
-    links:
-      - location
+      # NOTE: Mounted volumes do not work on windows. As a workaround disable the next line and uncomment the two other lines
+      - ./services/database/docker_mount:/pouchdb/
+      # - type: volume
+      #   target: /pouchdb
 
   ais:
-    build:
-      context: .
-      dockerfile: ./services/ais/Dockerfile
-    command: npm run dev
-    volumes:
-      - ./services/ais:/app:cached
-      - /app/node_modules
-    environment:
-      - PORT=5000
+    container_name: onefleet.ais
+    image: registry.gitlab.com/civilmrcc/onefleet/services:latest
+    command: node ais/main.js
+    ports:
+      - 5000:5000
 
   location:
-    build:
-      context: .
-      dockerfile: ./services/location/Dockerfile
-    command: dockerize -wait tcp://database:5984 -wait tcp://ais:5000 -timeout 5m npm run dev
-    volumes:
-      - ./services/location:/app:cached
-      - /app/node_modules
+    container_name: onefleet.location
+    image: registry.gitlab.com/civilmrcc/onefleet/services:latest
+    command: node location/main.js -t 15
+    env_file:
+      - .env
     environment:
       - AIS_API=http://ais:5000
       - DB_URL=http://database:5984
-      - DEVELOPMENT=true
-    links:
-      - ais
-      - bootstrap

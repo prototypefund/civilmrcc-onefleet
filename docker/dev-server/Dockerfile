@@ -10,7 +10,7 @@ EXPOSE 5984/tcp 5985/tcp
 
 WORKDIR /db
 ENV DATA_ROOT /db
-RUN git clone https://gitlab.com/niczem/onefleet
+RUN git clone https://gitlab.com/civilmrcc/onefleet
 
 # Prepare packages
 RUN cd onefleet/services/location \

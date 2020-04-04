@@ -1,3 +1,5 @@
+#/bin/sh
 
-docker pull registry.gitlab.com/niczem/onefleet/master:latest
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker pull registry.gitlab.com/civilmrcc/onefleet/app:latest
+docker pull registry.gitlab.com/civilmrcc/onefleet/services:latest
+docker-compose up -d
