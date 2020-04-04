@@ -18,7 +18,7 @@ Setup the application under '/opt':
 
 ```bash
 sudo useradd -r onefleet
-sudo git clone https://gitlab.com/niczem/onefleet -C /opt/onefleet
+sudo git clone https://gitlab.com/civilmrcc/onefleet -C /opt/onefleet
 sudo chown onefleet.onefleet -R /opt/onefleet
 sudo su onefleet -s /bin/bash
 cd /opt/onefleet && npm i

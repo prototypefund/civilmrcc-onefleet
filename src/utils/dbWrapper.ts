@@ -1,4 +1,4 @@
-import pouchwrapper from 'pouchwrapper';
+import pouchwrapper from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
 

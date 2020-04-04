@@ -29,7 +29,7 @@ This repo contains all the services that you need to run to track and display ve
 We would love for you to contribute to OneFleet and help make it even better than it is today and #SafePassage and lives! As a contributor, here are the guidelines we would like you to follow:
 
 - [Installation Guide](#Installation-Guide)
-- [Code of Conduct](https://gitlab.com/niczem/onefleet/blob/master/CODE_OF_CONDUCT.md)
+- [Code of Conduct](https://gitlab.com/civilmrcc/onefleet/blob/master/CODE_OF_CONDUCT.md)
 - [Issue Reporting Guidelines](#Issue-Reporting-Guidelines)
 - [Pull Request Guidelines](#Pull-Request-Guidelines)
 
@@ -42,14 +42,25 @@ Recommended editor is [Visual Studio Code](https://code.visualstudio.com/) with 
 ### Clone the Repo
 
 ```
-git clone https://gitlab.com/niczem/onefleet.git
+git clone https://gitlab.com/civilmrcc/onefleet.git
 cd onefleet
 npm i
 ```
 
 ---
 
-### Installation without Docker
+### Installation
+
+#### Start Frontend
+
+The frontend is built on Vue.js. To start it you have to run:
+
+```
+npm i
+npm serve
+```
+
+After that you can open the frontend at http://localhost:8080/
 
 #### Start Location-Service
 
@@ -58,7 +69,7 @@ The location service runs in the background and requests the position data for v
 ```
 cd services/location
 npm i
-npm run start
+npm start
 ```
 
 #### Start Database
@@ -68,30 +79,33 @@ The database in this repo is a pouchdb-server instance. We highly recomend to us
 ```
 cd services/database
 npm i
-npm run start
+npm start
 ```
 
----
+### Docker
 
-### Installation with Docker
+#### Create docker image
 
-#### Run development environment
-
-```
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-#### Run prod environment
-
-Copy the file `.env.template` to `.env`. Replace placeholder values in `.env` with real values. Then start the docker containers with:
+This onefleet uses two separate docker images: One for the Vue-application, and another for the backend services. To create a new docker image run the following commands:
 
 ```
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+npm install
+npm run build
+docker build -t registry.gitlab.com/civilmrcc/onefleet/app .
+docker build -t registry.gitlab.com/civilmrcc/onefleet/services services
+```
+
+#### Create docker container
+
+Start the docker containers with:
+
+```
+docker-compose up -d
 ```
 
 **NOTE**: The option `-d` means the the containers will be started in a "detached mode", meaning they will keep running even if the user session is closed.
 
-To update the prod environment first pull a new docker image with `docker pull registry.gitlab.com/niczem/onefleet/master:latest` and then execute the deployment command again.
+To update the prod environment first pull a new docker image with `docker pull registry.gitlab.com/civilmrcc/onefleet/master:latest` and then execute the deployment command again.
 
 **NOTE**: The file `deploy.sh` does exactly this.
 
@@ -99,33 +113,15 @@ An example output of the deployment script looks like this:
 
 ```
 $ sh deploy.sh
-latest: Pulling from niczem/onefleet/master
+latest: Pulling from civilmrcc/onefleet/master
 Digest: sha256:7b4e73b0843a50d3ed22bdb1470ac716593d34fa594f81cb8db9708fa266d427
-Status: Image is up to date for registry.gitlab.com/niczem/onefleet/master:latest
-registry.gitlab.com/niczem/onefleet/master:latest
+Status: Image is up to date for registry.gitlab.com/civilmrcc/onefleet/master:latest
+registry.gitlab.com/civilmrcc/onefleet/master:latest
 onefleet_database_1 is up-to-date
 onefleet_ais_1 is up-to-date
 Starting onefleet_bootstrap_1 ... done
 Starting onefleet_location_1  ... done
 Creating onefleet_app_1       ... done
-```
-
-#### Compiles and minifies for production
-
-```
-docker-compose exec app npm run build
-```
-
-#### Run your tests
-
-```
-docker-compose exec app npm run test
-```
-
-#### Lints and fixes files
-
-```
-docker-compose exec app npm run lint
 ```
 
 #### Debugging JavaScript files with Visual Studio Code and Chrome
@@ -162,10 +158,49 @@ After that the Portainer interface should be available at `http://<your-ip>:9000
 
 For more information see the [documentation](https://portainer.readthedocs.io/en/stable/deployment.html).
 
+### Automatically update containers with Watchtower
+
+With [Watchtower](https://github.com/containrrr/watchtower) you can automatically update containers when a new docker image is available.
+
+```
+docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower onefleet.app onefleet.ais onefleet.location
+```
+
+### Automatically clean up unused docker images
+
+When a newer docker image is pulled to a host the older image still remains on the host. This means that over time a lot of unused images will accumulated on the host, and the free space on the host will continually decrease.
+
+To prevent the host from beeing swamped with older images it is prudent to perform a regular cleanup job. This can be done with `docker prune`. This command will remove any unused images, containers and volumes from the host. It is recommended to create a daily cronjob to perform the docker cleanup. Example output:
+
+```
+$ docker system prune -f
+Deleted Containers:
+4b71d312123496fe01b7e2b64b07f818abcfbac12fe69db5601edefcdac52bbb
+c43b3b797b0912770beb6e059f798ab6afdc5c5ea4983a05aeb08a98995ca291
+4400153a985f8568a7ff7059eab361b7d722ef80781edc743d6d4455aca6b5b7
+
+Deleted Images:
+deleted: sha256:af498107b991b85588bfa7374e110603ed70146770f82e0daad7dd5fe36a6c16
+deleted: sha256:d65bd1604a78313fcb0eb62d7617678a5e9efb620b7bfd56724dfa2ead182b2f
+untagged: registry.gitlab.com/civilmrcc/onefleet/services@sha256:a2602345f2f4e46990abdacfcb14e8fbe3620fd33ce61d7346f16cb7b97c2da4
+deleted: sha256:b127232f37ee91f7269b765a6ff4cea1408899e12eff5d53d1aee15dd78e5371
+deleted: sha256:b135ac74cc7aa8b9283ca5dd25b8547d2ae2e72452c435bd776bcddf525fefb4
+
+Total reclaimed space: 1.317GB
+```
+
+### Backup database files
+
+The database data files of the PouchDB should be backed up regularily. The file location depends on how the database was started.
+
+If the database was started as a node process the data files are located in `services/database/data`.
+
+If the database was started as a docker container the data files are located in `services/database/docker_mount`.
+
 ### Issue Reporting Guidelines
 
 The issue list is reserved exclusively for bug reports and feature requests, not for usage questions. Please use the discord channel for that.
-Please report all issues in the [issue page](https://gitlab.com/niczem/onefleet/issues). There make sure that the bug or feature was not already reported, or please link dublicated cards together.
+Please report all issues in the [issue page](https://gitlab.com/civilmrcc/onefleet/issues). There make sure that the bug or feature was not already reported, or please link dublicated cards together.
 
 Write detailed information because it is very helpful to understand an issue. For example:
 

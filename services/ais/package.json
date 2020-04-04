@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm install && npm run start",
+    "dev": "npm install --no-save && npm run start",
     "start": "node main.js"
   },
   "dependencies": {

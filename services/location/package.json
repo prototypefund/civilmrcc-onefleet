@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm install && npm run start",
+    "postinstall": "cp -n example-config.js config.js",
+    "dev": "npm install --no-save && npm run start",
     "start": "node main.js -t 15"
   },
   "dependencies": {
