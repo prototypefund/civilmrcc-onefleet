@@ -50,8 +50,8 @@ docker-app:
   stage: docker
   image: docker:stable
   allow_failure: true
-  # only:
-  #   - master
+  only:
+    - master
   script:
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -62,8 +62,8 @@ docker-services:
   stage: docker
   image: docker:stable
   allow_failure: true
-  # only:
-  #   - master
+  only:
+    - master
   script:
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services services
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
