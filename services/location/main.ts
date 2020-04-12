@@ -1,11 +1,10 @@
-const PouchDB = require('pouchdb');
+const pouchDB = require('pouchdb');
 const request = require('request');
 const sqlite3 = require('sqlite3').verbose();
 
 const fs = require('fs');
 const path = require('path');
 const csv = require('fast-csv');
-// test line endings
 
 const MailListener = require('mail-listener2');
 
@@ -24,8 +23,16 @@ program
 program.parse(process.argv);
 let INTERVAL = program.time || 10;
 
-let service = new (function() {
-  this.initDBs = function() {
+/**
+ * LocationService
+ */
+class LocationService {
+  dbConfig: any;
+  itemDB: any;
+  locationsDB: any;
+  sqlite: any;
+
+  public initDBs() {
     this.dbConfig = process.env.DEVELOPMENT
       ? {}
       : {
@@ -35,47 +42,48 @@ let service = new (function() {
           },
         };
     console.log(this.dbConfig);
-    this.itemDB = new PouchDB(
+    this.itemDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
       this.dbConfig
     );
-    this.locationsDB = new PouchDB(
+    this.locationsDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}positions`,
       this.dbConfig
     );
 
     //SQLITE is used for long term storage
     this.sqlite = new sqlite3.Database('./locations.db');
-  };
-  this.initMail = function() {
+  }
+
+  public initMail() {
     console.log('starting mail listener...');
     this.initDBs();
-    var self = this;
     console.log('mail init');
     this.initMailListener({
       imap_username: config.imap_username,
       imap_password: config.imap_password,
       imap_host: config.imap_host,
-      mail_callback: function(mail, seqno, attributes) {
-        if (mail) self.positionCallback(mail, seqno, attributes);
+      mail_callback: (mail, seqno, attributes) => {
+        if (mail) this.positionCallback(mail, seqno, attributes);
       },
     });
-  };
-  this.sqlite_query = function(sql, cb) {
-    var self = this;
+  }
+
+  public sqlite_query(sql, cb) {
     this.sqlite.all(sql, [], (err, rows) => {
       if (err && err.errno == 1) {
         console.log(err);
-        self.createTable(function() {
+        this.createTable(() => {
           console.log('locations table created');
-          self.sqlite_query(sql, cb);
+          this.sqlite_query(sql, cb);
         });
       } else {
         cb(rows);
       }
     });
-  };
-  this.createTable = function(cb) {
+  }
+
+  public createTable(cb) {
     console.log('creating locations table');
     this.sqlite.run(
       'CREATE TABLE IF NOT EXISTS `locations` ( \
@@ -90,8 +98,9 @@ let service = new (function() {
       {},
       cb
     );
-  };
-  this.insertLocation = function(identifier, Position) {
+  }
+
+  public insertLocation(identifier, Position) {
     if (
       typeof Position != 'undefined' &&
       Position != false &&
@@ -145,8 +154,9 @@ let service = new (function() {
     } else {
       console.log('there was an error getting the position for ' + identifier);
     }
-  };
-  this.insertItem = function(obj, cb) {
+  }
+
+  public insertItem(obj, cb) {
     var itemDB = this.itemDB;
     itemDB
       .put(obj)
@@ -156,10 +166,10 @@ let service = new (function() {
       .catch(function(err) {
         cb(err);
       });
-  };
-  this.getItems = function(identifier, callback) {
+  }
+
+  public getItems(identifier, callback) {
     var items = this.itemDB;
-    var self = this;
     items
       .allDocs({
         include_docs: true,
@@ -167,41 +177,39 @@ let service = new (function() {
         startkey: identifier,
       })
       .then(function(result) {
-        if (result.error) callback(err);
+        if (result.error) callback(result.error);
         else callback(false, result.rows);
         // handle result
       })
       .catch(function(err) {
         console.log('error while getting vehicles: ', err);
       });
-  };
-  this.fetchAPIs = function() {
+  }
+
+  public fetchAPIs() {
     this.initDBs();
     //this.initMail();
-    var self = this;
-    this.getItems('VEHICLE', function(err, res) {
+    this.getItems('VEHICLE', (err, res) => {
       if (err) {
         console.log(err);
       } else {
-        res.forEach(function(v, i) {
+        res.forEach((v, i) => {
           switch (v.doc.properties.tracking_type) {
             case 'AIS':
               console.log(
                 'get position from AISs for vehicle ' + v.doc.properties.name
               );
-              self.getPositionFromAIS(v.doc.properties.MMSI, function(
-                Position
-              ) {
+              this.getPositionFromAIS(v.doc.properties.MMSI, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
                 console.log(Position);
-                self.insertLocation(v.doc.identifier, Position);
+                this.insertLocation(v.doc.identifier, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
-                // self.getHistoricalData(
+                // this.getHistoricalData(
                 //   v.doc.properties.MMSI,
                 //   v.doc.properties.get_historical_data_since,
-                //   function(positions) {
+                //   (positions) => {
                 //     console.log(positions);
                 //     for (let i in positions) {
                 //       console.log(
@@ -209,7 +217,7 @@ let service = new (function() {
                 //       );
                 //       console.log(positions[i]);
                 //       /*
-                //     self.insertLocation(v.doc.identifier,Position);
+                //     this.insertLocation(v.doc.identifier,Position);
                 //     //update entry in db items, set get_historical_data_since to 0
                 //     items.put(v.doc).then(function (response) {
                 //       console.log('item created');
@@ -228,16 +236,17 @@ let service = new (function() {
         });
       }
     });
-  };
-  this.fetchAPIInterval = function(interval_in_minutes) {
-    var self = this;
+  }
+
+  public fetchAPIInterval(interval_in_minutes) {
     //run on startup at function
     this.fetchAPIs();
-    setInterval(function() {
-      self.fetchAPIs();
+    setInterval(() => {
+      this.fetchAPIs();
     }, interval_in_minutes * 1000 * 60);
-  };
-  this.parsePositionFromFleetmonApi = function(apiResult) {
+  }
+
+  public parsePositionFromFleetmonApi(apiResult) {
     if (!apiResult) return false;
     //die();
     return {
@@ -250,18 +259,19 @@ let service = new (function() {
       timestamp: apiResult.timestamp,
       source: apiResult.source,
     };
-  };
-  this.getHistoricalData = function(mmsi, days, cb) {
+  }
+
+  public getHistoricalData(mmsi, days, cb) {
     console.log('implement me!');
-  };
-  this.getPositionFromAIS = function(mmsi, cb) {
+  }
+
+  public getPositionFromAIS(mmsi, cb) {
     let url =
       'https://apiv2.fleetmon.com/ais/position/?limit=1&sort=desc&mmsi=' +
       mmsi +
       '&apikey=' +
       config.fleetmon_api_key;
-    let self = this;
-    let fallbackCallback = function() {
+    let fallbackCallback = () => {
       console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
       request(
         `${config.aisUrl}/getLastPosition/${mmsi}`,
@@ -269,6 +279,7 @@ let service = new (function() {
         (err, res, body) => {
           if (err) {
             return console.log(err);
+          } else {
           }
           if (body.error != null) return console.log(body.error);
 
@@ -282,27 +293,27 @@ let service = new (function() {
           console.log('error fetching position from fleetmon:', err);
           console.log('retry with ais api');
           config.fleetmon_api_key = false;
-          self.getPositionFromAIS(mmsi, cb);
+          this.getPositionFromAIS(mmsi, cb);
         }
         if ((body && body.ais_position_items >= 1) || typeof body != 'string') {
           if (typeof body.errors != 'undefined') {
             console.log('error fetching position from fleetmon:', err);
             console.log('retry with ais api');
             config.fleetmon_api_key = false;
-            self.getPositionFromAIS(mmsi, cb);
+            this.getPositionFromAIS(mmsi, cb);
           } else {
             let i = 0;
             console.log(body);
             if (typeof body.ais_position_items != 'undefined')
-              cb(self.parsePositionFromFleetmonApi(body.ais_position_items[0]));
+              cb(this.parsePositionFromFleetmonApi(body.ais_position_items[0]));
             else fallbackCallback();
           }
         }
       });
     } else fallbackCallback();
-  };
-  this.initMailListener = function(listener_config) {
-    var self = this;
+  }
+
+  public initMailListener(listener_config) {
     console.log(listener_config);
     var mailListener = new MailListener({
       username: listener_config.imap_username,
@@ -347,14 +358,14 @@ let service = new (function() {
       console.log('got mail!');
       listener_config.mail_callback(mail, seqno, attributes);
     });
-  };
-  this.positionCallback = function(mail, seqno, attributes) {
-    var self = this;
+  }
+
+  public positionCallback(mail, seqno, attributes) {
     var sender_mail = this.getEmailsFromString(mail.headers.from);
 
     console.log('getting vehicles...');
 
-    this.getItems('VEHICLE', function(err, res) {
+    this.getItems('VEHICLE', (err, res) => {
       console.log('got items');
       if (err) console.log(err);
 
@@ -404,7 +415,7 @@ let service = new (function() {
                     alt = parseFloat(alt.replace('ft', ''));
 
                     console.log('adding position to db:');
-                    self.insertLocation(res[i].doc.identifier, {
+                    this.insertLocation(res[i].doc.identifier, {
                       timestamp: new Date(mail.headers.date),
                       latitude: lat,
                       longitude: lon,
@@ -426,12 +437,13 @@ let service = new (function() {
         }
       }
     });
-  };
+  }
+
   /*
    *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
    *returns mail (e.g. joe.smith@somemail.com)
    */
-  this.getEmailsFromString = function(StrObj) {
+  public getEmailsFromString(StrObj) {
     var separateEmailsBy = ', ';
     var email = '<none>'; // if no match, use this
     var emailsArray = StrObj.match(
@@ -445,38 +457,43 @@ let service = new (function() {
       }
     }
     return email;
-  };
+  }
+
+  private getRandomElement(inputArray: any[]) {
+    return inputArray[Math.floor(Math.random() * inputArray.length)];
+  }
+
   //@int i number of cases
-  this.generateTestCases = function(number_of_cases) {
+  public generateTestCases(number_of_cases) {
     this.initDBs();
-    Array.prototype.randomElement = function() {
-      return this[Math.floor(Math.random() * this.length)];
-    };
     //start identifier
     let start_identifier = 13;
 
     let objects = [];
     let i = 0;
-    let self = this;
     while (i <= number_of_cases) {
       //NEEDS TO BE UPDATED AFTER EVERY CHANGE OF template.js!!!
       let item = {
         _id: 'CASE_' + (start_identifier + i),
         properties: {
-          status: [
+          status: this.getRandomElement([
             'closed',
             'attended',
             'possible_target',
             'confirmed',
             'critical',
-          ].randomElement(),
-          boat_type: ['wood', 'rubber'].randomElement(),
+          ]),
+          boat_type: this.getRandomElement(['wood', 'rubber']),
           pob_total: Math.round(Math.random() * 100),
           pob_women: Math.round(Math.random() * 100),
           pob_men: Math.round(Math.random() * 100),
           pob_minors: Math.round(Math.random() * 100),
           pob_medical_cases: Math.round(Math.random() * 100),
-          actors_involved: ['SW3, COL', 'SW3', 'LYCG, MOO'].randomElement(),
+          actors_involved: this.getRandomElement([
+            'SW3, COL',
+            'SW3',
+            'LYCG, MOO',
+          ]),
           people_drowned: Math.round(Math.random() * 100),
           people_missing: Math.round(Math.random() * 100),
         },
@@ -484,11 +501,11 @@ let service = new (function() {
         identifier: start_identifier + i,
       };
 
-      self.itemDB
+      this.itemDB
         .put(item)
         .then(
           (i => {
-            return function(response) {
+            return response => {
               console.log('item created');
 
               let entry = {
@@ -502,7 +519,7 @@ let service = new (function() {
                 altitude: null,
                 timestamp: new Date().toISOString(),
               };
-              self.locationsDB
+              this.locationsDB
                 .put(entry)
                 .then(function(response) {
                   console.log('location created');
@@ -521,9 +538,9 @@ let service = new (function() {
       i++;
     }
     console.log(objects);
-  };
+  }
 
-  this.importFromCSV = function(filename) {
+  public importFromCSV(filename) {
     /*
     usage for large csv:
     1. split up file to smaller filers:
@@ -536,11 +553,9 @@ let service = new (function() {
       done
     */
 
-    let self = this;
-
     this.initDBs();
     //get all vehicles from db
-    this.getItems('VEHICLE', function(err, res) {
+    this.getItems('VEHICLE', (err, res) => {
       console.log('got items');
       if (err) throw err;
 
@@ -585,7 +600,7 @@ let service = new (function() {
                 tracking_type: "ais"
               }
             }
-            self.insertItem(item, function(err, result) {
+            this.insertItem(item, function(err, result) {
               if (err) {
                 if (err.name == 'conflict')
                   console.log('The id is already taken, please choose another one');
@@ -602,52 +617,54 @@ let service = new (function() {
           }
         })
         .on('end', rowCount => function(){
-          insertPositions(vehiclesByMMSI);
+          this.insertPositions(vehiclesByMMSI);
         });*/
 
-      insertPositions(vehiclesByMMSI);
+      this.insertPositions(vehiclesByMMSI, filename);
     });
+  }
 
-    function insertPositions(vehiclesByMMSI) {
-      fs.createReadStream(path.resolve(__dirname, '', filename))
-        .pipe(csv.parse({ headers: true }))
-        .on('error', error => console.error(error))
-        .on('data', row => {
+  private insertPositions(vehiclesByMMSI, filename) {
+    fs.createReadStream(path.resolve(__dirname, '', filename))
+      .pipe(csv.parse({ headers: true }))
+      .on('error', error => console.error(error))
+      .on('data', row => {
+        let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
+        let pos = {
+          timestamp: new Date(row.timestamp),
+          latitude: parseFloat(row.lat),
+          longitude: parseFloat(row.lon),
+          altitude: null,
+          speed: parseFloat(row.speed),
+          course: parseFloat(row.course),
+          source: 'import',
+        };
+
+        if (vehiclesByMMSI[parseInt(row.mmsi)]) {
+          if (row.callsign.length === 0) row.callsign = row.mmsi;
+          if (row.name.length === 0) row.name = row.callsign;
+
+          let identifier = String(
+            'VEHICLE' +
+              '_' +
+              row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
+          ).toUpperCase();
           let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
-          let pos = {
-            timestamp: new Date(row.timestamp),
-            latitude: parseFloat(row.lat),
-            longitude: parseFloat(row.lon),
-            altitude: null,
-            speed: parseFloat(row.speed),
-            course: parseFloat(row.course),
-            source: 'import',
-          };
-
-          if (vehiclesByMMSI[parseInt(row.mmsi)]) {
-            if (row.callsign.length === 0) row.callsign = row.mmsi;
-            if (row.name.length === 0) row.name = row.callsign;
-
-            let identifier = String(
-              'VEHICLE' +
-                '_' +
-                row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
-            ).toUpperCase();
-            let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
-            console.log(`vehicle ${row.name} exists in db. add position...`);
-            self.insertLocation(vehicle.doc.identifier, pos);
+          console.log(`vehicle ${row.name} exists in db. add position...`);
+          this.insertLocation(vehicle.doc.identifier, pos);
+        }
+      })
+      .on(
+        'end',
+        rowCount2 =>
+          function() {
+            console.log('fin.');
           }
-        })
-        .on(
-          'end',
-          rowCount2 =>
-            function() {
-              console.log('fin.');
-            }
-        );
-    }
-  };
-})();
+      );
+  }
+}
+
+let service = new LocationService();
 
 console.log(program.opts());
 
