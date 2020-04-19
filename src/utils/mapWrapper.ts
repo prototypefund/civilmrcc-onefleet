@@ -416,6 +416,7 @@ class mapWrapper {
       return markers;
     }
   }
+
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
    * @param {Object} item The item that should be updated.
@@ -606,6 +607,75 @@ class mapWrapper {
   }
 
   /**
+   * Generate marker icon HTML content string, using a stored PNG image.
+   * @param rotation
+   * @param size The size of the icon
+   * @param caption The caption to display near the maker. May be an empty string.
+   * @returns A HTML String that can be given to a leaflet divIcon constructor.
+   */
+  private _createImageMarkerHTML(
+    rotation: number,
+    size: number,
+    caption: string
+  ): string {
+    var css_style = {
+      transform: 'rotate(' + rotation + 'deg)',
+      width: size + 'px',
+      height: size + 'px',
+      'margin-left': size / -2 + 'px',
+      'margin-top': size / -2 + 'px',
+    };
+    let iconimg = document.createElement('img');
+    iconimg.src = '/gfx/icons/cursor.png';
+    for (var k in css_style) {
+      iconimg.style.setProperty(k, css_style[k]);
+    }
+    let iconhtml = document.createElement('div');
+    iconhtml.appendChild(iconimg);
+    iconhtml.append(caption);
+    return iconhtml.outerHTML;
+  }
+
+  /**
+   * Generate marker icon HTML content string, using any unicode character.
+   * @param character The unicode character to use as icon. Some rotation and scaling may be necessary.
+   * @param rotation The rotation of the icon. May consist of item's heading plus some constant rotation.
+   * @param size The size of the icon. Currently in unit 'pt', but may change.
+   * @param color The color for the icon. By using unicode characters, we can easily reflect boat color by icon color.
+   * @param caption The caption to display near the maker. May be an empty string.
+   * @returns A HTML String that can be given to a leaflet divIcon constructor.
+   */
+  private _createCharacterMarkerHTML(
+    character: string,
+    rotation: number,
+    size: number,
+    color: string,
+    caption: string
+  ): string {
+    let iconhtml = document.createElement('div');
+
+    let iconimg = document.createElement('div');
+    iconimg.textContent = character;
+    iconimg.style.fontSize = size + 'pt';
+    iconimg.style.transform = 'rotate(' + rotation + 'deg)';
+    iconimg.style.color = color;
+    iconimg.style.width = size + 'pt';
+    iconimg.style.textAlign = 'center';
+    iconhtml.appendChild(iconimg);
+
+    if (caption) {
+      let span = document.createElement('span');
+      span.className = 'itemCaption';
+      span.append(caption);
+      iconhtml.appendChild(span);
+    }
+
+    iconhtml.style.marginLeft = '-12px';
+    iconhtml.style.marginTop = '-20px';
+    return iconhtml.outerHTML;
+  }
+
+  /**
    * Return a new leaflet.Marker at the last position of the item.
    * The marker uses a "cursor" icon and is rotated to reflect the heading
    * of the item at its last known position.
@@ -629,99 +699,126 @@ class mapWrapper {
    * @returns L.Marker
    */
   public generateMarker(item) {
-    var marker;
-    var positions = item.positions;
-    for (var i in positions) {
-      var v = positions[i];
-      //last position
-      if (positions.length == 1 || i == (positions.length - 1).toString()) {
-        var width = 16;
-        var height = 16;
-        var rotation = v.doc.heading;
-        var style =
-          'transform: rotate(' +
-          rotation +
-          'deg);width: ' +
-          width +
-          'px; height:' +
-          height +
-          'px;margin-left:-' +
-          width / 2 +
-          'px;margin-top:-' +
-          height / 2 +
-          'px;';
-
-        let icon;
-        let caption = '';
-        console.log(item.doc);
-        if (
-          localStorage.settings_showcaptions === 'true' &&
-          typeof item.doc.properties.name !== undefined
-        ) {
-          caption =
-            '<span class="itemCaption">' + item.doc.properties.name + '</span>';
-        }
-
-        if (
-          item.doc.template !== 'case' &&
-          item.doc.template !== 'vehicle' &&
-          typeof item.doc.properties.icon !== undefined
-        ) {
-          icon = L.divIcon({
-            className: 'vehicle-marker',
-            html:
-              '<div><span class="el-icon-' +
-              item.doc.properties.icon +
-              '"></span>' +
-              caption +
-              '</div>',
-          });
-        } else {
-          icon = L.divIcon({
-            className: 'vehicle-marker',
-            html:
-              '<div><img src="/gfx/icons/cursor.png" style="' +
-              style +
-              '">' +
-              caption +
-              '</div>',
-          });
-        }
-
-        if (
-          typeof v.doc.lat !== 'undefined' &&
-          typeof v.doc.lon !== 'undefined'
-        ) {
-          // create a new marker with the given lat/lon position and icon
-          marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
-          // on click, call this mapWrapper's clickItem() function
-          // without overwriting its "this" module (?), but
-          // with binding its first parameter to the item's ID:
-          marker.on('click', L.bind(this.clickItem, null, item.id));
-          // Use the item's identifier (and its name if applicable) as Pop-up
-          let popupcontent = item.doc.identifier.toString();
-          if (item.doc.properties.name) {
-            popupcontent += ' - ' + item.doc.properties.name;
-          }
-          // bind the popupcontent to the marker. Used by openPopup() below
-          marker.bindPopup(popupcontent);
-          // on mouseover, the marker's openPopup() function shall be called
-          marker.on('mouseover', function() {
-            // call leaflet's Marker.openPopup() function, displaying the
-            // popupcontent that has been bound to this marker just above.
-            this.openPopup();
-          });
-          // on mouseout, the marker's closePopup() function shall be called
-          marker.on('mouseout', function() {
-            // call leaflet's Marker.closePopup() function
-            this.closePopup();
-          });
-          return marker;
-        }
-      }
-      // return 'undefined' if lat or lon are 'undefined'
+    if (typeof item.positions === 'undefined' || item.positions.length == 0) {
+      return; // 'undefined' if the item has no positions
     }
-    // return 'undefined' if the item has no positions
+    // use the last known position for the marker:
+    var lastKnownPosition = item.positions[item.positions.length - 1];
+    if (
+      typeof lastKnownPosition.doc.lat == 'undefined' ||
+      typeof lastKnownPosition.doc.lon == 'undefined'
+    ) {
+      return; // 'undefined' if lat or lon are 'undefined'
+    }
+
+    let caption = '';
+    if (localStorage.settings_showcaptions === 'true') {
+      if (item.doc.properties.name) {
+        caption = item.doc.properties.name;
+      } else {
+        caption = item.id;
+      }
+    }
+
+    let icon;
+    if (item.doc.properties.icon) {
+      // use item-specific icon if given
+      icon = L.divIcon({
+        className: 'vehicle-marker',
+        html:
+          '<div><span class="el-icon-' +
+          item.doc.properties.icon +
+          '"></span>' +
+          caption +
+          '</div>',
+      });
+    } else if (item.doc.template == 'case') {
+      // set default case icon
+      icon = L.divIcon({
+        className: 'case-marker',
+        html: this._createCharacterMarkerHTML(
+          '⊳', // unicode 0x22B3 / html &#8883;
+          (lastKnownPosition.doc.heading || 0) - 90,
+          20,
+          item.doc.properties.boat_color || 'black',
+          caption
+        ),
+      });
+    } else if (item.doc.template == 'landmark') {
+      // set default landmark icon
+      icon = L.divIcon({
+        className: 'landmark-marker',
+        html: this._createCharacterMarkerHTML(
+          '⟟', // unicode 0x27DF / html &#10207;
+          lastKnownPosition.doc.heading || 0,
+          20,
+          item.doc.properties.boat_color || 'black',
+          caption
+        ),
+      });
+    } else if (item.doc.template == 'airplane') {
+      // set default airplane icon
+      icon = L.divIcon({
+        className: 'vehicle-marker',
+        html: this._createCharacterMarkerHTML(
+          '✈︎', // unicode 0x2708 / html &#9992;
+          lastKnownPosition.doc.heading || 0,
+          20,
+          item.doc.properties.boat_color || 'black',
+          caption
+        ),
+      });
+    } else if (
+      item.doc.template == 'vehicle' ||
+      typeof item.doc.template === 'undefined' // TODO fix (vehicle) items by using classes
+    ) {
+      // set default vehicle icon
+      console.log('creating a new vehicle icon');
+      icon = L.divIcon({
+        className: 'vehicle-marker',
+        html: this._createCharacterMarkerHTML(
+          '⩥', // unicode 0x2A65 / html &#10853;
+          (lastKnownPosition.doc.heading || 0) - 90,
+          20,
+          item.doc.properties.boat_color || 'black',
+          caption
+        ),
+      });
+    } else {
+      // lazy fail: Do we want to raise an error here instead?
+      console.log('Undefined item template for marker generation. Please fix.');
+    }
+
+    // create a new marker with the given lat/lon position and icon
+    let marker = L.marker(
+      [lastKnownPosition.doc.lat, lastKnownPosition.doc.lon],
+      { icon: icon }
+    );
+    // on click, call this mapWrapper's clickItem() function
+    // without overwriting its "this" module (?), but
+    // with binding its first parameter to the item's ID:
+    marker.on('click', L.bind(this.clickItem, null, item.id));
+    // Use the item's identifier (and its name if applicable) as Pop-up
+    let popupcontent = (item.doc.identifier || '').toString();
+    if (item.doc.properties.name) {
+      popupcontent = item.doc.properties.name;
+    } else {
+      popupcontent = item.id;
+    }
+    // bind the popupcontent to the marker. Used by openPopup() below
+    marker.bindPopup(popupcontent);
+    // on mouseover, the marker's openPopup() function shall be called
+    marker.on('mouseover', function() {
+      // call leaflet's Marker.openPopup() function, displaying the
+      // popupcontent that has been bound to this marker just above.
+      this.openPopup();
+    });
+    // on mouseout, the marker's closePopup() function shall be called
+    marker.on('mouseout', function() {
+      // call leaflet's Marker.closePopup() function
+      this.closePopup();
+    });
+    return marker;
   }
 
   /**
@@ -830,14 +927,14 @@ class mapWrapper {
    * @param {string} item_id The ID of the item that should be hidden
    */
   public hideItem(item_id: string): void {
-    if (typeof this.loaded_items[item_id] !== 'undefined') {
-      this.loaded_items[item_id].line.setStyle({
-        opacity: 0,
-      });
-      this.loaded_items[item_id].marker.setOpacity(0).update();
-
-      for (let i in this.loaded_items[item_id].lineCaptions) {
-        this.loaded_items[item_id].lineCaptions[i].setOpacity(0).update();
+    let item = this.loaded_items[item_id];
+    if (item) {
+      item.marker.setOpacity(0).update();
+      if (item.line) {
+        item.line.setStyle({ opacity: 0 });
+      }
+      for (let i in item.lineCaptions) {
+        item.lineCaptions[i].setOpacity(0).update();
       }
     }
   }
