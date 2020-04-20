@@ -1,7 +1,5 @@
 <template>
-  <div id="mapArea">
-    Map
-  </div>
+  <div id="mapArea">Map</div>
 </template>
 
 <script>
@@ -69,6 +67,8 @@ export default {
   height: calc(100vh - 60px);
 }
 
+.landmark-marker,
+.case-marker,
 .vehicle-marker {
   height: 16px !important;
   width: 16px !important;
