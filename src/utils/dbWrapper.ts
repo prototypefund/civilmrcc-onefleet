@@ -93,7 +93,7 @@ export class DbWrapper extends PouchWrapper {
 
         result.rows.forEach((v, i) => {
           result.rows[i]['positions'] = [];
-          this.getPositionsForItem(v.doc.identifier, function(positions) {
+          this.getPositionsForItem(v.doc.identifier, positions => {
             //append positions to vehicles:
             result.rows[i].positions = positions.rows;
 
@@ -121,7 +121,7 @@ export class DbWrapper extends PouchWrapper {
 
         result.rows.forEach((v, i) => {
           //HAS TO BE REPLACED WITH PROMISE!
-          this.getPositionsForItem(v.doc.identifier, function(positions) {
+          this.getPositionsForItem(v.doc.identifier, positions => {
             //append positions to vehicles:
             if (positions.rows) result.rows[i].positions = positions.rows;
 
@@ -140,7 +140,7 @@ export class DbWrapper extends PouchWrapper {
     this.getItemsByTemplate('VEHICLE', cb);
   }
   public appendItemsToMap(map) {
-    this.getItems(function(err, result) {
+    this.getItems((err, result) => {
       for (var i in result.rows) {
         var item = result.rows[i];
         //add onclick option to itemobject
@@ -173,7 +173,7 @@ export class DbWrapper extends PouchWrapper {
    * @param {Number} options.frameLength     length in s in which a frame is shown
    */
   public startReplay(options, cb) {
-    let start_interval = function() {
+    let start_interval = () => {
       let currentDate = moment(options.startDate);
 
       let interval = setInterval(() => {
@@ -185,7 +185,7 @@ export class DbWrapper extends PouchWrapper {
         serverBus.$emit('replay_next_tick', currentDate);
 
         for (let i in replay_items) {
-          self.getItem(replay_items[i].id, function(loadeditem) {
+          this.getItem(replay_items[i].id, loadeditem => {
             let templatedItem = options.map.loadTemplatedItem(loadeditem);
             console.log(templatedItem);
             options.map.updateItemPosition(templatedItem);
@@ -212,7 +212,6 @@ export class DbWrapper extends PouchWrapper {
     };
 
     console.log('Start replay with following options:', options);
-    let self = this;
     //store old tracking type to
     //to reset map after replay
     let old_tracking_value: any = {};
@@ -259,7 +258,7 @@ export class DbWrapper extends PouchWrapper {
     //loop through items
     for (let identifier in options.shown_items) {
       if (options.shown_items[identifier] == 'true') {
-        self.getItem(identifier, result => {
+        this.getItem(identifier, result => {
           replay_items.push(result);
 
           i++;
