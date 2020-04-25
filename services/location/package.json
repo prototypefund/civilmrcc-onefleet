@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "postinstall": "cp -n example-config.js config.js",
+    "postinstall": "cp -n config.template.js config.js && echo 'Created new location config.' || echo 'Keeping existing location config.' ",
     "dev": "npm install --no-save && npm run start",
     "start": "ts-node main.ts -t 15"
   },
