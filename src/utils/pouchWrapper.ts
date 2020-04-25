@@ -18,7 +18,7 @@ export class PouchWrapper {
     this.config = config;
   }
 
-  public initDB(db_name, noprefix = false) {
+  public initDB(db_name: string, noprefix = false) {
     var self = this;
     if (typeof this.databases[db_name] == 'undefined') {
       let prefix = this.config.db_prefix;
@@ -94,9 +94,9 @@ export class PouchWrapper {
    *
    * @param {string} db_name - Database selector
    * @param {string} method_name - Index of the method
-   * @param {functoin} method - Function that is executed on db-change
+   * @param {function} method - Function that is executed on db-change
    */
-  public setOnChange(db_name, method_name, method) {
+  public setOnChange(db_name: string, method_name: string, method: () => {}) {
     var db = this.getDB(db_name);
     if (typeof this.databases[db_name].onChange == 'undefined') {
       this.databases[db_name].onChange = {};
@@ -109,9 +109,13 @@ export class PouchWrapper {
    *
    * @param {string} db_name - Database selector
    * @param {string} method_name - Index of the method
-   * @param {functoin} method - Function that is executed on db-initial-replication done
+   * @param {function} method - Function that is executed on db-initial-replication done
    */
-  public setOnInitialReplicationDone(db_name, method_name, method) {
+  public setOnInitialReplicationDone(
+    db_name: string,
+    method_name: string,
+    method: () => {}
+  ) {
     var db = this.getDB(db_name);
     if (
       typeof this.databases[db_name].onInitialReplicationDone == 'undefined'
@@ -121,7 +125,7 @@ export class PouchWrapper {
     this.databases[db_name].onInitialReplicationDone[method_name] = method;
   }
 
-  public getDB(db_name, noprefix = false) {
+  public getDB(db_name: string, noprefix = false) {
     if (typeof this.databases[db_name] == 'undefined') {
       this.initDB(db_name, noprefix);
     }
