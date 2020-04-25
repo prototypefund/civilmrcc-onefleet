@@ -15,11 +15,11 @@ import 'leaflet-draw/dist/leaflet.draw.css';
 
 import App from './App.vue';
 
-import dbWrapper from './utils/dbWrapper';
+import { DbWrapper } from './utils/dbWrapper';
 import mapWrapper from './utils/mapWrapper';
 
 export const serverBus = new Vue();
-Vue.prototype.$db = dbWrapper;
+Vue.prototype.$db = new DbWrapper();
 Vue.prototype.$db.setLoginCallback(function() {
   serverBus.$emit('modal_modus', 'login');
 });
