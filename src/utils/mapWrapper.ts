@@ -17,14 +17,16 @@ class mapWrapper {
    * @param {string} mapId
    */
   public init(mapId: string): void {
+    let mapcenter;
+    let mapzoom;
     try {
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
     } catch (err) {
       console.error('could not load mapcenter and zoom from localstorage', err);
+      mapcenter = [38.575655, 10.710734];
+      mapzoom = 5;
     }
-    if (mapcenter == null) var mapcenter = [38.575655, 10.710734];
-    if (mapzoom == null) var mapzoom = 5;
 
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
@@ -146,7 +148,7 @@ class mapWrapper {
 
   // Generate popup content based on layer type
   // - Returns HTML string, or null if unknown object
-  private getPopupContent(layer): string {
+  private getPopupContent(layer): string | null {
     let latlngs, distance, area;
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
@@ -287,10 +289,9 @@ class mapWrapper {
 
     // Object(s) edited - update popups
     this.map.on(L.Draw.Event.EDITED, event => {
-      var layers = event.layers,
-        content = null;
+      var layers = event.layers;
       layers.eachLayer(layer => {
-        content = this.getPopupContent(layer);
+        var content = this.getPopupContent(layer);
         if (content !== null) {
           layer.setPopupContent(content);
         }
@@ -885,7 +886,7 @@ class mapWrapper {
    * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
-  public updateItemPosition(item): boolean {
+  public updateItemPosition(item): false | undefined {
     console.log('updateItemPosition');
     console.log(item);
     if (item.positions.length < 1) {

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "strict": false,
+    // "strict": true,
+    "noImplicitAny": false,
     "jsx": "preserve",
     // TODO: Enable this after pouchwrapper has been converted to typescript class
     // "noImplicitThis": true,
