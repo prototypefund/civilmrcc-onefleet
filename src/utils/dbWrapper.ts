@@ -3,7 +3,6 @@ import moment from 'moment';
 import config from '../../config/config.js';
 
 import { serverBus } from '../main';
-// const pouchwrapper = new PouchWrapper();
 export class DbWrapper extends PouchWrapper {
   constructor() {
     super(config);
@@ -256,7 +255,7 @@ export class DbWrapper extends PouchWrapper {
     }
 
     let i = 0;
-    let replay_items = [];
+    let replay_items: any[] = [];
     //loop through items
     for (let identifier in options.shown_items) {
       if (options.shown_items[identifier] == 'true') {
@@ -278,4 +277,3 @@ export class DbWrapper extends PouchWrapper {
     }
   }
 }
-// export default pouchwrapper;

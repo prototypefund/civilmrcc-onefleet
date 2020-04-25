@@ -390,7 +390,7 @@ class mapWrapper {
   public generateLineCaption(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var markers = [];
+    var markers: any[] = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
@@ -434,7 +434,7 @@ class mapWrapper {
   public generateLine(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var pointList = [];
+    var pointList: any[] = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
