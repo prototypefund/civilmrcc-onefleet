@@ -3,16 +3,22 @@ import PouchDBAuthentication from 'pouchdb-authentication';
 
 PouchDB.plugin(PouchDBAuthentication);
 
-var dbWrapper = function() {
-  this.databases = {};
-  this.logged_in;
-  this.loginCallback;
-  this.config = {};
-
-  this.setConfig = function(config) {
-    this.config = config;
+export class PouchWrapper {
+  public databases = {};
+  public logged_in;
+  public loginCallback;
+  public config = {
+    db_prefix: '',
+    db_remote_protocol: '',
+    db_remote_host: '',
+    db_remote_port: '',
   };
-  this.initDB = function(db_name, noprefix = false) {
+
+  constructor(config) {
+    this.config = config;
+  }
+
+  public initDB(db_name, noprefix = false) {
     var self = this;
     if (typeof this.databases[db_name] == 'undefined') {
       let prefix = this.config.db_prefix;
@@ -81,7 +87,8 @@ var dbWrapper = function() {
           // boo, something went wrong!
         });
     }
-  };
+  }
+
   /**
    * Sets onchange funtions for a specified database
    *
@@ -89,13 +96,14 @@ var dbWrapper = function() {
    * @param {string} method_name - Index of the method
    * @param {functoin} method - Function that is executed on db-change
    */
-  this.setOnChange = function(db_name, method_name, method) {
+  public setOnChange(db_name, method_name, method) {
     var db = this.getDB(db_name);
     if (typeof this.databases[db_name].onChange == 'undefined') {
       this.databases[db_name].onChange = {};
     }
     this.databases[db_name].onChange[method_name] = method;
-  };
+  }
+
   /**
    * Sets function which is fired when the initial replication for a specified database is done
    *
@@ -103,7 +111,7 @@ var dbWrapper = function() {
    * @param {string} method_name - Index of the method
    * @param {functoin} method - Function that is executed on db-initial-replication done
    */
-  this.setOnInitialReplicationDone = function(db_name, method_name, method) {
+  public setOnInitialReplicationDone(db_name, method_name, method) {
     var db = this.getDB(db_name);
     if (
       typeof this.databases[db_name].onInitialReplicationDone == 'undefined'
@@ -111,23 +119,25 @@ var dbWrapper = function() {
       this.databases[db_name].onInitialReplicationDone = {};
     }
     this.databases[db_name].onInitialReplicationDone[method_name] = method;
-  };
-  this.getDB = function(db_name, noprefix = false) {
+  }
+
+  public getDB(db_name, noprefix = false) {
     if (typeof this.databases[db_name] == 'undefined') {
       this.initDB(db_name, noprefix);
     }
     return this.databases[db_name].local;
-  };
-  this.showLogin = function() {
+  }
+
+  public showLogin() {
     this.loginCallback();
-  };
+  }
 
   //sets callback function which will be called on showLogin()
-  this.setLoginCallback = function(callback) {
+  public setLoginCallback(callback) {
     this.loginCallback = callback;
-  };
+  }
 
-  this.login = function(username, password, db) {
+  public login(username, password, db) {
     db.login(username, password)
       .then(function(res) {
         console.log(res);
@@ -138,12 +148,13 @@ var dbWrapper = function() {
       .catch(function(error) {
         console.error(error);
       });
-  };
-  this.fetchError = function(err) {
+  }
+  public fetchError(err) {
     console.log(err);
     if (err.error == 'unauthorized') this.showLogin();
-  };
-  this.getDBURL = function() {
+  }
+
+  public getDBURL() {
     if (
       typeof localStorage.username != 'undefined' &&
       localStorage.username.length > 0
@@ -161,6 +172,6 @@ var dbWrapper = function() {
         '/'
       );
     else this.showLogin();
-  };
-};
-export default new dbWrapper();
+  }
+}
+// export default new PouchWrapper();
