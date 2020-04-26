@@ -1,30 +1,9 @@
 import * as L from 'leaflet';
 import 'leaflet-draw';
-import { SARZone, SARZones } from '../constants/sar-zones';
+import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
-
-type MapItem = {
-  id: string;
-  doc: {
-    template: string;
-    identifier: string;
-    base_template: string;
-    properties: {
-      icon: string;
-      color: string;
-      boat_color: string;
-      name: string;
-    };
-  };
-  positions: {
-    doc: {
-      timestamp: string;
-      heading: number;
-      lat: string;
-      lon: string;
-    };
-  }[];
-};
+import { SARZone } from '@/types/sar-zone';
+import { MapItem } from './map-item';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)

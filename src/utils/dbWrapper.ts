@@ -1,37 +1,10 @@
 import moment from 'moment';
 import config from '../../config/config.js';
 import { serverBus } from '../main';
-import mapWrapper from './mapWrapper';
 import { PouchWrapper } from './pouchWrapper';
-
-type DbPosition = {
-  _id: string;
-  lat: string;
-  lon: string;
-  item_identifier: string;
-  source: string;
-  timestamp: string;
-};
-
-type DbItem = {
-  template: string;
-  vehicles: unknown[];
-  template_data: string;
-  form_data: { properties: {} };
-  position_data: {
-    positions: [{}];
-  };
-};
-
-type ReplayOptions = {
-  startDate: string;
-  endDate: string;
-  frameLength: number;
-  hoursPerFrame: number;
-  map: typeof mapWrapper;
-  // Todo: Infer this type from vue
-  shown_items: unknown[];
-};
+import { ReplayOptions } from '../types/replay-options';
+import { DbItem } from '../types/db-item';
+import { DbPosition } from '../types/db-position';
 
 export class DbWrapper extends PouchWrapper {
   constructor() {
