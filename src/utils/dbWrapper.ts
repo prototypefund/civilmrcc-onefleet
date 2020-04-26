@@ -2,7 +2,7 @@ import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
 
-type Position = {
+type DbPosition = {
   _id: string;
   lat: string;
   lon: string;
@@ -11,7 +11,7 @@ type Position = {
   timestamp: string;
 };
 
-type Item = {
+type DbItem = {
   twmplate: string;
   vehicles: any[];
   template_data: string;
@@ -53,7 +53,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public createPosition(obj: Position, cb: Function) {
+  public createPosition(obj: DbPosition, cb: Function) {
     this.getDB('positions')
       .put(obj)
       .then(response => {
@@ -64,7 +64,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public createItem(obj: Item, cb: Function) {
+  public createItem(obj: DbItem, cb: Function) {
     var itemDB = this.getDB('items');
     itemDB
       .put(obj)
@@ -76,13 +76,13 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public updateItem(obj: Item, cb: Function) {
+  public updateItem(obj: DbItem, cb: Function) {
     //in pouch create and update actually is the same function
     //an item will be updated if the id and a rev already exists
     return this.createItem(obj, cb);
   }
 
-  public getItem(itemId, cb: Function) {
+  public getItem(itemId: string, cb: Function) {
     this.getDB('items')
       .get(itemId)
       .then(doc => {
