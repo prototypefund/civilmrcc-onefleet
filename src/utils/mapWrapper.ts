@@ -86,7 +86,7 @@ class mapWrapper {
 
     /** Control setup */
     L.control.scale({ imperial: false }).addTo(this.map);
-    L.control
+    (L.control as any)
       .polylineMeasure({
         position: 'topleft',
         unit: 'nauticalmiles',
@@ -104,7 +104,7 @@ class mapWrapper {
     this.initDraw();
 
     this.map.on('move', () => {
-      storage.set('mapzoom', this.map._zoom);
+      storage.set('mapzoom', (this.map as any)._zoom);
       storage.set(
         'mapcenter',
         JSON.stringify([this.map.getCenter().lat, this.map.getCenter().lng])
@@ -183,6 +183,7 @@ class mapWrapper {
       );
       // Rectangle/Polygon - area
     } else if (layer instanceof L.Polygon) {
+      layer = layer as any;
       (latlngs = layer._defaultShape
         ? layer._defaultShape()
         : layer.getLatLngs()),
@@ -193,6 +194,7 @@ class mapWrapper {
       return html + 'Area: ' + L.GeometryUtil.readableArea(area, true);
       // Polyline - distance
     } else if (layer instanceof L.Polyline) {
+      layer = layer as any;
       (latlngs = layer._defaultShape
         ? layer._defaultShape()
         : layer.getLatLngs()),
@@ -283,7 +285,7 @@ class mapWrapper {
           poly: {
             allowIntersection: true,
           },
-        },
+        } as any,
         draw: {
           polygon: {
             allowIntersection: true,
@@ -305,7 +307,7 @@ class mapWrapper {
 
     // Object(s) edited - update popups
     this.map.on(L.Draw.Event.EDITED, event => {
-      var layers = event.layers;
+      var layers = (event as any).layers;
       layers.eachLayer(layer => {
         var content = this.getPopupContent(layer);
         if (content !== null) {
@@ -415,7 +417,9 @@ class mapWrapper {
           });
           //let marker = new L.marker([v.doc.lat, v.doc.lon], { opacity: 0.5 }); //opacity may be set to zero
 
-          let marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
+          let marker = (L as any).marker([v.doc.lat, v.doc.lon], {
+            icon: icon,
+          });
           markers.push(marker);
         }
         //pointList.push()
@@ -775,13 +779,13 @@ class mapWrapper {
 
     // create a new marker with the given lat/lon position and icon
     let marker = L.marker(
-      [lastKnownPosition.doc.lat, lastKnownPosition.doc.lon],
+      [lastKnownPosition.doc.lat as any, lastKnownPosition.doc.lon as any],
       { icon: icon }
     );
     // on click, call this mapWrapper's clickItem() function
     // without overwriting its "this" module (?), but
     // with binding its first parameter to the item's ID:
-    marker.on('click', L.bind(this.clickItem, null, item.id));
+    marker.on('click', (L as any).bind(this.clickItem, null, item.id));
     // Use the item's identifier (and its name if applicable) as Pop-up
     let popupcontent = (item.doc.identifier || '').toString();
     if (item.doc.properties.name) {
