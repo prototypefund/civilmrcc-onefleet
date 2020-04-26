@@ -1,20 +1,17 @@
 import PouchDB from 'pouchdb-browser';
 import PouchDBAuthentication from 'pouchdb-authentication';
+import { Config } from '@/types/config';
 
 PouchDB.plugin(PouchDBAuthentication);
 
 export class PouchWrapper {
   public databases = {};
+  // NOTE: This property seems to unused
   public logged_in;
   public loginCallback;
-  public config = {
-    db_prefix: '',
-    db_remote_protocol: '',
-    db_remote_host: '',
-    db_remote_port: '',
-  };
+  public config: Config;
 
-  constructor(config) {
+  constructor(config: Config) {
     this.config = config;
   }
 
