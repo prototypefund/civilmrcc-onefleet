@@ -8,10 +8,23 @@ PouchDB.plugin(PouchDBAuthentication);
  * PouchWrapper
  */
 export class PouchWrapper {
-  public databases = {};
+  public databases: {
+    [index: string]: {
+      local: any;
+      remote: any;
+      // local: PouchDB.Database<{}>;
+      // remote: PouchDB.Database<{}>;
+      onInitialReplicationDone: {
+        [index: string]: Function;
+      };
+      onChange: {
+        [index: string]: Function;
+      };
+    };
+  } = {};
   // NOTE: This property seems to unused
   public logged_in;
-  public loginCallback;
+  public loginCallback: Function | undefined;
   public config: Config;
 
   constructor(config: Config) {
@@ -25,6 +38,8 @@ export class PouchWrapper {
         prefix = '';
       }
       this.databases[db_name] = {
+        onChange: {},
+        onInitialReplicationDone: {},
         local: new PouchDB(db_name, { skip_setup: false }),
         remote: new PouchDB(
           this.getDBURL() +
@@ -132,15 +147,17 @@ export class PouchWrapper {
   }
 
   public showLogin() {
-    this.loginCallback();
+    if (this.loginCallback) {
+      this.loginCallback();
+    }
   }
 
   //sets callback function which will be called on showLogin()
-  public setLoginCallback(callback) {
+  public setLoginCallback(callback: Function) {
     this.loginCallback = callback;
   }
 
-  public login(username, password, db) {
+  public login(username: string, password: string, db) {
     db.login(username, password)
       .then(function(res) {
         console.log(res);
