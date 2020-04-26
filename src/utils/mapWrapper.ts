@@ -1,7 +1,7 @@
-import storage from './storageWrapper';
-import { SARZones, SARZone } from '../constants/sar-zones';
 import * as L from 'leaflet';
 import 'leaflet-draw';
+import { SARZone, SARZones } from '../constants/sar-zones';
+import storage from './storageWrapper';
 
 type MapItem = {
   id: string;

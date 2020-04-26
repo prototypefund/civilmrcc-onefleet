@@ -1,6 +1,8 @@
-import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
+import { serverBus } from '../main';
+import mapWrapper from './mapWrapper';
+import { PouchWrapper } from './pouchWrapper';
 
 type DbPosition = {
   _id: string;
@@ -31,8 +33,6 @@ type ReplayOptions = {
   shown_items: unknown[];
 };
 
-import { serverBus } from '../main';
-import mapWrapper from './mapWrapper';
 export class DbWrapper extends PouchWrapper {
   constructor() {
     super(config);
