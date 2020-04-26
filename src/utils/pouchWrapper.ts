@@ -4,6 +4,9 @@ import { Config } from '@/types/config';
 
 PouchDB.plugin(PouchDBAuthentication);
 
+/**
+ * PouchWrapper
+ */
 export class PouchWrapper {
   public databases = {};
   // NOTE: This property seems to unused
@@ -16,7 +19,6 @@ export class PouchWrapper {
   }
 
   public initDB(db_name: string, noprefix = false) {
-    var self = this;
     if (typeof this.databases[db_name] == 'undefined') {
       let prefix = this.config.db_prefix;
       if (noprefix) {
@@ -35,31 +37,31 @@ export class PouchWrapper {
 
       this.databases[db_name].local.replicate
         .from(this.databases[db_name].remote)
-        .on('complete', function(r, a, n) {
+        .on('complete', (r, a, n) => {
           // yay, we're done!
           console.log('initial replication done!');
 
           //check if any function needs to be fired after initial replication
-          for (let n in self.databases[db_name].onInitialReplicationDone) {
+          for (let n in this.databases[db_name].onInitialReplicationDone) {
             if (
-              typeof self.databases[db_name].onInitialReplicationDone[n] ==
+              typeof this.databases[db_name].onInitialReplicationDone[n] ==
               'function'
             ) {
-              self.databases[db_name].onInitialReplicationDone[n]();
+              this.databases[db_name].onInitialReplicationDone[n]();
             }
           }
           console.log('starting sync..');
-          self.databases[db_name].remote
+          this.databases[db_name].remote
             .sync(db_name, {
               live: true,
               retry: true,
             })
-            .on('change', function(change) {
+            .on('change', change => {
               console.log('data ch change', change);
               //each database can contain multiple onchange listeners, defined by index n
-              for (let n in self.databases[db_name].onChange) {
-                if (typeof self.databases[db_name].onChange[n] == 'function') {
-                  self.databases[db_name].onChange[n](change);
+              for (let n in this.databases[db_name].onChange) {
+                if (typeof this.databases[db_name].onChange[n] == 'function') {
+                  this.databases[db_name].onChange[n](change);
                 }
               }
             })
