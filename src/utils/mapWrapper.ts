@@ -402,9 +402,7 @@ class mapWrapper {
           });
           //let marker = new L.marker([v.doc.lat, v.doc.lon], { opacity: 0.5 }); //opacity may be set to zero
 
-          let marker = L.marker([v.doc.lat, v.doc.lon], {
-            icon: icon,
-          });
+          let marker = L.marker([v.doc.lat, v.doc.lon], { icon: icon });
           markers.push(marker);
         }
         //pointList.push()
