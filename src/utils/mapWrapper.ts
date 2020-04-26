@@ -11,7 +11,13 @@ import { MapItem } from '../types/map-item';
  */
 class mapWrapper {
   public map!: L.Map;
-  public loaded_items = {};
+  public loaded_items: {
+    [index: string]: {
+      marker: L.Marker<any>;
+      lineCaptions: L.Marker<any>[];
+      line: L.Polyline<any, any>;
+    };
+  } = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
 
@@ -19,8 +25,8 @@ class mapWrapper {
    * Initialises the map backend component.
    */
   public init(mapId: string): void {
-    let mapcenter;
-    let mapzoom;
+    let mapcenter: [number, number];
+    let mapzoom: number;
     try {
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
@@ -33,7 +39,7 @@ class mapWrapper {
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
     /** Tile setup */
-    let tile_url;
+    let tile_url: string;
     switch (localStorage.settings_maptiles) {
       default:
         tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
@@ -144,7 +150,7 @@ class mapWrapper {
   // Generate popup content based on layer type
   // - Returns HTML string, or null if unknown object
   private getPopupContent(layer): string | null {
-    let latlngs, distance, area;
+    let latlngs, distance: number, area;
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
       return this.strLatLng(layer.getLatLng());
@@ -396,7 +402,7 @@ class mapWrapper {
           });
           //let marker = new L.marker([v.doc.lat, v.doc.lon], { opacity: 0.5 }); //opacity may be set to zero
 
-          let marker = (L as any).marker([v.doc.lat, v.doc.lon], {
+          let marker = L.marker([v.doc.lat, v.doc.lon], {
             icon: icon,
           });
           markers.push(marker);
@@ -758,7 +764,7 @@ class mapWrapper {
 
     // create a new marker with the given lat/lon position and icon
     let marker = L.marker(
-      [lastKnownPosition.doc.lat as any, lastKnownPosition.doc.lon as any],
+      [lastKnownPosition.doc.lat, lastKnownPosition.doc.lon],
       { icon: icon }
     );
     // on click, call this mapWrapper's clickItem() function
@@ -815,7 +821,11 @@ class mapWrapper {
       if (localStorage.settings_positiontimestamps == 'true')
         lineCaptions = this.generateLineCaption(item);
 
-      this.loaded_items[item.id] = {};
+      this.loaded_items[item.id] = {
+        line: {} as any,
+        marker: {} as any,
+        lineCaptions: {} as any,
+      };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
@@ -854,10 +864,9 @@ class mapWrapper {
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {
-        this.loaded_items[item.id].marker
+        (this.loaded_items[item.id].marker
           .setLatLng([lat, lon])
-          .setOpacity(1)
-          .update();
+          .setOpacity(1) as any).update();
       }
 
       if (this.loaded_items[item.id].line) {
@@ -870,7 +879,9 @@ class mapWrapper {
 
       if (this.loaded_items[item.id].lineCaptions) {
         for (let i in this.loaded_items[item.id].lineCaptions) {
-          this.loaded_items[item.id].lineCaptions[i].setOpacity(1).update();
+          (this.loaded_items[item.id].lineCaptions[i].setOpacity(
+            1
+          ) as any).update();
         }
       }
     }
@@ -882,12 +893,14 @@ class mapWrapper {
   public hideItem(item_id: string): void {
     let item = this.loaded_items[item_id];
     if (item) {
-      item.marker.setOpacity(0).update();
+      if (item.marker) {
+        (item.marker.setOpacity(0) as any).update();
+      }
       if (item.line) {
         item.line.setStyle({ opacity: 0 });
       }
       for (let i in item.lineCaptions) {
-        item.lineCaptions[i].setOpacity(0).update();
+        (item.lineCaptions[i].setOpacity(0) as any).update();
       }
     }
   }

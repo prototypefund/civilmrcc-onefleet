@@ -15,8 +15,10 @@ export interface MapItem {
     doc: {
       timestamp: string;
       heading: number;
-      lat: string;
-      lon: string;
+      // lat: string;
+      lat: number;
+      // lon: string;
+      lon: number;
     };
   }[];
 }
