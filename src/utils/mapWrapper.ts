@@ -1,6 +1,17 @@
 import storage from './storageWrapper';
 import { SARZones, SARZone } from '../constants/sar-zones';
 import * as L from 'leaflet';
+import { DbItem, DbPosition } from './dbWrapper';
+
+export type MapPosition = {
+  doc: DbPosition;
+};
+
+type MapItem = {
+  id: string;
+  doc: DbItem;
+  positions: MapPosition[];
+};
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
@@ -313,7 +324,7 @@ class mapWrapper {
    * @param {number} item.positions.doc.timestamp The timestamp of a position.
    * @returns
    */
-  public loadTemplatedItem(item) {
+  public loadTemplatedItem(item: MapItem) {
     console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
@@ -390,7 +401,7 @@ class mapWrapper {
   public generateLineCaption(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var markers: any[] = [];
+    var markers = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
@@ -434,7 +445,7 @@ class mapWrapper {
   public generateLine(item) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var pointList: any[] = [];
+    var pointList = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
@@ -837,12 +848,12 @@ class mapWrapper {
    * @param {string} item.doc.template The template of the item
    * @param {Object[]} item.positions The array of positions of the item.
    */
-  public addItemToMap(item): void {
+  public addItemToMap(item: MapItem): void {
     item = this.loadTemplatedItem(item);
 
     var line = false,
-      marker: any = false,
-      lineCaptions: any = false;
+      marker = false,
+      lineCaptions = false;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
@@ -886,7 +897,7 @@ class mapWrapper {
    * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
-  public updateItemPosition(item): false | undefined {
+  public updateItemPosition(item: MapItem): false | undefined {
     console.log('updateItemPosition');
     console.log(item);
     if (item.positions.length < 1) {

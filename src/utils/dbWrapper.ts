@@ -2,7 +2,7 @@ import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
 
-type DbPosition = {
+export type DbPosition = {
   _id: string;
   lat: string;
   lon: string;
@@ -11,7 +11,7 @@ type DbPosition = {
   timestamp: string;
 };
 
-type DbItem = {
+export type DbItem = {
   twmplate: string;
   vehicles: any[];
   template_data: string;
