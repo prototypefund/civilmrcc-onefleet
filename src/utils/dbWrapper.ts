@@ -12,7 +12,6 @@ export type DbPosition = {
 };
 
 export type DbItem = {
-  twmplate: string;
   vehicles: any[];
   template_data: string;
   form_data: { properties: {} };

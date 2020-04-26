@@ -95,7 +95,7 @@ export default {
   name: 'CreateItem',
   data: function() {
     return {
-      twmplate: '',
+      template: '',
       vehicles: [],
       template_data: '',
       form_data: { properties: {} },
