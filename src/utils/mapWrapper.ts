@@ -895,7 +895,6 @@ class mapWrapper {
 
   /**
    * Hides the given item from the map.
-   * @param {string} item_id The ID of the item that should be hidden
    */
   public hideItem(item_id: string): void {
     let item = this.loaded_items[item_id];
@@ -912,15 +911,12 @@ class mapWrapper {
 
   /**
    * Calculates the geographical distance between two points on the map, in meters.
-   * @param {Object} point1 The first point for distance calculation
-   * @param {number} point1.lat Latitude of first point
-   * @param {number} point1.lon Longitude of first point
-   * @param {Object} point2 The second point for distance calculation
-   * @param {number} point2.lat Latitude of second point
-   * @param {number} point2.lon Longitude of second point
    * @returns {number} The distance in meters (CI unit)
    */
-  public getDistance(point1, point2): number {
+  public getDistance(
+    point1: { lat: number; lon: number },
+    point2: { lat: number; lon: number }
+  ): number {
     let latlng1 = L.latLng(point1.lat, point1.lon);
     let latlng2 = L.latLng(point2.lat, point2.lon);
     return latlng1.distanceTo(latlng2);
