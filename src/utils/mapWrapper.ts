@@ -682,7 +682,7 @@ class mapWrapper {
    * @see L.Marker.openPopup() The function to call on mouseover.
    * @see L.Marker.closePopup() The function to call on mouseout.
    */
-  public generateMarker(item: MapItem): L.Marker {
+  public generateMarker(item: MapItem): L.Marker | undefined {
     if (typeof item.positions === 'undefined' || item.positions.length == 0) {
       return; // 'undefined' if the item has no positions
     }
