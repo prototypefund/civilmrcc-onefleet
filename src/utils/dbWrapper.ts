@@ -13,7 +13,7 @@ type DbPosition = {
 
 type DbItem = {
   template: string;
-  vehicles: any[];
+  vehicles: unknown[];
   template_data: string;
   form_data: { properties: {} };
   position_data: {
