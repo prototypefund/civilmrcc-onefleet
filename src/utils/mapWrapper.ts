@@ -3,7 +3,7 @@ import 'leaflet-draw';
 import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
-import { MapItem } from './map-item';
+import { MapItem } from '../types/map-item';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
