@@ -96,7 +96,7 @@ export class PouchWrapper {
    * @param {string} method_name - Index of the method
    * @param {function} method - Function that is executed on db-change
    */
-  public setOnChange(db_name: string, method_name: string, method: () => {}) {
+  public setOnChange(db_name: string, method_name: string, method: Function) {
     var db = this.getDB(db_name);
     if (typeof this.databases[db_name].onChange == 'undefined') {
       this.databases[db_name].onChange = {};
@@ -114,7 +114,7 @@ export class PouchWrapper {
   public setOnInitialReplicationDone(
     db_name: string,
     method_name: string,
-    method: () => {}
+    method: Function
   ) {
     var db = this.getDB(db_name);
     if (
