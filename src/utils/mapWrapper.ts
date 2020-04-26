@@ -1,6 +1,7 @@
 import storage from './storageWrapper';
 import { SARZones, SARZone } from '../constants/sar-zones';
 import * as L from 'leaflet';
+import 'leaflet-draw';
 
 type MapItem = {
   id: string;
@@ -30,7 +31,7 @@ type MapItem = {
  * It also provides some convenience methods for recurring map-related tasks.
  */
 class mapWrapper {
-  public map: L.Map;
+  public map!: L.Map;
   public loaded_items = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
@@ -393,7 +394,7 @@ class mapWrapper {
    */
   public clickItem() {}
 
-  public generateLineCaption(item: MapItem) {
+  public generateLineCaption(item: MapItem): L.Marker[] | undefined {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var markers: any = [];
@@ -427,7 +428,7 @@ class mapWrapper {
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
    */
-  public generateLine(item: MapItem): L.Polyline {
+  public generateLine(item: MapItem): L.Polyline | undefined {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var pointList: any = [];
@@ -600,7 +601,6 @@ class mapWrapper {
         smoothFactor: 1,
       });
     }
-    // return 'undefined' if the item has no positions
   }
 
   /**
@@ -817,9 +817,9 @@ class mapWrapper {
   public addItemToMap(item: MapItem): void {
     item = this.loadTemplatedItem(item);
 
-    var line = false,
-      marker: any = false,
-      lineCaptions: any = false;
+    var line: L.Polyline | undefined,
+      marker: L.Marker | undefined,
+      lineCaptions: L.Marker[] | undefined;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
