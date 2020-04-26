@@ -4,9 +4,8 @@
     "module": "esnext",
     "strict": true,
     // "strict": false,
-    "noImplicitAny": false,
-    // "assi"
-    // "noImplicitAny": true,
+    // "noImplicitAny": false,
+    "noImplicitAny": true,
     "jsx": "preserve",
     // TODO: Enable this after pouchwrapper has been converted to typescript class
     "noImplicitThis": false,

@@ -2,13 +2,32 @@ import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
 
+type Position = {
+  _id: string;
+  lat: string;
+  lon: string;
+  item_identifier: string;
+  source: string;
+  timestamp: string;
+};
+
+type Item = {
+  twmplate: string;
+  vehicles: any[];
+  template_data: string;
+  form_data: { properties: {} };
+  position_data: {
+    positions: [{}];
+  };
+};
+
 import { serverBus } from '../main';
 export class DbWrapper extends PouchWrapper {
   constructor() {
     super(config);
   }
 
-  public getPositionsForItem(identifier, cb) {
+  public getPositionsForItem(identifier: string, cb: Function) {
     this.getDB('positions')
       .allDocs({
         include_docs: true,
@@ -34,7 +53,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public createPosition(obj, cb) {
+  public createPosition(obj: Position, cb: Function) {
     this.getDB('positions')
       .put(obj)
       .then(response => {
@@ -45,7 +64,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public createItem(obj, cb) {
+  public createItem(obj: Item, cb: Function) {
     var itemDB = this.getDB('items');
     itemDB
       .put(obj)
@@ -57,13 +76,13 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public updateItem(obj, cb) {
+  public updateItem(obj: Item, cb: Function) {
     //in pouch create and update actually is the same function
     //an item will be updated if the id and a rev already exists
     return this.createItem(obj, cb);
   }
 
-  public getItem(itemId, cb) {
+  public getItem(itemId, cb: Function) {
     this.getDB('items')
       .get(itemId)
       .then(doc => {
@@ -81,7 +100,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public getItems(cb) {
+  public getItems(cb: Function) {
     var items = this.getDB('items');
     items
       .allDocs({
@@ -107,7 +126,7 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public getItemsByTemplate(template, cb) {
+  public getItemsByTemplate(template: string, cb: Function) {
     this.getDB('items')
       .allDocs({
         include_docs: true,
@@ -136,7 +155,7 @@ export class DbWrapper extends PouchWrapper {
         cb(err);
       });
   }
-  public getVehicles(cb) {
+  public getVehicles(cb: Function) {
     this.getItemsByTemplate('VEHICLE', cb);
   }
   public appendItemsToMap(map) {
@@ -172,7 +191,7 @@ export class DbWrapper extends PouchWrapper {
    * @param {Number} options.hoursPerFrame   hoursPerFrame added to the animation per frame update
    * @param {Number} options.frameLength     length in s in which a frame is shown
    */
-  public startReplay(options, cb) {
+  public startReplay(options, cb: Function) {
     let start_interval = () => {
       let currentDate = moment(options.startDate);
 
