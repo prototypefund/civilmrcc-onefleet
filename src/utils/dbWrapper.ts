@@ -2,7 +2,7 @@ import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
 
-export type DbPosition = {
+type DbPosition = {
   _id: string;
   lat: string;
   lon: string;
@@ -11,7 +11,8 @@ export type DbPosition = {
   timestamp: string;
 };
 
-export type DbItem = {
+type DbItem = {
+  template: string;
   vehicles: any[];
   template_data: string;
   form_data: { properties: {} };
@@ -20,7 +21,18 @@ export type DbItem = {
   };
 };
 
+type ReplayOptions = {
+  startDate: string;
+  endDate: string;
+  frameLength: number;
+  hoursPerFrame: number;
+  map: typeof mapWrapper;
+  // Todo: Infer this type from vue
+  shown_items: unknown[];
+};
+
 import { serverBus } from '../main';
+import mapWrapper from './mapWrapper';
 export class DbWrapper extends PouchWrapper {
   constructor() {
     super(config);
@@ -183,14 +195,10 @@ export class DbWrapper extends PouchWrapper {
     }
   }
 
-  /** Method starts timelapse replay
-   * @param {Object} options.map
-   * @param {String} options.startDate       starting datetime of the replay
-   * @param {String} options.endDate         ending datetime of the replay
-   * @param {Number} options.hoursPerFrame   hoursPerFrame added to the animation per frame update
-   * @param {Number} options.frameLength     length in s in which a frame is shown
+  /**
+   * Method starts timelapse replay
    */
-  public startReplay(options, cb: Function) {
+  public startReplay(options: ReplayOptions, cb: Function) {
     let start_interval = () => {
       let currentDate = moment(options.startDate);
 

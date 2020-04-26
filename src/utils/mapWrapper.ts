@@ -1,16 +1,28 @@
 import storage from './storageWrapper';
 import { SARZones, SARZone } from '../constants/sar-zones';
 import * as L from 'leaflet';
-import { DbItem, DbPosition } from './dbWrapper';
-
-export type MapPosition = {
-  doc: DbPosition;
-};
 
 type MapItem = {
   id: string;
-  doc: DbItem;
-  positions: MapPosition[];
+  doc: {
+    template: string;
+    identifier: string;
+    base_template: string;
+    properties: {
+      icon: string;
+      color: string;
+      boat_color: string;
+      name: string;
+    };
+  };
+  positions: {
+    doc: {
+      timestamp: string;
+      heading: number;
+      lat: string;
+      lon: string;
+    };
+  }[];
 };
 
 /**
@@ -18,14 +30,13 @@ type MapItem = {
  * It also provides some convenience methods for recurring map-related tasks.
  */
 class mapWrapper {
-  public map;
+  public map: L.Map;
   public loaded_items = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
 
   /**
    * Initialises the map backend component.
-   * @param {string} mapId
    */
   public init(mapId: string): void {
     let mapcenter;
@@ -86,7 +97,7 @@ class mapWrapper {
       .addTo(this.map);
 
     //** SAR Zones setup */
-    this.createSarZoneFeatureGroup(SARZones, this.map);
+    this.createSarZoneFeatureGroup(SARZones);
 
     //** Init draws on the map after startup. */
     this.initDraw();
@@ -102,18 +113,11 @@ class mapWrapper {
     console.log('map initiated');
   }
 
-  /** Creates a featureGroup with polygons of each given SAR Zone from the parameter.
-   * Return a leaflet L.featureGroup.
-   * @param {Object[]} sarZones The constant sarZones object that is stored separately.
-   * @param {string} sarZones.name The name of the SAR zone. Used as tooltip.
-   * @param {string} sarZones.color A color by a SAR zone can be quickly identified on the map.
-   * @param {Object[]} sarZones.coordinates An array of lat/lon coordinates.
-   * @param {number} sarZones.coordinates.lat A latitude coordinate.
-   * @param {number} sarZones.coordinates.lon A longitude coordinate.
-   * @param {L.Map} map The map to which the sarZones should be added.
+  /**
+   * Creates a featureGroup with polygons of each given SAR Zone from the parameter.
    */
-  public createSarZoneFeatureGroup(sarZones: SARZone[], map: L.Map): void {
-    map.addLayer(this.sarZoneLayerGroup);
+  public createSarZoneFeatureGroup(sarZones: SARZone[]): void {
+    this.map.addLayer(this.sarZoneLayerGroup);
 
     for (let sarZoneObject of sarZones) {
       const coordinates = sarZoneObject.coordinates;
@@ -314,17 +318,8 @@ class mapWrapper {
    * Prepares the given item for UI by converting templates to known base
    * templates, defining icons, and cropping the loaded number of positions
    * to an amount that can be handled by interactive display.
-   * @param {Object} item The item that should be updated.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.template The template of the item
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.icon The icon file name for the item
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.timestamp The timestamp of a position.
-   * @returns
    */
-  public loadTemplatedItem(item: MapItem) {
+  public loadTemplatedItem(item: MapItem): MapItem {
     console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
@@ -398,7 +393,7 @@ class mapWrapper {
    */
   public clickItem() {}
 
-  public generateLineCaption(item) {
+  public generateLineCaption(item: MapItem) {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var markers = [];
@@ -431,18 +426,8 @@ class mapWrapper {
 
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.color The item's color.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
-   * @returns L.Polyline
    */
-  public generateLine(item) {
+  public generateLine(item: MapItem): L.Polyline {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
     var pointList = [];
@@ -453,7 +438,7 @@ class mapWrapper {
         //pointList.push()
       }
 
-      var color;
+      let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
       else
@@ -696,21 +681,8 @@ class mapWrapper {
    * @see this.clickItem() The function to call when clicking on the marker.
    * @see L.Marker.openPopup() The function to call on mouseover.
    * @see L.Marker.closePopup() The function to call on mouseout.
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.identifier The item's identifier.
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.name The item's name.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
-   * @param {number} item.positions.doc.heading The heading direction at a position.
-   * @returns L.Marker
    */
-  public generateMarker(item) {
+  public generateMarker(item: MapItem): L.Marker {
     if (typeof item.positions === 'undefined' || item.positions.length == 0) {
       return; // 'undefined' if the item has no positions
     }
@@ -841,19 +813,13 @@ class mapWrapper {
    * @see this.loadTemplatedItem() Used to prepare item for display on map.
    * @see this.generateLine() Used to generate a polyline for the item.
    * @see this.generateMarker() Used to generate a marker for the item
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.template The template of the item
-   * @param {Object[]} item.positions The array of positions of the item.
    */
   public addItemToMap(item: MapItem): void {
     item = this.loadTemplatedItem(item);
 
     var line = false,
-      marker = false,
-      lineCaptions = false;
+      marker: any = false,
+      lineCaptions: any = false;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
@@ -888,13 +854,6 @@ class mapWrapper {
    * Updates a loaded item's position on the map and ensures it is visible.
    *
    * @see this.addItemToMap() Used to add an item to the map if not present.
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   public updateItemPosition(item: MapItem): false | undefined {
