@@ -1,6 +1,5 @@
 const pouchDB = require('pouchdb');
 const request = require('request');
-const sqlite3 = require('sqlite3').verbose();
 
 const fs = require('fs');
 const path = require('path');
@@ -30,7 +29,6 @@ class LocationService {
   dbConfig: any;
   itemDB: any;
   locationsDB: any;
-  sqlite: any;
 
   public initDBs() {
     this.dbConfig = process.env.DEVELOPMENT
@@ -50,9 +48,6 @@ class LocationService {
       `${config.dbUrl}/${config.dbPrefix}positions`,
       this.dbConfig
     );
-
-    //SQLITE is used for long term storage
-    this.sqlite = new sqlite3.Database('./locations.db');
   }
 
   public initMail() {
@@ -67,37 +62,6 @@ class LocationService {
         if (mail) this.positionCallback(mail, seqno, attributes);
       },
     });
-  }
-
-  public sqlite_query(sql, cb) {
-    this.sqlite.all(sql, [], (err, rows) => {
-      if (err && err.errno == 1) {
-        console.log(err);
-        this.createTable(() => {
-          console.log('locations table created');
-          this.sqlite_query(sql, cb);
-        });
-      } else {
-        cb(rows);
-      }
-    });
-  }
-
-  public createTable(cb) {
-    console.log('creating locations table');
-    this.sqlite.run(
-      'CREATE TABLE IF NOT EXISTS `locations` ( \
-      `id` varchar(255) NOT NULL,\
-      `item_identifier` varchar(255) NOT NULL,\
-      `lat` decimal(11,8) NOT NULL,\
-      `lon` decimal(11,8) NOT NULL,\
-      `speed` float NOT NULL,\
-      `course` float NOT NULL,\
-      `timestamp` int(11) NOT NULL\
-    )',
-      {},
-      cb
-    );
   }
 
   public insertLocation(identifier, Position) {
@@ -128,29 +92,6 @@ class LocationService {
           console.log(entry);
           console.log(err);
         });
-
-      var statement =
-        'INSERT INTO `locations` (`id`, `lat`, `lon`, `speed`, `course`, `timestamp`, `item_identifier`) VALUES ("' +
-        identifier +
-        '_' +
-        new Date(Position.timestamp).toISOString() +
-        '", ' +
-        Position.latitude +
-        ', ' +
-        Position.longitude +
-        ', ' +
-        Position.speed +
-        ', ' +
-        Position.course +
-        ', ' +
-        new Date(Position.timestamp).getTime() / 1000 +
-        ', "' +
-        identifier +
-        '")';
-      //add position for longtime storage
-      this.sqlite_query(statement, function() {
-        console.log('location also stored in sqlite');
-      });
     } else {
       console.log('there was an error getting the position for ' + identifier);
     }
