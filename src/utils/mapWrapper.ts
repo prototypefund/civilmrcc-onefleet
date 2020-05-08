@@ -313,7 +313,6 @@ class mapWrapper {
    * @returns
    */
   public loadTemplatedItem(item) {
-    console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -886,17 +885,12 @@ class mapWrapper {
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   public updateItemPosition(item): boolean {
-    console.log('updateItemPosition');
-    console.log(item);
     if (item.positions.length < 1) {
-      console.log('no positions available');
       return false;
     }
     if (typeof this.loaded_items[item.id] == 'undefined') {
-      console.log('add item');
       this.addItemToMap(item);
     } else {
-      console.log('update item', this.loaded_items[item.id]);
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {
