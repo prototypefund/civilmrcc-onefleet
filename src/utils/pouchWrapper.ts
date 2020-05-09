@@ -12,6 +12,7 @@ export class PouchWrapper {
     [index: string]: {
       local: any;
       remote: any;
+      // TODO: Use the correct type for databases
       // local: PouchDB.Database<{}>;
       // remote: PouchDB.Database<{}>;
       onInitialReplicationDone: {
@@ -22,7 +23,7 @@ export class PouchWrapper {
       };
     };
   } = {};
-  // NOTE: This property seems to unused
+  // NOTE: This property seems to unused. Can it be removed?
   public logged_in;
   public loginCallback: Function | undefined;
   public config: Config;
