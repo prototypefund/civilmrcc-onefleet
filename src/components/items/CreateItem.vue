@@ -1,18 +1,18 @@
 <template>
   <div class="background" v-on:click.self="closeModal">
     <div class="form-style-6">
-      <h1>Create Item</h1>
+      <h1>Add new {{ form_data.template }}</h1>
       <form @submit="createItem">
         <span>Template</span>
-        <select
-          v-model="form_data.template"
-          @change="loadTemplate()"
-          class="select-css"
-          required
-        >
-          <option>case</option>
-          <option>vehicle</option>
-          <option>landmark</option>
+        <select v-model="form_data.template" class="select-css" required>
+          <option
+            v-for="template_option in template_options"
+            :label="template_option"
+            :name="template_option"
+            :key="template_option"
+          >
+            {{ template_option }}
+          </option>
         </select>
 
         <span>Identifier</span>
@@ -43,7 +43,7 @@
           />
         </div>
 
-        <div v-for="field in template_data.fields" :key="field">
+        <div v-for="field in template_data.fields" :key="field.name">
           <span>{{ field.title }}</span>
 
           <!-- iconwrapper start -->
@@ -78,6 +78,7 @@
           >
             <option
               v-for="option in field.options"
+              :key="option"
               :value="field.options[option]"
               >{{ option }}</option
             >
@@ -93,17 +94,32 @@ import templates from './templates.js';
 import { serverBus } from '../../main';
 export default {
   name: 'CreateItem',
+  props: {
+    givenTemplate: {
+      type: String,
+      default: '',
+    },
+  },
   data: function() {
     return {
       twmplate: '',
       vehicles: [],
-      template_data: '',
-      form_data: { properties: {} },
+      form_data: { properties: {}, template: this.givenTemplate },
       position_data: {
         positions: [{}],
       },
     };
   },
+  computed: {
+    template_data: function() {
+      // change (cached) template data whenever the selected template string in form_data changes
+      return templates.get(this.form_data.template) || {};
+    },
+    template_options: function() {
+      return Object.keys(templates.get('all'));
+    },
+  },
+
   methods: {
     createItem: function(e) {
       var self = this;
@@ -154,11 +170,6 @@ export default {
       }
 
       e.preventDefault();
-    },
-    loadTemplate: function() {
-      var template = templates.get(this.form_data.template);
-      this.template_data = template;
-      this.$nextTick();
     },
     closeModal: function() {
       // Using the service bus

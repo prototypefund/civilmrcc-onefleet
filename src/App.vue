@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <CreateItem v-if="modal == 'createItem'"></CreateItem>
+    <CreateItem
+      v-if="modal == 'createItem'"
+      :givenTemplate="modal_data"
+    ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
     <ExportItem
       v-show="exportItemId != false"
@@ -58,6 +61,7 @@ export default {
   data: () => ({
     modus: 'map',
     modal: '',
+    modal_data: '',
     show_air: false,
     itemId: false,
     exportItemId: false,
@@ -78,8 +82,9 @@ export default {
       this.$data.modus = app_modus;
     });
 
-    serverBus.$on('modal_modus', modal_modus => {
+    serverBus.$on('modal_modus', (modal_modus, modal_data) => {
       this.$data.modal = modal_modus;
+      this.$data.modal_data = modal_data;
     });
     serverBus.$on('show_air', show_air => {
       this.$data.show_air = show_air;
@@ -122,8 +127,8 @@ body {
 
 #mainWindow {
   position: absolute;
-  width: 75vw;
-  left: 25vw;
+  width: 100%;
+  left: 280px;
   top: 60px;
   bottom: 0;
   background: #fff;
