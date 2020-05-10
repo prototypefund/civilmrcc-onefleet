@@ -127,10 +127,13 @@ body {
 
 #mainWindow {
   position: absolute;
-  width: 100%;
+  width: -webkit-calc(100% - 280px);
+  width: -moz-calc(100% - 280px);
+  width: calc(100% - 280px);
   left: 280px;
+  right: 0px;
   top: 60px;
-  bottom: 0;
+  bottom: 0px;
   background: #fff;
 }
 #chat {

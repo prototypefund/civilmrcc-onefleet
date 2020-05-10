@@ -64,6 +64,8 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 #mapArea {
+  height: -webkit-calc(100vh - 60px);
+  height: -moz-calc(100vh - 60px);
   height: calc(100vh - 60px);
 }
 

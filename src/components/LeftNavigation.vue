@@ -9,7 +9,8 @@
       >
         <div class="action_area">
           <div>
-            more buttons coming soon
+            more <br />
+            soon
           </div>
           <el-button
             @click="createItemWithTemplate(category.title)"
@@ -282,8 +283,10 @@ nav .categories .item_name {
 
 .category_list ul {
   overflow: scroll;
-  height: 80vh;
-  top: 260px;
+  height: -webkit-calc(100vh - 164px);
+  height: -moz-calc(100vh - 164px);
+  height: calc(100vh - 164px);
+  top: 164px;
 }
 
 .category_list li {
@@ -305,9 +308,6 @@ nav .categories .item_name {
 
 el-switch {
   margin-right: 5px;
-}
-
-el-tag {
 }
 
 .item_name:hover {
