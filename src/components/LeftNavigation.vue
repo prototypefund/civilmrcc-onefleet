@@ -1,71 +1,67 @@
 <template>
   <nav>
-    <ul>
-      <el-collapse v-model="activeCategories">
-        <el-collapse-item
-          v-for="category in categories"
-          class="categories"
-          :title="category.plural"
-          :name="category.plural"
-          :key="category.plural"
-        >
-          <ul class="category_list">
-            <li v-for="item in category.items.rows">
-              <span
-                class="item_name"
+    <el-tabs v-model="activeCategories">
+      <el-tab-pane
+        v-for="category in categories"
+        :label="category.plural"
+        :name="category.plural"
+        :key="category.plural"
+      >
+        <div class="action_area">
+          <div>
+            more buttons coming soon
+          </div>
+          <el-button
+            @click="createItemWithTemplate(category.title)"
+            type="danger"
+            icon="fas fa-plus-circle"
+          >
+            Add new {{ category.title }}
+          </el-button>
+        </div>
+        <div class="category_list">
+          <ul>
+            <li
+              v-for="item in category.items.rows"
+              :key="item.id"
+              @click="flyToItem(item)"
+            >
+              <el-button
                 @click="clickItem(item.id)"
-                v-if="item.doc.properties.name"
-                >{{ item.doc.properties.name }}</span
-              >
-              <span
-                class="item_name"
-                v-if="!item.doc.properties.name"
-                @click="clickItem(item.id)"
-                >{{ item.doc._id }}</span
-              >
+                style="float: right;"
+                type="danger"
+                icon="el-icon-edit"
+                circle
+              />
               <span>
-                <!-- use span tag to trigger click event, click event on el-tag won't work for some reason -->
-                <span v-on:click="flyToPosition(item.positions)">
-                  <el-tag
-                    class="position_button"
-                    size="small"
-                    :type="getTimeTagType(item)"
-                    style="width:100px;"
-                    v-if="
-                      item.positions &&
-                        item.positions.length > 0 &&
-                        item.positions[item.positions.length - 1]
-                    "
-                  >
-                    {{ showTimeTag(item) }} ago
-                  </el-tag>
-                </span>
+                <div class="item_name" v-if="item.doc.properties.name">
+                  {{ item.doc.properties.name }}
+                </div>
+                <div class="item_name" v-else>{{ item.doc._id }}</div>
                 <el-tag
+                  v-if="item.positions && item.positions.length > 0"
                   size="small"
-                  type="info"
-                  style="width:100px"
-                  v-if="!item.positions || item.positions.length == 0"
+                  :type="getTimeTagType(item)"
+                  style="width:100px;"
                 >
+                  {{ showTimeTag(item) }} ago
+                </el-tag>
+                <el-tag v-else size="small" type="info" style="width:100px">
                   no positions
                 </el-tag>
-              </span>
-              <span style="float:right;">
                 <el-switch
                   v-model="shown_items[item.id]"
                   :active-color="getItemColor(item.id)"
-                  inactive-color="#ff4949"
                   active-value="true"
                   inactive-value="false"
                   @change="toggleItem(item.id)"
-                >
-                </el-switch>
+                />
               </span>
-              <!--<span>{{vehicle.positions}}</span>-->
             </li>
           </ul>
-        </el-collapse-item>
-      </el-collapse>
-    </ul>
+        </div>
+      </el-tab-pane>
+    </el-tabs>
   </nav>
 </template>
 
@@ -80,7 +76,7 @@ export default {
       vehicles: [],
       shown_items: [],
       categories: [],
-      activeCategories: ['Vehicles'],
+      activeCategories: 'Vehicles',
     };
   },
   methods: {
@@ -102,13 +98,12 @@ export default {
     },
 
     // click on the last position span
-    flyToPosition: function(positions) {
-      const mappedPositions = positions.map(position => {
-        return { lat: position.doc.lat, lon: position.doc.lon };
-      });
-
-      const lastPositionIndex = mappedPositions.length - 1;
-      serverBus.$emit('fly_to_position', mappedPositions[lastPositionIndex]);
+    flyToItem: function(item) {
+      if (item && item.positions && item.positions.length > 0) {
+        let lastPosition = item.positions[item.positions.length - 1];
+        lastPosition = { lat: lastPosition.doc.lat, lon: lastPosition.doc.lon };
+        serverBus.$emit('fly_to_position', lastPosition);
+      }
     },
 
     getItemColor: function(itemId) {
@@ -121,18 +116,21 @@ export default {
         return item.doc.properties.color;
       else return '#13ce66';
     },
+
     getItemById: function(itemId) {
       for (var i in this.vehicles) {
         if (this.vehicles[i].id == itemId) return this.vehicles[i];
       }
       return false;
     },
+
     showTimeTag: function(item) {
       if (item.positions[item.positions.length - 1])
         return this.timeSince(
           item.positions[item.positions.length - 1].doc.timestamp
         );
     },
+
     getTimeTagType: function(item) {
       if (item.positions[item.positions.length - 1]) {
         let date = new Date(
@@ -146,6 +144,7 @@ export default {
         return type;
       }
     },
+
     timeSince: function(date) {
       date = new Date(date);
       let seconds = Math.floor((new Date() - date) / 1000);
@@ -173,6 +172,7 @@ export default {
       }
       return Math.floor(seconds) + ' seconds';
     },
+
     loadVehicles: function() {
       let self = this;
       let all_templates = templates.get('all');
@@ -214,6 +214,10 @@ export default {
         }
       });
     },
+
+    createItemWithTemplate: function(template_to_use) {
+      serverBus.$emit('modal_modus', 'createItem', template_to_use);
+    },
   },
   mounted: function() {
     serverBus.$on('shown_items', shown_items => {
@@ -234,22 +238,24 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
-nav .el-collapse-item__header {
-  font-size: 22px;
-  padding: 10px;
+.el-tabs__nav-wrap {
+  overflow: hidden;
+  margin-bottom: -1px;
+  position: relative;
+  padding-left: 15px;
 }
 </style>
 
+<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 nav {
   position: absolute;
   left: 0;
-  width: 25vw;
+  width: 280px;
   top: 60px;
   bottom: 0;
-  overflow: auto;
+  background-color: white;
 }
 nav .categories .item_name {
   margin-left: 5px;
@@ -258,9 +264,43 @@ nav .categories .item_name {
   display: inline-block;
 }
 
-.category_list li {
+.action_area {
   display: flex;
-  padding: 2px 15px;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+.action_area div {
+  display: flex;
+  vertical-align: text-bottom;
+  font-style: italic;
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.category_list ul {
+  overflow: scroll;
+  height: 80vh;
+  top: 260px;
+}
+
+.category_list li {
+  padding-top: 5px;
+  padding-right: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+
+  border-width: 1px;
+  border-color: #eee;
+  border-bottom-style: solid;
+}
+.category_list li:hover {
+  cursor: pointer;
+  font-weight: 500;
+  transition: ease-in-out 0.3s;
+  background-color: #eee;
 }
 
 el-switch {
