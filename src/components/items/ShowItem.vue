@@ -1,7 +1,7 @@
 <template>
   <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
     <div class="form-style-6" v-if="template_data && template_data.fields">
-      <h1>Show Item</h1>
+      <h1>Show {{ historical_form_data.template }}</h1>
       <form @submit="storeItem">
         <Position v-bind:position="last_position"></Position>
         <span style="padding-top:20px">Identifier</span>
@@ -11,7 +11,7 @@
           placeholder="identifier"
           @input="form_data.identifier = $event.target.value.toUpperCase()"
         />
-        <div v-for="field in template_data.fields" :key="field">
+        <div v-for="field in template_data.fields" :key="field.name">
           <span>{{ field.title }}</span>
 
           <!-- iconwrapper start -->
@@ -46,6 +46,7 @@
           >
             <option
               v-for="option in field.options"
+              :key="option"
               :value="field.options[option]"
               >{{ option }}</option
             >

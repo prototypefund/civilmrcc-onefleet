@@ -851,14 +851,11 @@ class mapWrapper {
     console.log('updateItemPosition');
     console.log(item);
     if (item.positions.length < 1) {
-      console.log('no positions available');
       return false;
     }
     if (typeof this.loaded_items[item.id] == 'undefined') {
-      console.log('add item');
       this.addItemToMap(item);
     } else {
-      console.log('update item', this.loaded_items[item.id]);
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {
