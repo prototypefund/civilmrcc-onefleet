@@ -2,15 +2,14 @@
 
 ## **Short description- what is this app for?**
 
-In the central mediterranean, there are many different actors *(civil rescue associations/ships such as Sea Watch, Sea Eye, Mediterranea, MSF/SOS Mediterranee, Moonbird and Colibri as reconnaissance aircrafts, Alarmphone as a emergency hotline for ppl in maritime distress)* involved in supporting people on the move. 
-The cMRCC (civil Maritime Rescue Coordination Center) App aims for a better coordination and smoother communication about boats in maritime distress between all the involved associations and networks. 
-Also the app will be used to collect more data and information on the incidents in the Mediterranean and provide the public with this information. E.g. this can be used by journalists. 
+In the Central Mediterranean, there are many different actors involved in Search-and-Rescue operations. The app aims for a better coordination and smoother communication about boats in maritime distress between all the involved organisations and networks, be it ships or airplaens. 
+Also the app will be used to collect more data and information on the incidents in the Mediterranean and provide the public with this information. E.g. this can be used by journalists or researchers.
 
 **How should that work?**
-If we get knowledge about a boat in distress (Distress Case - DC) eg. it got spottet by an aircraft (a/c) or there is a call at Alarmphone (AP) this boat should become a case/item in the map. Either it can be typed in manually by AP shiftteams (via the "add case button") or a/c can send a position via Iridium (@NIC: pls explain :) 
+If we get knowledge about a boat in distress, this boat should become a case/item in the map. Either it can be typed in manually or is added through the drop points from the aircraft. 
 
 ## **Add**
-- add a new case, vehicle or sighting
+- add a new case, vehicle or landmark (e.g. oil platforms)
 - depending on what you are adding, different templates with lines to fill in (such as latitude/longitude, boat type, people on board (pob)) will show up 
 
 ## **Map**
@@ -18,7 +17,6 @@ In the map are shown:
 ***Must have***
 - territorial waters (TTW) 
 - Search and Rescue Regions (SRR/SAR)
-- Oilfields (as there are always merchant vessel around)
 - all ships in a certain area (between Libya/Lampedusa/Malta)
 - Cases (DCs) (as long as they are open!)
 - a/c as long as they are airborne (incl. altitude!) -> tracked via IRIDIUM Go
@@ -57,32 +55,21 @@ Left navigation shows the following in this order:
     - e.g: Moonbird spots a boat at 1203Z in pos xx.xx.xxx. After one hour at 1307Z Moonbird spots the SAME boat again in pos xx.xy.yyy. This should then not appear as different cases in the app, but this boat will become a casenumber (DC115) and should be tracked with this number until closed. 
 - it would be a *nice to have* if the different cases of one day could have either different colors or different icons or the DCnumbers visible on first sight in order to be able to keep an overview on busy days with up to 7-10 different boats in distress
 
-**Sightings**
+**Landmarkus**
 - same structure as cases:
-- show current sightings (closed sightings should be transfered into the historical database always at midnight)
+- show current landmark/sighting (closed sightings should be transfered into the historical database always at midnight)
 - possibility to edit and delete sightings
 - should have different icon than cases
 
-**Assets (please rename vehicles ;)**
-Make a difference between the following:
+**Vehicles**
+Make a difference between the following ??:
    - civil fleet
    - merchant/commercial
-- Air assets/aircrafts
-
-**Civil Fleet** show only active ships/not seized since more than 800 days :) 
-- make track availible on request
-- show time of last position
-
-**merchant/commercial**
-  - show merchant/commercial vessel on request for a certain area (e.g a drawed rectangle/circle) 
-      - reason: this way you can search for a specific area around a DC for assests who could render assistance. If they don't -> interesting for legal cases
-
-**Aircrafts**
-- show active/airborne aircrafts+time of last position 
+    - Air assets/aircrafts
 
 ## **Top right**
 **AIR**
-- show altitude of a/c operated
+- show altitude diagram of a/c operated
 - 
 
 **Admin**
