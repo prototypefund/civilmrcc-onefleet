@@ -78,5 +78,6 @@ deploy-prod:
   environment:
     name: production
   when: manual
-  only:
-    - master
+  # TODO: Enable this before merge
+  # only:
+  #   - master
