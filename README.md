@@ -4,7 +4,7 @@
 
 ## **Backround Information**
 
-The civil Maritime Rescue Coordination Center (civilMRCC) is a coordination and documentation platform for distress cases in the Mediterranean Sea. One of the main components is the OneFleet App. It consists out of a livesystem and a historical database. 
+The civil Maritime Rescue Coordination Center (civilMRCC) is a coordination and documentation platform for distress cases in the Mediterranean Sea. One of the main components is the OneFleet App. It consists out of a livesystem and a historical database.
 
 In the Central Mediterranean, there are many different actors involved in Search-and-Rescue operations. The cMRCC aims for a better coordination and smoother communication about boats in maritime distress between all the involved organisations and networks. Also the app will be used to collect more data and information on the incidents in the Mediterranean and provide the public with this information. E.g. this can be used by journalists or researchers.
 
@@ -96,7 +96,7 @@ docker build -t registry.gitlab.com/civilmrcc/onefleet/app .
 docker build -t registry.gitlab.com/civilmrcc/onefleet/services services
 ```
 
-#### Create docker container
+#### Create docker containers (development)
 
 Start the docker containers with:
 
@@ -125,6 +125,14 @@ Starting onefleet_location_1  ... done
 Creating onefleet_app_1       ... done
 ```
 
+#### Create docker containers (production)
+
+To create docker containers for a production environment you have to use `docker-compose` with a different config file:
+
+```
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
 #### Debugging JavaScript files with Visual Studio Code and Chrome
 
 Enable remote debugging in Chrome. You can do that by starting Chrome with `chrome.exe --remote-debugging-port=9222`. If you are using Windows you can simply [edit the Chrome shortcut](https://stackoverflow.com/a/56457835/2306587) to start Chrome with remote debugging enabled.
@@ -148,8 +156,10 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 To deploy Portainer on a Linux machine you simply have to execute these two commands:
 
 ```
+
 docker volume create portainer_data
 docker run -d -p 9000:9000 -p 8000:8000 --name portainer --restart always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer
+
 ```
 
 After that the Portainer interface should be available at `http://<your-ip>:9000`. Before you can fully use Portainer you have to perform two more steps:
@@ -164,7 +174,9 @@ For more information see the [documentation](https://portainer.readthedocs.io/en
 With [Watchtower](https://github.com/containrrr/watchtower) you can automatically update containers when a new docker image is available.
 
 ```
+
 docker run -d --name watchtower -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower onefleet.app onefleet.ais onefleet.location
+
 ```
 
 ### Automatically clean up unused docker images
@@ -174,7 +186,8 @@ When a newer docker image is pulled to a host the older image still remains on t
 To prevent the host from beeing swamped with older images it is prudent to perform a regular cleanup job. This can be done with `docker prune`. This command will remove any unused images, containers and volumes from the host. It is recommended to create a daily cronjob to perform the docker cleanup. Example output:
 
 ```
-$ docker system prune -f
+
+\$ docker system prune -f
 Deleted Containers:
 4b71d312123496fe01b7e2b64b07f818abcfbac12fe69db5601edefcdac52bbb
 c43b3b797b0912770beb6e059f798ab6afdc5c5ea4983a05aeb08a98995ca291
@@ -188,6 +201,7 @@ deleted: sha256:b127232f37ee91f7269b765a6ff4cea1408899e12eff5d53d1aee15dd78e5371
 deleted: sha256:b135ac74cc7aa8b9283ca5dd25b8547d2ae2e72452c435bd776bcddf525fefb4
 
 Total reclaimed space: 1.317GB
+
 ```
 
 ### Backup database files
@@ -227,3 +241,7 @@ Overview of Branches:
 
 Special thanks to everyone who already contributed to the project:
 (Here should be the names or the links to the profiles)
+
+```
+
+```
