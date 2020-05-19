@@ -51,6 +51,9 @@ docker-development:
   image: docker:stable
   environment:
     name: development
+  needs:
+    - job: build
+      artifacts: true
   # TODO: Enable before merge
   # only:
   #   - develop
@@ -67,6 +70,9 @@ docker-production:
   image: docker:stable
   environment:
     name: production
+  needs:
+    - job: build
+      artifacts: true
   # TODO: Enable before merge
   # only:
   #   - master
