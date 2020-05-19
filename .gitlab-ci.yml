@@ -50,9 +50,10 @@ docker-development:
   stage: docker
   image: docker:stable
   environment:
-    name: develop
-  only:
-    - develop
+    name: development
+  # TODO: Enable before merge
+  # only:
+  #   - develop
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
@@ -66,8 +67,9 @@ docker-production:
   image: docker:stable
   environment:
     name: production
-  only:
-    - develop
+  # TODO: Enable before merge
+  # only:
+  #   - master
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:production .
