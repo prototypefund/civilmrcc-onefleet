@@ -11,7 +11,6 @@ stages:
   - lint
   - code_formatting
   - docker
-  - deploy
 
 install:
   stage: install
@@ -47,28 +46,56 @@ lint:
   script:
     - npm run lint
 
-docker-app:
+docker-development-app:
   stage: docker
   image: docker:stable
-  allow_failure: true
+  environment:
+    name: develop
   only:
-    - master
+    - develop
   script:
-    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY/civilmrcc/onefleet/app
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/app:development
     - docker logout $CI_REGISTRY
 
-docker-services:
+docker-development-services:
   stage: docker
   image: docker:stable
-  allow_failure: true
+  environment:
+    name: develop
   only:
-    - master
+    - develop
   script:
-    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services services
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY/civilmrcc/onefleet/services
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/services:development
+    - docker logout $CI_REGISTRY
+
+docker-production-app:
+  stage: docker
+  image: docker:stable
+  environment:
+    name: production
+  only:
+    - develop
+  script:
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:production .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/app:production
+    - docker logout $CI_REGISTRY
+
+docker-production-services:
+  stage: docker
+  image: docker:stable
+  environment:
+    name: production
+  only:
+    - develop
+  script:
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:production services
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/services:production
     - docker logout $CI_REGISTRY
 
 deploy-prod:

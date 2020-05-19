@@ -3,7 +3,7 @@ version: '3.7'
 services:
   app:
     container_name: onefleet.app
-    image: registry.gitlab.com/civilmrcc/onefleet/app:latest
+    image: registry.gitlab.com/civilmrcc/onefleet/app:production
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     ports:
@@ -24,7 +24,7 @@ services:
 
   ais:
     container_name: onefleet.ais
-    image: registry.gitlab.com/civilmrcc/onefleet/services:latest
+    image: registry.gitlab.com/civilmrcc/onefleet/services:production
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     command: node ais/main.js
@@ -33,7 +33,7 @@ services:
 
   location:
     container_name: onefleet.location
-    image: registry.gitlab.com/civilmrcc/onefleet/services:latest
+    image: registry.gitlab.com/civilmrcc/onefleet/services:production
     labels:
       - 'com.centurylinklabs.watchtower.enable=true'
     command: node location/main.js -t 15
