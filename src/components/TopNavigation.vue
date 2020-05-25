@@ -18,13 +18,16 @@
       </ul>
     </div>
     <ul id="nav-views">
-      <li class="active" v-on:click="changeModus('map')">
+      <li :class="{ active: modus == 'map' }" v-on:click="changeModus('map')">
         <a>
           <i class="fas fa-map-marked"></i>
           <span>Map</span>
         </a>
       </li>
-      <li v-on:click="changeModus('cases')">
+      <li
+        :class="{ active: modus == 'cases' }"
+        v-on:click="changeModus('cases')"
+      >
         <a>
           <i class="fas fa-list-alt"></i>
           <span>List</span>
@@ -67,6 +70,12 @@ export default {
   name: 'TopNavigation',
   components: {
     TimeControl,
+  },
+  props: {
+    modus: {
+      type: String,
+      default: 'cases',
+    },
   },
   data: function() {
     return {

@@ -13,14 +13,14 @@
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
-    <TopNavigation></TopNavigation>
+    <TopNavigation :modus="modus"></TopNavigation>
 
-    <LeftNavigation></LeftNavigation>
+    <LeftNavigation v-show="modus == 'map'"></LeftNavigation>
     <Air v-if="show_air"></Air>
     <div id="mainWindow">
       <MapArea v-show="modus == 'map'"></MapArea>
-      <ListView v-show="modus == 'cases'"></ListView>
     </div>
+    <ListView class="wide" v-show="modus == 'cases'"></ListView>
     <div id="chat" v-bind:class="chatWindowClass">
       <div style="margin-left:-15px;" @click="show_chat = !show_chat">
         toggle chat
@@ -182,6 +182,15 @@ body {
   width: calc(100% - var(--app-left-siderbar));
   left: var(--app-left-siderbar);
   right: 0px;
+  top: var(--app-top);
+  bottom: 0px;
+  background: var(--white);
+}
+
+.wide {
+  position: absolute;
+  left: 10px;
+  right: 10px;
   top: var(--app-top);
   bottom: 0px;
   background: var(--white);
