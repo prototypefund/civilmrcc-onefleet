@@ -2,10 +2,12 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "strict": false,
+    "strict": true,
+    // TODO: Remove "as any" workarounds in mapWrapper.ts
+    "noImplicitAny": false,
     "jsx": "preserve",
-    // TODO: Enable this after pouchwrapper has been converted to typescript class
-    // "noImplicitThis": true,
+    // TODO: Fix this.openPopup() and this.closePopup()
+    "noImplicitThis": false,
     "importHelpers": true,
     "moduleResolution": "node",
     "experimentalDecorators": true,

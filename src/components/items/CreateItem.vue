@@ -102,7 +102,7 @@ export default {
   },
   data: function() {
     return {
-      twmplate: '',
+      template: '',
       vehicles: [],
       form_data: { properties: {}, template: this.givenTemplate },
       position_data: {
