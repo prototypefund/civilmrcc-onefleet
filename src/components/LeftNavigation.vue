@@ -1,8 +1,8 @@
 <template>
   <nav>
-    <el-tabs v-model="activeCategories">
+    <el-tabs v-model="activeCategoryTab">
       <el-tab-pane
-        v-for="category in categories"
+        v-for="(category, category_title) in tabpane_categories"
         :label="category.plural"
         :name="category.plural"
         :key="category.plural"
@@ -13,49 +13,21 @@
             <br />soon
           </div>
           <el-button
-            @click="createItemWithTemplate(category.title)"
+            @click="createItemWithTemplate(category_title)"
             type="danger"
             icon="fas fa-plus-circle"
-            >Add new {{ category.title }}</el-button
           >
+            Add new {{ category_title }}
+          </el-button>
         </div>
         <div class="category_list">
           <ul>
-            <li
-              v-for="item in category.items.rows"
-              :key="item.id"
-              @click="flyToItem(item)"
-            >
-              <span>
-                <div class="item_name" v-if="item.doc.properties.name">
-                  {{ item.doc.properties.name }}
-                </div>
-                <div class="item_name" v-else>{{ item.doc._id }}</div>
-                <el-switch
-                  v-model="shown_items[item.id]"
-                  :active-color="getItemColor(item.id)"
-                  active-value="true"
-                  inactive-value="false"
-                  @change="toggleItem(item.id)"
-                />
-                <el-tag
-                  v-if="item.positions && item.positions.length > 0"
-                  size="small"
-                  :type="getTimeTagType(item)"
-                  style="max-width:110px;"
-                  >{{ showTimeTag(item) }} ago</el-tag
-                >
-                <el-tag v-else size="small" type="info" style="width:110px"
-                  >no positions</el-tag
-                >
-              </span>
-              <el-button
-                @click="clickItem(item.id)"
-                style="float: right;"
-                icon="el-icon-edit"
-                circle
-              />
-            </li>
+            <NavbarItem
+              v-for="item_info in category.item_infos"
+              :key="item_info.id"
+              :item-id="item_info.id"
+              :item_category="category.pouch_identifier"
+            ></NavbarItem>
           </ul>
         </div>
       </el-tab-pane>
@@ -64,19 +36,60 @@
 </template>
 
 <script>
+import NavbarItem from './items/NavbarItem.vue';
 import templates from './items/templates.js';
 import { serverBus } from '../main';
 export default {
   name: 'LeftNavigation',
-
+  components: {
+    NavbarItem,
+  },
   data: function() {
     return {
       vehicles: [],
       shown_items: [],
       categories: [],
-      activeCategories: 'Vehicles',
+      tabpane_categories: {},
+      activeCategoryTab: 'Vehicles',
+      // item_infos: [],
     };
   },
+  computed: {
+    //   allCategories: function() {
+    //     let all_categories = [];
+    //     let all_templates = templates.get('all');
+
+    //     for (let template_index in all_templates) {
+    //       all_categories.push({
+    //         title: template_index,
+    //         plural: all_templates[template_index].plural,
+    //         pouch_identifier: all_templates[template_index].pouch_identifier,
+    //         // item_ids: loadItemIdsForCategory(template_index),
+    //       });
+    //     }
+    //     console.log('allCategories', all_categories);
+    //     return all_categories;
+    //   },
+    allCats: function() {
+      return this.tabpane_categories;
+    },
+    tab_A_items: function() {
+      if (this.tabpane_categories.length > 0)
+        return this.tabpane_categories['CASE'].item_infos;
+      else return [];
+    },
+  },
+
+  watch: {
+    tabpane_categories: {
+      handler: function(after, before) {
+        // Changes detected. Do work...
+        console.log('change detected in tabpane_categories', after, before);
+      },
+      deep: true,
+    },
+  },
+
   methods: {
     isShown: function(identifier) {
       return this.shown_items[identifier];
@@ -171,6 +184,71 @@ export default {
       return Math.floor(seconds) + ' seconds';
     },
 
+    loadCategories: function() {
+      // console.log('loadCategories ##########');
+      let all_templates = templates.get('all');
+      for (let template_index in all_templates) {
+        this.tabpane_categories[template_index] = {
+          plural: all_templates[template_index].plural,
+          pouch_identifier: all_templates[template_index].pouch_identifier,
+          // item_ids: [],
+          item_infos: [],
+          // key: template_index,
+        };
+        this.loadItems(
+          template_index,
+          all_templates[template_index].pouch_identifier
+        );
+      }
+      // console.log(
+      //   'loadCategories ########## tabpane_categories',
+      //   this.tabpane_categories
+      // );
+    },
+
+    loadItems: function(category_index, pouch_identifier) {
+      var self = this;
+      console.log('loadItems ##########');
+      this.$db.getItemIDsByTemplate(pouch_identifier, function(item_infos) {
+        console.log('loadItems ########## @@@@@@@', item_infos);
+        // if (result.rows.length > 0)
+        // self.item_infos = item_infos;
+        self.tabpane_categories[category_index].item_infos = item_infos;
+        // for (let i in item_infos) {
+        //   self.tabpane_categories[category_index].item_ids.push(
+        //     item_infos[i].id
+        //   );
+        // }
+        // self.tabpane_categories[category_index].key =
+        //   category_index +
+        //   self.tabpane_categories[category_index].item_ids.join(',');
+
+        self.$forceUpdate();
+        // else console.log('loadItems ########## no rows returned ');
+      });
+    },
+
+    // loadItemsForCategory: async function(category) {
+    //   var items_for_template = [];
+    //   // await this.$db.getItemsByTemplate(category.pouch_identifier, function(
+    //   //   error,
+    //   //   result
+    //   // ) {
+    //   //   if (error)
+    //   //     throw 'an error occured reading the template for the leftnav! ';
+    //   //   console.log('loadItemsForCategory result', result);
+    //   //   items_for_template = result.rows;
+    //   // });
+
+    //   var alliteminfos = this.$db.getInfoOfAllItems();
+
+    //   if (category) console.log('loadItemsForCategory category ', category);
+    //   if (alliteminfos)
+    //     console.log('loadItemsForCategory alliteminfos ', category);
+
+    //   return items_for_template;
+    // },
+
     loadVehicles: function() {
       let self = this;
       let all_templates = templates.get('all');
@@ -219,20 +297,25 @@ export default {
     },
   },
   mounted: function() {
-    serverBus.$on('shown_items', shown_items => {
-      this.shown_items = shown_items;
-    });
-
+    // serverBus.$on('shown_items', shown_items => {
+    //   this.shown_items = shown_items;
+    // });
+    // this.loadCategories();
+    // this.loadItems('LANDMARK');
     //load vehicles
-    this.loadVehicles();
-
-    let self = this;
-
-    //set on change listener
+    // this.loadVehicles();
+    // let self = this;
+    // //set on change listener
     this.$db.setOnChange('positions', 'leftnav_change', function() {
       //reload vehicles if change is detected
-      self.loadVehicles();
+      // self.loadVehicles();
+      this.loadCategories();
     });
+    // this.activeCategoryTab = 'Landmarks';
+  },
+
+  created: function() {
+    this.loadCategories();
   },
 };
 </script>

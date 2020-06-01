@@ -11,6 +11,11 @@ import { MapItem } from '../types/map-item';
  */
 class mapWrapper {
   public map!: L.Map;
+  // public item_states: {
+  //   [index: string]: {
+  //     visible: boolean;
+  //   };
+  // } = {};
   public loaded_items: {
     [index: string]: {
       marker: L.Marker<any>;
@@ -372,11 +377,6 @@ class mapWrapper {
       i++;
     });
   }
-
-  /**
-   * Not implemented. But see src/components/items/ShowItem.vue
-   */
-  public showItem() {}
 
   /**
    * Implemented in src/components/MapArea.vue
@@ -823,9 +823,9 @@ class mapWrapper {
         lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {
-        line: {} as any,
-        marker: {} as any,
-        lineCaptions: {} as any,
+        line: undefined as any,
+        marker: undefined as any,
+        lineCaptions: undefined as any,
       };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
@@ -881,6 +881,36 @@ class mapWrapper {
             1
           ) as any).update();
         }
+      }
+    }
+  }
+
+  /**
+   * Sets a map item's visibility.
+   * If the item is not on the map yet, add it to the map.
+   */
+  public setItemVisibility(item: MapItem, visible_state: boolean): void {
+    console.log('setItemVisibility:', item.id, visible_state, item);
+    if (!this.loaded_items[item.id]) this.addItemToMap(item);
+
+    if (visible_state) this.showItem(item.id);
+    else this.hideItem(item.id);
+  }
+
+  /**
+   * Set opacity of item to 1
+   */
+  public showItem(item_id: string): void {
+    let item = this.loaded_items[item_id];
+    if (item) {
+      if (item.marker) {
+        (item.marker.setOpacity(1) as any).update();
+      }
+      if (item.line) {
+        item.line.setStyle({ opacity: 1 });
+      }
+      for (let i in item.lineCaptions) {
+        (item.lineCaptions[i].setOpacity(1) as any).update();
       }
     }
   }

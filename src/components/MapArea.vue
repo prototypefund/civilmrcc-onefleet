@@ -2,8 +2,9 @@
   <div id="mapArea"></div>
 </template>
 
-<script>
+<script lang="ts">
 import { serverBus } from '../main';
+// import { MapItem } from '../types/map-item';
 export default {
   name: 'MapArea',
   data: function() {
@@ -13,6 +14,10 @@ export default {
   },
   mounted: function() {
     var self = this;
+
+    serverBus.$on('set_item_visibility', (item, visibility_state) => {
+      self.$map.setItemVisibility(item, visibility_state);
+    });
 
     serverBus.$on('shown_items', shown_items => {
       self.shown_items = shown_items;
@@ -46,6 +51,7 @@ export default {
     });
     this.$db.setOnChange('positions', 'map_area', function(change) {
       if (change.direction == 'push') {
+        console.log('DB-change-push: ', change);
         change.change.docs.forEach(function(item) {
           let identifier = 'VEHICLE_' + item.item_identifier;
           if (self.shown_items[identifier] == 'true') {

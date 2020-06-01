@@ -84,6 +84,34 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
+  public getItemIDsByTemplate(template: string, cb: Function) {
+    var items = this.getDB('items');
+    items
+      .allDocs({
+        include_docs: false,
+        attachments: false,
+        startkey: template,
+        endkey: template + '\uffff',
+      })
+      .then(result => {
+        if (result.error) return this.fetchError(result);
+
+        console.log('dbWrapper getInfoOfAllItems result: ', result);
+        // var item_ids = [];
+        // for (let item_info in result.rows) {
+        //   item_ids.push(item_info);
+        // }
+        // cb(item_ids);
+
+        cb(result.rows);
+
+        // return result.rows;
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  }
+
   public getItems(cb: Function) {
     var items = this.getDB('items');
     items

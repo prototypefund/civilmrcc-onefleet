@@ -1,15 +1,9 @@
 <template>
   <div id="app">
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
-    <CreateItem
-      v-if="modal == 'createItem'"
-      :givenTemplate="modal_data"
-    ></CreateItem>
+    <CreateItem v-if="modal == 'createItem'" :givenTemplate="modal_data"></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
-    <ExportItem
-      v-show="exportItemId != false"
-      :exportItemId="exportItemId"
-    ></ExportItem>
+    <ExportItem v-show="exportItemId != false" :exportItemId="exportItemId"></ExportItem>
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
@@ -22,10 +16,7 @@
     </div>
     <ListView class="wide" v-show="modus == 'cases'"></ListView>
     <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
-        toggle chat
-      </div>
-      chat
+      <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>chat
     </div>
   </div>
 </template>
@@ -66,7 +57,7 @@ export default {
     modal: '',
     modal_data: '',
     show_air: false,
-    show_loadingscreen: true,
+    show_loadingscreen: false,
     itemId: false,
     exportItemId: false,
     show_chat: false,
