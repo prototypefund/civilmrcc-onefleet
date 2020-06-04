@@ -1,13 +1,11 @@
 <template>
   <div class="air" v-on:click.self="closeModal">
     <ul>
-      <div
-        v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles"
-      >
+      <div v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles">
         <li v-for="vehicle in properties.vehicles">
           <div v-if="vehicle.doc.properties.air == 'true'">
             <h2>
-              <i data-v-19f9f8c9="" class="fas fa-plane"></i>
+              <i data-v-19f9f8c9 class="fas fa-plane"></i>
               {{ vehicle.doc.properties.name }}
             </h2>
             <Position
@@ -107,7 +105,7 @@ export default {
   opacity: 0.7;
   overflow: auto;
   position: fixed;
-  top: 60px;
+  top: var(--app-top);
   right: 0;
   bottom: 0;
   background: rgb(55, 60, 68);

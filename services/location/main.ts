@@ -1,6 +1,8 @@
 const pouchDB = require('pouchdb');
 const request = require('request');
 
+const moment = require('moment');
+
 const fs = require('fs');
 const path = require('path');
 const csv = require('fast-csv');
@@ -15,6 +17,7 @@ program
   .option('-c <number>', 'generate testcases')
   .option('-i <filename>', 'import from csv file')
   .option('-l', 'fetches locations once')
+  .option('-d <date>', 'delete locations older than ')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
   .version('0.0.1');
@@ -379,7 +382,6 @@ class LocationService {
       }
     });
   }
-
   /*
    *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
    *returns mail (e.g. joe.smith@somemail.com)
@@ -603,11 +605,54 @@ class LocationService {
           }
       );
   }
+
+  private importHistoricalData() {}
+
+  public deletePositionsOlderThan = async function(olderThanDate) {
+    console.log('delete positions older than ' + olderThanDate);
+
+    const parsedDate = moment(olderThanDate, [
+      'DD/MM/YYYY',
+      'DD.MM.YYYY',
+      'DD-MM-YYYY',
+    ]);
+    if (!parsedDate.isValid()) {
+      return console.error('error! date should be in the format DD/MM/YYYY');
+    }
+    olderThanDate = parsedDate.toDate();
+
+    this.initDBs();
+    let locations = this.locationsDB;
+    const self = this;
+
+    let toDelete = 0;
+    let deleted = 0;
+    let result = await locations.allDocs({
+      include_docs: true,
+      attachments: true,
+    });
+
+    if (result.error) console.log(result.error);
+    else {
+      // handle result
+      for (let i in result.rows) {
+        let position = result.rows[i];
+        let positionDate = new Date(position.id.split('_')[1]);
+
+        if (positionDate.getTime() <= olderThanDate.getTime()) {
+          toDelete++;
+          console.log('deleting ' + position.id + ' ...');
+          let res = await locations.remove(position.doc._id, position.doc._rev);
+          console.log(res);
+          deleted++;
+          console.log(deleted + '/' + toDelete);
+        }
+      }
+    }
+  };
 }
 
 let service = new LocationService();
-
-console.log(program.opts());
 
 if (program.T) {
   service.fetchAPIInterval(program.T);
@@ -624,5 +669,7 @@ if (program.C) {
 if (program.I) {
   service.importFromCSV(program.I);
 }
-
+if (program.D) {
+  service.deletePositionsOlderThan(program.D);
+}
 //service.initMail();

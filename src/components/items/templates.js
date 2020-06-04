@@ -214,6 +214,11 @@ export default {
             title: 'icon',
             type: 'icon',
           },
+          {
+            name: 'testtag',
+            title: 'testtag',
+            type: 'tag',
+          },
         ],
       },
     };
