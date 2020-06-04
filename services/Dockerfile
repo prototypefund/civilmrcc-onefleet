@@ -4,6 +4,8 @@ COPY ais /app/ais
 COPY location /app/location
 
 RUN npm install ts-node -g
+RUN npm install typescript -g
+
 WORKDIR /app/location
 RUN npm install
 
