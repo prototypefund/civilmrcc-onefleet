@@ -1,14 +1,12 @@
 <template>
   <div id="app">
+    <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
     <CreateItem
       v-if="modal == 'createItem'"
       :givenTemplate="modal_data"
     ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
-    <ExportItem
-      v-show="exportItemId != false"
-      :exportItemId="exportItemId"
-    ></ExportItem>
+    <ExportItem v-show="exportItemId != false" :exportItemId="exportItemId"></ExportItem>
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
@@ -21,10 +19,7 @@
       <ListView v-show="modus == 'cases'"></ListView>
     </div>
     <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
-        toggle chat
-      </div>
-      chat
+      <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>chat
     </div>
   </div>
 </template>
@@ -41,6 +36,7 @@ import MapArea from './components/MapArea.vue';
 import ListView from './components/ListView.vue';
 import Login from './components/Login.vue';
 import Settings from './components/Settings.vue';
+import Loadingscreen from './components/Loadingscreen.vue';
 
 import { serverBus } from './main';
 
@@ -57,12 +53,14 @@ export default {
     ListView,
     Login,
     Settings,
+    Loadingscreen
   },
   data: () => ({
     modus: 'map',
     modal: '',
     modal_data: '',
     show_air: false,
+    show_loadingscreen: true,
     itemId: false,
     exportItemId: false,
     show_chat: false,
@@ -84,6 +82,8 @@ export default {
 
     serverBus.$on('modal_modus', (modal_modus, modal_data) => {
       this.$data.modal = modal_modus;
+      if(modal_modus == 'login')
+        this.$data.show_loadingscreen = false;
       this.$data.modal_data = modal_data;
     });
     serverBus.$on('show_air', show_air => {
@@ -95,30 +95,72 @@ export default {
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
+    //let self = this;
+    //set on change listener on positions because its usually the largest database
+    let self = this;
+    this.$db.setOnInitialReplicationDone('positions', 'hide_loadingscreen', function() {
+      //reload vehicles if change is detected
+      self.show_loadingscreen = false;
+    });
   },
 };
 </script>
 
 <style>
+:root {
+  --primary-darker: #04202e;
+  --primary-dark: #1079ad;
+  --primary: #17affa;
+  --primary-light: #61c7fa;
+  --primary-lighter: #def1fa;
+  --white: #ffffff;
+  --light-gray: #eeeeee;
+  --dark-gray: #666666;
+  --black: #151515;
+  --red: #ff3333;
+
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Noto Sans', Ubuntu, Cantarell, 'Helvetica Neue', sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-family-monospace: 'Menlo', 'DejaVu Sans Mono', 'Liberation Mono',
+    'Consolas', 'Ubuntu Mono', 'Courier New', 'andale mono', 'lucida console',
+    monospace;
+  --border-radius: 4px;
+  --app-top: 40px;
+  --app-left-siderbar: 280px;
+}
+
+.el-button--danger {
+  background: var(--red);
+}
+
+.el-tabs__item.is-active {
+  color: var(--primary);
+}
+
+.svg-inline--fa {
+  margin-right: 0.25em;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-family: var(--font-family-sans-serif);
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
+  color: var(--black);
   text-align: left;
-  background-color: #fff;
+  background-color: var(--white);
 }
+
+
 #app {
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  padding-top: 60px;
+  padding-top: var(--app-top);
 }
 
 .hide_chat {
@@ -127,21 +169,22 @@ body {
 
 #mainWindow {
   position: absolute;
-  width: -webkit-calc(100% - 280px);
-  width: -moz-calc(100% - 280px);
-  width: calc(100% - 280px);
-  left: 280px;
+  width: -webkit-calc(100% - var(--app-left-siderbar));
+  width: -moz-calc(100% - var(--app-left-siderbar));
+  width: calc(100% - var(--app-left-siderbar));
+  left: var(--app-left-siderbar);
   right: 0px;
-  top: 60px;
+  top: var(--app-top);
   bottom: 0px;
-  background: #fff;
+  background: var(--white);
 }
+
 #chat {
   display: none; /* hide for now */
   position: fixed;
   width: 20vw;
   right: 0;
-  top: 60px;
+  top: var(--app-top);
   bottom: 0;
   z-index: 999;
 }
@@ -167,15 +210,15 @@ ul {
   max-width: 400px;
   margin: 10px auto;
   padding: 16px;
-  background: #f7f7f7;
+  background: var(--white);
 }
 .form-style-6 h1 {
-  background: #43d1af;
+  background: var(--primary);
   padding: 20px 0;
   font-size: 140%;
   font-weight: 300;
   text-align: center;
-  color: #fff;
+  color: var(--white);
   margin: -16px -16px 16px -16px;
 }
 .form-style-6 input[type='text'],
@@ -200,11 +243,11 @@ ul {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   width: 100%;
-  background: #fff;
+  background: var(--white);
   margin-bottom: 4%;
-  border: 1px solid #ccc;
+  border: 1px solid var(--light-gray);
   padding: 3%;
-  color: #555;
+  color: var(--dark-gray);
   font: 95% Arial, Helvetica, sans-serif;
   height: 42px;
 }
@@ -225,9 +268,9 @@ ul {
 .form-style-6 input[type='password']:focus,
 .form-style-6 textarea:focus,
 .form-style-6 select:focus {
-  box-shadow: 0 0 5px #43d1af;
+  box-shadow: 0 0 5px var(--primary);
   padding: 3%;
-  border: 1px solid #43d1af;
+  border: 1px solid var(--primary);
 }
 
 .form-style-6 input[type='submit'],
@@ -237,8 +280,8 @@ ul {
   -moz-box-sizing: border-box;
   width: 100%;
   padding: 3%;
-  background: #43d1af;
-  border-bottom: 2px solid #30c29e;
+  background: var(--primary);
+  border-bottom: 2px solid var(--primary);
   border-top-style: none;
   border-right-style: none;
   border-left-style: none;
@@ -246,32 +289,32 @@ ul {
 }
 .form-style-6 input[type='submit']:hover,
 .form-style-6 input[type='button']:hover {
-  background: #2ebc99;
+  background: var(--primary-dark);
 }
 .select-css {
   display: block;
   font-size: 16px;
   font-family: sans-serif;
   font-weight: 700;
-  color: #444;
+  color: var(--dark-gray);
   line-height: 1.3;
   padding: 0.6em 1.4em 0.5em 0.8em;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   margin: 0;
-  border: 1px solid #000;
+  border: 1px solid var(--black);
   border-radius: 0;
   -moz-appearance: none;
   -webkit-appearance: none;
   appearance: none;
-  background-color: #fff;
+  background-color: var(--white);
 }
 .select-css::-ms-expand {
   display: none;
 }
 .select-css:hover {
-  border-color: #888;
+  border-color: var(--dark-gray);
 }
 .select-css:focus {
   border-color: #aaa;
@@ -295,4 +338,21 @@ ul {
   margin-left: 10px;
   padding: 11px;
 }
+
+
+
+.tags-input-wrapper-default,
+.tags-input-wrapper-default.active {
+    padding: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+    border-color: #dbdbdb;
+    box-shadow:none;
+}
+
+input[type="tag"]{
+  display: none;
+}
+
 </style>

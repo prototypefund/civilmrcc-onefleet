@@ -38,6 +38,9 @@ export class PouchWrapper {
       if (noprefix) {
         prefix = '';
       }
+
+      //init database object
+      //skip setup to do replication manually
       this.databases[db_name] = {
         onChange: {},
         onInitialReplicationDone: {},
@@ -50,12 +53,13 @@ export class PouchWrapper {
           { skip_setup: false }
         ),
       };
-
+      //first replication
       this.databases[db_name].local.replicate
         .from(this.databases[db_name].remote)
         .on('complete', (r, a, n) => {
           // yay, we're done!
           console.log('initial replication done!');
+          console.log(this.databases[db_name]);
 
           //check if any function needs to be fired after initial replication
           for (let n in this.databases[db_name].onInitialReplicationDone) {
@@ -63,10 +67,24 @@ export class PouchWrapper {
               typeof this.databases[db_name].onInitialReplicationDone[n] ==
               'function'
             ) {
+              console.log('fire onInitialReplicationDone');
               this.databases[db_name].onInitialReplicationDone[n]();
             }
           }
-          console.log('starting sync..');
+
+          for (let n in this.databases[db_name].onChange) {
+                if (typeof this.databases[db_name].onChange[n] == 'function') {
+
+                  console.log('fire onChange');
+                  console.log(n,this.databases[db_name].onChange[n]);
+                  this.databases[db_name].onChange[n]();
+                }
+          }
+
+
+
+          //the database doesn't sync until now, its only replicated once
+          console.log(`starting sync for db ${db_name}..`);
           this.databases[db_name].remote
             .sync(db_name, {
               live: true,

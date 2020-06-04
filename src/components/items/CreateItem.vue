@@ -63,6 +63,14 @@
           </div>
           <!-- iconwrapper end -->
 
+
+          <!-- tags start -->
+          <tags-input v-if="field.type == 'tag'" element-id="tags"
+          v-model="form_data.properties[field.name]"
+          :existing-tags="tags.getTagsForField(form_data.template,field.name)"
+          :typeahead="true" typeahead-style="dropdown"></tags-input>
+          <!-- tags end -->
+
           <input
             v-if="field.type != 'select' && field.type != 'icon'"
             v-model="form_data.properties[field.name]"
@@ -86,11 +94,15 @@
         </div>
         <input type="submit" value="Send" />
       </form>
+      <p>
+        {{form_data.template}}
+      </p>
     </div>
   </div>
 </template>
 <script>
 import templates from './templates.js';
+import tags from './tags.js';
 import { serverBus } from '../../main';
 export default {
   name: 'CreateItem',
@@ -108,6 +120,7 @@ export default {
       position_data: {
         positions: [{}],
       },
+      tags:tags
     };
   },
   computed: {

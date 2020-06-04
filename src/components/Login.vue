@@ -1,5 +1,5 @@
 <template>
-  <div class="background" v-on:click.self="closeModal">
+  <div class="background loginbackground">
     <div class="form-style-6">
       <h1>Login</h1>
       <form @submit="login">
@@ -69,6 +69,18 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.form-style-6{
+  color:#FFF;
+  background:none;
+  font-size: 11px;
+}
+.form-style-6 h1{
+  background:#17affa;
+}
+.loginbackground{
+background:#17affa;
+}
+
 #settingsToggle {
   margin-bottom: 15px;
   float: right;
@@ -79,5 +91,11 @@ export default {
 }
 .fas.fa-cog.active {
   color: #212529;
+}
+
+.form-style-6 input[type='submit'], .form-style-6 input[type='button'] {
+    background: #67d9ff;
+    border-color: #0082c2;
+    border-right: 2px solid #0082c2;
 }
 </style>
