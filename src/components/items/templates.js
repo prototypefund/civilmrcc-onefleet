@@ -1,5 +1,5 @@
 export default {
-  get: function(name) {
+  get: function (name) {
     var templates = {
       case: {
         plural: 'Cases',
@@ -181,6 +181,11 @@ export default {
             name: 'color',
             title: 'Color',
             type: 'color',
+          },
+          {
+            name: 'fleetmon_vessel_id',
+            title: 'Fleetmon Vessel ID',
+            type: 'number',
           },
           {
             name: 'active',
