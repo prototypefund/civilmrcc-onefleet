@@ -37,11 +37,11 @@ class LocationService {
     this.dbConfig = process.env.DEVELOPMENT
       ? {}
       : {
-          auth: {
-            username: config.dbUser,
-            password: config.dbPassword,
-          },
-        };
+        auth: {
+          username: config.dbUser,
+          password: config.dbPassword,
+        },
+      };
     console.log(this.dbConfig);
     this.itemDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
@@ -73,25 +73,33 @@ class LocationService {
       Position != false &&
       Position.timestamp != 'undefined'
     ) {
-      console.log(Position);
-      let entry = {
-        _id: identifier + '_' + new Date(Position.timestamp).toISOString(),
-        lat: Position.latitude,
-        lon: Position.longitude,
-        heading: Position.course,
-        speed: Position.speed,
-        item_identifier: identifier,
-        source: Position.source || 'ais_api',
-        altitude: Position.altitude || -1,
-        timestamp: new Date(Position.timestamp).toISOString(),
-      };
+
+      let entry: any = {};
+
+      entry._id = identifier + '_' + new Date(Position.timestamp).toISOString();
+      entry.item_identifier = identifier;
+      entry.source = Position.source || 'ais_api';
+      entry.altitude = Position.altitude || null;
+      entry.timestamp = new Date(Position.timestamp).toISOString();
+
+      if (Position.latitude)
+        entry.lat = Position.latitude;
+      if (Position.longitude)
+        entry.lon = Position.longitude;
+      if (Position.course)
+        entry.course = Position.course;
+
+      if (Position.speed)
+        entry.lon = Position.longitude;
+
+
       this.locationsDB
         .put(entry)
-        .then(function(response) {
+        .then(function (response) {
           console.log('location created');
           console.log(entry);
         })
-        .catch(function(err) {
+        .catch(function (err) {
           console.log(entry);
           console.log(err);
         });
@@ -104,10 +112,10 @@ class LocationService {
     var itemDB = this.itemDB;
     itemDB
       .put(obj)
-      .then(function(response) {
+      .then(function (response) {
         cb(null, response);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         cb(err);
       });
   }
@@ -120,12 +128,12 @@ class LocationService {
         attachments: true,
         startkey: identifier,
       })
-      .then(function(result) {
+      .then(function (result) {
         if (result.error) callback(result.error);
         else callback(false, result.rows);
         // handle result
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.log('error while getting vehicles: ', err);
       });
   }
@@ -143,10 +151,10 @@ class LocationService {
               console.log(
                 'get position from AISs for vehicle ' + v.doc.properties.name
               );
-              this.getPositionFromAIS(v.doc.properties.MMSI, Position => {
+              this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
                 console.log(Position);
-                this.insertLocation(v.doc.identifier, Position);
+                this.insertLocation(v.doc._id, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
@@ -209,7 +217,128 @@ class LocationService {
     console.log('implement me!');
   }
 
-  public getPositionFromAIS(mmsi, cb) {
+  public getPositionFromAIS(doc, cb) {
+
+
+
+    let fallbackCallback = () => {
+      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+      request(
+        `${config.aisUrl}/getLastPosition/${mmsi}`,
+        { json: true },
+        (err, res, body) => {
+          if (err) {
+            return console.log(err);
+          } else {
+          }
+          if (body.error != null) return console.log(body.error);
+
+          cb(body.data);
+        }
+      );
+    };
+
+
+    console.log(doc);
+    if (!doc.properties.MMSI)
+      return console.log('no mmsi!');
+
+    let mmsi = parseInt(doc.properties.MMSI);
+    console.log('mmsi');
+    console.log(mmsi, config.fleetmon_api_key, doc.properties.fleetmon_vessel_id);
+
+    if (config.fleetmon_api_key && !doc.properties.fleetmon_vessel_id) {
+      let url = 'https://apiv2.fleetmon.com/vesselsearch/?mmsi_number=' +
+        mmsi +
+        '&apikey=' +
+        config.fleetmon_api_key;
+
+      request(url, { json: true }, (err, res, body) => {
+        if (err && err.length > 0) {
+          console.log('error fetching position from fleetmon:', err);
+          console.log('retry with ais api');
+          config.fleetmon_api_key = false;
+          this.getPositionFromAIS(doc, cb);
+        }
+        if ((body && body.vessels >= 1) || typeof body != 'string') {
+          if (typeof body.errors != 'undefined') {
+            console.log('error fetching position from fleetmon:', err);
+            console.log('retry with ais api');
+            config.fleetmon_api_key = false;
+            this.getPositionFromAIS(doc, cb);
+          } else {
+            let i = 0;
+            console.log(body);
+            if (typeof body.vessels && body.vessels[0]) {
+
+
+
+              //got vessel_id, store in db
+              doc.properties.fleetmon_vessel_id = body.vessels[0].vessel_id;
+              this.itemDB
+                .put(doc)
+                .then(
+                  (i => {
+                    return response => {
+                      console.log('item created');
+
+                      //call self again with updated vessel_id
+                      this.getPositionFromAIS(doc, cb);
+                    };
+                  })(i)
+                )
+                .catch(function (err) {
+                  console.log(err);
+                });
+            } else {
+              console.log('error fetching position from fleetmon:', body);
+              config.fleetmon_api_key = false;
+              fallbackCallback();
+            }
+          }
+        }
+      });
+    } else if (doc.properties.fleetmon_vessel_id) {
+      console.log('doc.properties.fleetmon_vessel_id');
+      console.log(doc.properties.fleetmon_vessel_id);
+
+      let url = 'https://apiv2.fleetmon.com/vessel/' + doc.properties.fleetmon_vessel_id + '/position/?apikey=' + config.fleetmon_api_key;
+      if (config.fleetmon_api_key) {
+        request(url, { json: true }, (err, res, body) => {
+          if (err && err.length > 0) {
+            console.log('error fetching position from fleetmon:', err);
+            console.log('retry with ais api');
+            config.fleetmon_api_key = false;
+            this.getPositionFromAIS(doc, cb);
+          }
+
+          let entry = {
+            mmsi: mmsi,
+            latitude: body.latitude,
+            longitude: body.longitude,
+            timestamp: body.received,
+            source: 'fleetmon',
+          };
+          //console.log(entry);
+          //this.insertLocation(doc._id, entry);
+          if ((body && body.latitude && body.longitude && body.received) || typeof body != 'string') {
+            if (typeof body.errors != 'undefined') {
+              console.log('error fetching position from fleetmon:', err);
+              console.log('retry with ais api');
+              config.fleetmon_api_key = false;
+              this.getPositionFromAIS(doc, cb);
+            } else {
+              cb(this.parsePositionFromFleetmonApi(entry));
+            }
+          }
+        });
+      }
+    } else {
+      console.log('no api key');
+      fallbackCallback();
+    }
+  }
+  public getPositionFromAISOld(mmsi, cb) {
     let url =
       'https://apiv2.fleetmon.com/ais/position/?limit=1&sort=desc&mmsi=' +
       mmsi +
@@ -285,20 +414,20 @@ class LocationService {
     // stop listening
     //mailListener.stop();
 
-    mailListener.on('server:connected', function() {
+    mailListener.on('server:connected', function () {
       console.log('imapConnected');
     });
 
-    mailListener.on('server:disconnected', function() {
+    mailListener.on('server:disconnected', function () {
       console.log('imapDisconnected');
     });
 
-    mailListener.on('error', function(err) {
+    mailListener.on('error', function (err) {
       console.log('err:');
       console.log(err);
     });
 
-    mailListener.on('mail', function(mail, seqno, attributes) {
+    mailListener.on('mail', function (mail, seqno, attributes) {
       console.log('got mail!');
       listener_config.mail_callback(mail, seqno, attributes);
     });
@@ -464,18 +593,18 @@ class LocationService {
               };
               this.locationsDB
                 .put(entry)
-                .then(function(response) {
+                .then(function (response) {
                   console.log('location created');
                   console.log(entry);
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                   console.log(entry);
                   console.log(err);
                 });
             };
           })(i)
         )
-        .catch(function(err) {
+        .catch(function (err) {
           console.log(err);
         });
       i++;
@@ -589,18 +718,18 @@ class LocationService {
 
           let identifier = String(
             'VEHICLE' +
-              '_' +
-              row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
+            '_' +
+            row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
           ).toUpperCase();
           let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
           console.log(`vehicle ${row.name} exists in db. add position...`);
-          this.insertLocation(vehicle.doc.identifier, pos);
+          this.insertLocation(identifier, pos);
         }
       })
       .on(
         'end',
         rowCount2 =>
-          function() {
+          function () {
             console.log('fin.');
           }
       );
