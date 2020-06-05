@@ -154,7 +154,7 @@ class LocationService {
               this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
                 console.log(Position);
-                this.insertLocation(v.doc._id, Position);
+                this.insertLocation(v.doc.identifier, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
@@ -735,9 +735,9 @@ class LocationService {
       );
   }
 
-  private importHistoricalData() {}
+  private importHistoricalData() { }
 
-  public deletePositionsOlderThan = async function(olderThanDate) {
+  public deletePositionsOlderThan = async function (olderThanDate) {
     console.log('delete positions older than ' + olderThanDate);
 
     const parsedDate = moment(olderThanDate, [
