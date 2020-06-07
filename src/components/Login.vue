@@ -69,16 +69,16 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.form-style-6{
-  color:#FFF;
-  background:none;
+.form-style-6 {
+  color: #fff;
+  background: none;
   font-size: 11px;
 }
-.form-style-6 h1{
-  background:#17affa;
+.form-style-6 h1 {
+  background: #17affa;
 }
-.loginbackground{
-background:#17affa;
+.loginbackground {
+  background: #17affa;
 }
 
 #settingsToggle {
@@ -93,9 +93,10 @@ background:#17affa;
   color: #212529;
 }
 
-.form-style-6 input[type='submit'], .form-style-6 input[type='button'] {
-    background: #67d9ff;
-    border-color: #0082c2;
-    border-right: 2px solid #0082c2;
+.form-style-6 input[type='submit'],
+.form-style-6 input[type='button'] {
+  background: #67d9ff;
+  border-color: #0082c2;
+  border-right: 2px solid #0082c2;
 }
 </style>

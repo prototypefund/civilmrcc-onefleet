@@ -32,14 +32,24 @@
           <!-- iconwrapper end -->
 
           <!-- tags start -->
-          <tags-input v-if="field.type == 'tag'" element-id="tags"
-          v-model="form_data.properties[field.name]"
-          :existing-tags="tags.getTagsForField(form_data.template,field.name)"
-          :typeahead="true" typeahead-style="dropdown"></tags-input>
+          <tags-input
+            v-if="field.type == 'tag'"
+            element-id="tags"
+            v-model="form_data.properties[field.name]"
+            :existing-tags="
+              tags.getTagsForField(form_data.template, field.name)
+            "
+            :typeahead="true"
+            typeahead-style="dropdown"
+          ></tags-input>
           <!-- tags end -->
 
           <input
-            v-if="field.type != 'select'&&field.type != 'icon'&&field.type != 'tag'"
+            v-if="
+              field.type != 'select' &&
+                field.type != 'icon' &&
+                field.type != 'tag'
+            "
             v-model="form_data.properties[field.name]"
             :name="field.name"
             :placeholder="field.title"
@@ -87,7 +97,7 @@ export default {
     position_data: {
       positions: [{}],
     },
-    tags:tags
+    tags: tags,
   }),
   watch: {
     itemId: function(newVal) {

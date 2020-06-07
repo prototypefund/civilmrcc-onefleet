@@ -14,7 +14,7 @@ import 'leaflet-draw';
 import 'leaflet-draw/dist/leaflet.draw.css';
 
 import VoerroTagsInput from '@voerro/vue-tagsinput';
-import '@voerro/vue-tagsinput/dist/style.css'
+import '@voerro/vue-tagsinput/dist/style.css';
 Vue.component('tags-input', VoerroTagsInput);
 
 import App from './App.vue';

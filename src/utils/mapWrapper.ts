@@ -36,10 +36,8 @@ class mapWrapper {
       mapzoom = 5;
     }
 
-    if (!mapzoom)
-      mapzoom = 5;
-    if (!mapcenter)
-      mapcenter = [38.575655, 10.710734];
+    if (!mapzoom) mapzoom = 5;
+    if (!mapcenter) mapcenter = [38.575655, 10.710734];
 
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
@@ -378,13 +376,13 @@ class mapWrapper {
   /**
    * Not implemented. But see src/components/items/ShowItem.vue
    */
-  public showItem() { }
+  public showItem() {}
 
   /**
    * Implemented in src/components/MapArea.vue
    * @param {string} item_id The ID of the item that was clicked
    */
-  public clickItem() { }
+  public clickItem() {}
 
   public generateLineCaption(item: MapItem): L.Marker[] | undefined {
     /*let max_length = 5;
@@ -784,13 +782,13 @@ class mapWrapper {
     // bind the popupcontent to the marker. Used by openPopup() below
     marker.bindPopup(popupcontent);
     // on mouseover, the marker's openPopup() function shall be called
-    marker.on('mouseover', function () {
+    marker.on('mouseover', function() {
       // call leaflet's Marker.openPopup() function, displaying the
       // popupcontent that has been bound to this marker just above.
       this.openPopup();
     });
     // on mouseout, the marker's closePopup() function shall be called
-    marker.on('mouseout', function () {
+    marker.on('mouseout', function() {
       // call leaflet's Marker.closePopup() function
       this.closePopup();
     });

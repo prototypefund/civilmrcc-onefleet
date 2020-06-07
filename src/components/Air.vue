@@ -1,7 +1,9 @@
 <template>
   <div class="air" v-on:click.self="closeModal">
     <ul>
-      <div v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles">
+      <div
+        v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles"
+      >
         <li v-for="vehicle in properties.vehicles">
           <div v-if="vehicle.doc.properties.air == 'true'">
             <h2>

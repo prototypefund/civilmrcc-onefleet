@@ -73,15 +73,12 @@ export class PouchWrapper {
           }
 
           for (let n in this.databases[db_name].onChange) {
-                if (typeof this.databases[db_name].onChange[n] == 'function') {
-
-                  console.log('fire onChange');
-                  console.log(n,this.databases[db_name].onChange[n]);
-                  this.databases[db_name].onChange[n]();
-                }
+            if (typeof this.databases[db_name].onChange[n] == 'function') {
+              console.log('fire onChange');
+              console.log(n, this.databases[db_name].onChange[n]);
+              this.databases[db_name].onChange[n]();
+            }
           }
-
-
 
           //the database doesn't sync until now, its only replicated once
           console.log(`starting sync for db ${db_name}..`);
