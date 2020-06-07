@@ -47,9 +47,9 @@ export class PouchWrapper {
         local: new PouchDB(db_name, { skip_setup: false }),
         remote: new PouchDB(
           this.getDBURL() +
-            prefix +
-            db_name +
-            '?include_docs=true&descending=true',
+          prefix +
+          db_name +
+          '?include_docs=true&descending=true',
           { skip_setup: false }
         ),
       };
@@ -74,6 +74,7 @@ export class PouchWrapper {
 
           for (let n in this.databases[db_name].onChange) {
             if (typeof this.databases[db_name].onChange[n] == 'function') {
+
               console.log('fire onChange');
               console.log(n, this.databases[db_name].onChange[n]);
               this.databases[db_name].onChange[n]();
@@ -96,7 +97,7 @@ export class PouchWrapper {
                 }
               }
             })
-            .on('error', function(err) {
+            .on('error', function (err) {
               //TODO exception/logging
               console.log('sync error', err);
               if (err.error === 'unauthorized') {
@@ -106,11 +107,13 @@ export class PouchWrapper {
               }
             });
         })
-        .on('error', function(err) {
+        .on('error', function (err) {
           //TODO exception/logging
           console.log('error during inital replication:');
-          console.log(err);
-          if (err.error === 'unauthorized') {
+          console.log(err.toString());
+          console.log(err.result.status);
+          if (err.error === 'unauthorized' || err.result.status === 'aborting') {
+            alert('something went wrong during the initial replication, please login again')
             localStorage.clear();
             window.location.reload();
           }
@@ -175,13 +178,13 @@ export class PouchWrapper {
 
   public login(username: string, password: string, db) {
     db.login(username, password)
-      .then(function(res) {
+      .then(function (res) {
         console.log(res);
         localStorage.username = username;
         localStorage.password = password;
       })
-      .then(function(docs) {})
-      .catch(function(error) {
+      .then(function (docs) { })
+      .catch(function (error) {
         console.error(error);
       });
   }
