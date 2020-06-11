@@ -81,8 +81,6 @@ export class PouchWrapper {
             }
           }
 
-
-
           //the database doesn't sync until now, its only replicated once
           console.log(`starting sync for db ${db_name}..`);
           this.databases[db_name].remote

@@ -16,16 +16,20 @@
             @click="createItemWithTemplate(category.title)"
             type="danger"
             icon="fas fa-plus-circle"
-          >Add new {{ category.title }}</el-button>
+            >Add new {{ category.title }}</el-button
+          >
         </div>
         <div class="category_list">
           <ul>
-            <li v-for="item in category.items.rows" :key="item.id" @click="flyToItem(item)">
+            <li
+              v-for="item in category.items.rows"
+              :key="item.id"
+              @click="flyToItem(item)"
+            >
               <span>
-                <div
-                  class="item_name"
-                  v-if="item.doc.properties.name"
-                >{{ item.doc.properties.name }}</div>
+                <div class="item_name" v-if="item.doc.properties.name">
+                  {{ item.doc.properties.name }}
+                </div>
                 <div class="item_name" v-else>{{ item.doc._id }}</div>
                 <el-switch
                   v-model="shown_items[item.id]"
@@ -39,8 +43,11 @@
                   size="small"
                   :type="getTimeTagType(item)"
                   style="max-width:110px;"
-                >{{ showTimeTag(item) }} ago</el-tag>
-                <el-tag v-else size="small" type="info" style="width:110px">no positions</el-tag>
+                  >{{ showTimeTag(item) }} ago</el-tag
+                >
+                <el-tag v-else size="small" type="info" style="width:110px"
+                  >no positions</el-tag
+                >
               </span>
               <el-button
                 @click="clickItem(item.id)"
@@ -168,7 +175,6 @@ export default {
       let self = this;
       let all_templates = templates.get('all');
       self.categories = [];
-
 
       for (var template in all_templates) {
         //i actually like js, but sometimes...

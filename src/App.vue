@@ -6,7 +6,10 @@
       :givenTemplate="modal_data"
     ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
-    <ExportItem v-show="exportItemId != false" :exportItemId="exportItemId"></ExportItem>
+    <ExportItem
+      v-show="exportItemId != false"
+      :exportItemId="exportItemId"
+    ></ExportItem>
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
@@ -19,7 +22,10 @@
       <ListView v-show="modus == 'cases'"></ListView>
     </div>
     <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>chat
+      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
+        toggle chat
+      </div>
+      chat
     </div>
   </div>
 </template>
@@ -53,7 +59,7 @@ export default {
     ListView,
     Login,
     Settings,
-    Loadingscreen
+    Loadingscreen,
   },
   data: () => ({
     modus: 'map',
@@ -82,8 +88,7 @@ export default {
 
     serverBus.$on('modal_modus', (modal_modus, modal_data) => {
       this.$data.modal = modal_modus;
-      if(modal_modus == 'login')
-        this.$data.show_loadingscreen = false;
+      if (modal_modus == 'login') this.$data.show_loadingscreen = false;
       this.$data.modal_data = modal_data;
     });
     serverBus.$on('show_air', show_air => {
@@ -98,10 +103,14 @@ export default {
     //let self = this;
     //set on change listener on positions because its usually the largest database
     let self = this;
-    this.$db.setOnInitialReplicationDone('positions', 'hide_loadingscreen', function() {
-      //reload vehicles if change is detected
-      self.show_loadingscreen = false;
-    });
+    this.$db.setOnInitialReplicationDone(
+      'positions',
+      'hide_loadingscreen',
+      function() {
+        //reload vehicles if change is detected
+        self.show_loadingscreen = false;
+      }
+    );
   },
 };
 </script>
@@ -152,7 +161,6 @@ body {
   text-align: left;
   background-color: var(--white);
 }
-
 
 #app {
   position: absolute;
@@ -339,20 +347,17 @@ ul {
   padding: 11px;
 }
 
-
-
 .tags-input-wrapper-default,
 .tags-input-wrapper-default.active {
-    padding: 0;
-    background: none;
-    border: none;
-    border-radius: 0;
-    border-color: #dbdbdb;
-    box-shadow:none;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-color: #dbdbdb;
+  box-shadow: none;
 }
 
-input[type="tag"]{
+input[type='tag'] {
   display: none;
 }
-
 </style>

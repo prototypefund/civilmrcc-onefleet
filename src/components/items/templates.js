@@ -1,5 +1,5 @@
 export default {
-  get: function (name) {
+  get: function(name) {
     var templates = {
       case: {
         plural: 'Cases',

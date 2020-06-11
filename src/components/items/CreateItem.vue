@@ -63,12 +63,17 @@
           </div>
           <!-- iconwrapper end -->
 
-
           <!-- tags start -->
-          <tags-input v-if="field.type == 'tag'" element-id="tags"
-          v-model="form_data.properties[field.name]"
-          :existing-tags="tags.getTagsForField(form_data.template,field.name)"
-          :typeahead="true" typeahead-style="dropdown"></tags-input>
+          <tags-input
+            v-if="field.type == 'tag'"
+            element-id="tags"
+            v-model="form_data.properties[field.name]"
+            :existing-tags="
+              tags.getTagsForField(form_data.template, field.name)
+            "
+            :typeahead="true"
+            typeahead-style="dropdown"
+          ></tags-input>
           <!-- tags end -->
 
           <input
@@ -95,7 +100,7 @@
         <input type="submit" value="Send" />
       </form>
       <p>
-        {{form_data.template}}
+        {{ form_data.template }}
       </p>
     </div>
   </div>
@@ -120,7 +125,7 @@ export default {
       position_data: {
         positions: [{}],
       },
-      tags:tags
+      tags: tags,
     };
   },
   computed: {
