@@ -38,7 +38,7 @@ export class DbWrapper extends PouchWrapper {
   }
 
   public createPosition(obj: DbPosition, cb: Function) {
-    this.getDB('positions')
+    this.getDB('positions', false, 'remote')
       .put(obj)
       .then(response => {
         cb(null, response);
