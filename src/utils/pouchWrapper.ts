@@ -158,11 +158,11 @@ export class PouchWrapper {
     this.databases[db_name].onInitialReplicationDone[method_name] = method;
   }
 
-  public getDB(db_name: string, noprefix = false) {
+  public getDB(db_name: string, noprefix = false, type = 'local') {
     if (typeof this.databases[db_name] == 'undefined') {
       this.initDB(db_name, noprefix);
     }
-    return this.databases[db_name].local;
+    return this.databases[db_name][type];
   }
 
   public showLogin() {
