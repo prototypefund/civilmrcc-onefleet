@@ -17,8 +17,8 @@
     "init-vscode": "mkdir -p .vscode && cp -r -n .editor-settings-templates/.vscode/ .vscode/ && echo 'Created default vscode editor settings.' || echo 'Keeping existing vscode editor settings. See .editor-settings-templates/.vscode for inspiration.'",
     "postinstall": "npm run -s install-ais && npm run -s install-bootstrap && npm run -s install-database && npm run -s install-location && npm run -s maptiles:extract && npm run -s init-env && npm run -s init-appconfig && npm run -s init-vscode",
     "lint": "vue-cli-service lint",
-    "prettier:check": "prettier --check '{src,services}/**/*.{vue,js,ts}'",
-    "prettier:write": "prettier --write '{src,services}/**/*.{vue,js,ts}'",
+    "prettier:check": "prettier --check \"{src,services}/**/*.{vue,js,ts}\"",
+    "prettier:write": "prettier --write \"{src,services}/**/*.{vue,js,ts}\"",
     "maptiles:clean": "rimraf dist/MapTiles",
     "maptiles:extract": "cd public && extract-zip ../data/MapTiles.zip"
   },
