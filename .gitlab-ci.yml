@@ -49,11 +49,11 @@ lint:
 docker_build_only:
   stage: docker
   image: docker:stable
-    needs:
+  needs:
     - job: build
   script:
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
-    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services    
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services
 
 docker_build_and_push_development:
   stage: docker
