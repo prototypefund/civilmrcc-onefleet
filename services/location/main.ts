@@ -1,6 +1,8 @@
 const pouchDB = require('pouchdb');
 const request = require('request');
 
+const moment = require('moment');
+
 const fs = require('fs');
 const path = require('path');
 const csv = require('fast-csv');
@@ -15,6 +17,7 @@ program
   .option('-c <number>', 'generate testcases')
   .option('-i <filename>', 'import from csv file')
   .option('-l', 'fetches locations once')
+  .option('-d <date>', 'delete locations older than ')
   .option('-m, --mail', 'activate mail')
   .option('-p, --purchase', 'purchase locations if api key is provided')
   .version('0.0.1');
@@ -70,18 +73,20 @@ class LocationService {
       Position != false &&
       Position.timestamp != 'undefined'
     ) {
-      console.log(Position);
-      let entry = {
-        _id: identifier + '_' + new Date(Position.timestamp).toISOString(),
-        lat: Position.latitude,
-        lon: Position.longitude,
-        heading: Position.course,
-        speed: Position.speed,
-        item_identifier: identifier,
-        source: Position.source || 'ais_api',
-        altitude: Position.altitude || -1,
-        timestamp: new Date(Position.timestamp).toISOString(),
-      };
+      let entry: any = {};
+
+      entry._id = identifier + '_' + new Date(Position.timestamp).toISOString();
+      entry.item_identifier = identifier;
+      entry.source = Position.source || 'ais_api';
+      entry.altitude = Position.altitude || null;
+      entry.timestamp = new Date(Position.timestamp).toISOString();
+
+      if (Position.latitude) entry.lat = Position.latitude;
+      if (Position.longitude) entry.lon = Position.longitude;
+      if (Position.course) entry.course = Position.course;
+
+      if (Position.speed) entry.lon = Position.longitude;
+
       this.locationsDB
         .put(entry)
         .then(function(response) {
@@ -140,7 +145,7 @@ class LocationService {
               console.log(
                 'get position from AISs for vehicle ' + v.doc.properties.name
               );
-              this.getPositionFromAIS(v.doc.properties.MMSI, Position => {
+              this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
                 console.log(Position);
                 this.insertLocation(v.doc.identifier, Position);
@@ -206,7 +211,132 @@ class LocationService {
     console.log('implement me!');
   }
 
-  public getPositionFromAIS(mmsi, cb) {
+  public getPositionFromAIS(doc, cb) {
+    let fallbackCallback = () => {
+      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+      request(
+        `${config.aisUrl}/getLastPosition/${mmsi}`,
+        { json: true },
+        (err, res, body) => {
+          if (err) {
+            return console.log(err);
+          } else {
+          }
+          if (body.error != null) return console.log(body.error);
+
+          cb(body.data);
+        }
+      );
+    };
+
+    console.log(doc);
+    if (!doc.properties.MMSI) return console.log('no mmsi!');
+
+    let mmsi = parseInt(doc.properties.MMSI);
+    console.log('mmsi');
+    console.log(
+      mmsi,
+      config.fleetmon_api_key,
+      doc.properties.fleetmon_vessel_id
+    );
+
+    if (config.fleetmon_api_key && !doc.properties.fleetmon_vessel_id) {
+      let url =
+        'https://apiv2.fleetmon.com/vesselsearch/?mmsi_number=' +
+        mmsi +
+        '&apikey=' +
+        config.fleetmon_api_key;
+
+      request(url, { json: true }, (err, res, body) => {
+        if (err && err.length > 0) {
+          console.log('error fetching position from fleetmon:', err);
+          console.log('retry with ais api');
+          config.fleetmon_api_key = false;
+          this.getPositionFromAIS(doc, cb);
+        }
+        if ((body && body.vessels >= 1) || typeof body != 'string') {
+          if (typeof body.errors != 'undefined') {
+            console.log('error fetching position from fleetmon:', err);
+            console.log('retry with ais api');
+            config.fleetmon_api_key = false;
+            this.getPositionFromAIS(doc, cb);
+          } else {
+            let i = 0;
+            console.log(body);
+            if (typeof body.vessels && body.vessels[0]) {
+              //got vessel_id, store in db
+              doc.properties.fleetmon_vessel_id = body.vessels[0].vessel_id;
+              this.itemDB
+                .put(doc)
+                .then(
+                  (i => {
+                    return response => {
+                      console.log('item created');
+
+                      //call self again with updated vessel_id
+                      this.getPositionFromAIS(doc, cb);
+                    };
+                  })(i)
+                )
+                .catch(function(err) {
+                  console.log(err);
+                });
+            } else {
+              console.log('error fetching position from fleetmon:', body);
+              config.fleetmon_api_key = false;
+              fallbackCallback();
+            }
+          }
+        }
+      });
+    } else if (doc.properties.fleetmon_vessel_id) {
+      console.log('doc.properties.fleetmon_vessel_id');
+      console.log(doc.properties.fleetmon_vessel_id);
+
+      let url =
+        'https://apiv2.fleetmon.com/vessel/' +
+        doc.properties.fleetmon_vessel_id +
+        '/position/?apikey=' +
+        config.fleetmon_api_key;
+      if (config.fleetmon_api_key) {
+        request(url, { json: true }, (err, res, body) => {
+          if (err && err.length > 0) {
+            console.log('error fetching position from fleetmon:', err);
+            console.log('retry with ais api');
+            config.fleetmon_api_key = false;
+            this.getPositionFromAIS(doc, cb);
+          }
+
+          let entry = {
+            mmsi: mmsi,
+            latitude: body.latitude,
+            longitude: body.longitude,
+            timestamp: body.received,
+            source: 'fleetmon',
+          };
+          //console.log(entry);
+          //this.insertLocation(doc._id, entry);
+          if (
+            (body && body.latitude && body.longitude && body.received) ||
+            typeof body != 'string'
+          ) {
+            if (typeof body.errors != 'undefined') {
+              console.log('error fetching position from fleetmon:', err);
+              console.log('retry with ais api');
+              config.fleetmon_api_key = false;
+              this.getPositionFromAIS(doc, cb);
+            } else {
+              cb(this.parsePositionFromFleetmonApi(entry));
+            }
+          }
+        });
+      }
+    } else {
+      console.log('no api key');
+      fallbackCallback();
+    }
+  }
+  public getPositionFromAISOld(mmsi, cb) {
     let url =
       'https://apiv2.fleetmon.com/ais/position/?limit=1&sort=desc&mmsi=' +
       mmsi +
@@ -379,7 +509,6 @@ class LocationService {
       }
     });
   }
-
   /*
    *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
    *returns mail (e.g. joe.smith@somemail.com)
@@ -592,7 +721,7 @@ class LocationService {
           ).toUpperCase();
           let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
           console.log(`vehicle ${row.name} exists in db. add position...`);
-          this.insertLocation(vehicle.doc.identifier, pos);
+          this.insertLocation(identifier, pos);
         }
       })
       .on(
@@ -603,11 +732,54 @@ class LocationService {
           }
       );
   }
+
+  private importHistoricalData() {}
+
+  public deletePositionsOlderThan = async function(olderThanDate) {
+    console.log('delete positions older than ' + olderThanDate);
+
+    const parsedDate = moment(olderThanDate, [
+      'DD/MM/YYYY',
+      'DD.MM.YYYY',
+      'DD-MM-YYYY',
+    ]);
+    if (!parsedDate.isValid()) {
+      return console.error('error! date should be in the format DD/MM/YYYY');
+    }
+    olderThanDate = parsedDate.toDate();
+
+    this.initDBs();
+    let locations = this.locationsDB;
+    const self = this;
+
+    let toDelete = 0;
+    let deleted = 0;
+    let result = await locations.allDocs({
+      include_docs: true,
+      attachments: true,
+    });
+
+    if (result.error) console.log(result.error);
+    else {
+      // handle result
+      for (let i in result.rows) {
+        let position = result.rows[i];
+        let positionDate = new Date(position.id.split('_')[1]);
+
+        if (positionDate.getTime() <= olderThanDate.getTime()) {
+          toDelete++;
+          console.log('deleting ' + position.id + ' ...');
+          let res = await locations.remove(position.doc._id, position.doc._rev);
+          console.log(res);
+          deleted++;
+          console.log(deleted + '/' + toDelete);
+        }
+      }
+    }
+  };
 }
 
 let service = new LocationService();
-
-console.log(program.opts());
 
 if (program.T) {
   service.fetchAPIInterval(program.T);
@@ -624,5 +796,7 @@ if (program.C) {
 if (program.I) {
   service.importFromCSV(program.I);
 }
-
+if (program.D) {
+  service.deletePositionsOlderThan(program.D);
+}
 //service.initMail();

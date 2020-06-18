@@ -1,16 +1,17 @@
-import { PouchWrapper } from './pouchWrapper';
 import moment from 'moment';
 import config from '../../config/config.js';
-
 import { serverBus } from '../main';
-// const pouchwrapper = new PouchWrapper();
+import { PouchWrapper } from './pouchWrapper';
+import { ReplayOptions } from '../types/replay-options';
+import { DbItem } from '../types/db-item';
+import { DbPosition } from '../types/db-position';
+
 export class DbWrapper extends PouchWrapper {
   constructor() {
     super(config);
   }
 
-  public getPositionsForItem(identifier, cb) {
-    var self = this;
+  public getPositionsForItem(identifier: string, cb: Function) {
     this.getDB('positions')
       .allDocs({
         include_docs: true,
@@ -21,52 +22,55 @@ export class DbWrapper extends PouchWrapper {
         skip: 0,
         descending: false,
       })
-      .then(function(result) {
+      .then(result => {
         //quick fix
         //this has to be put to the server site
         if (result.rows.length > 1000) {
           result.rows = result.rows.splice(-1000);
         }
-        if (result.error) return self.fetchError(result);
+        if (result.error) return this.fetchError(result);
         cb(result);
         // handle result
       })
-      .catch(function(err) {
-        self.fetchError(err);
+      .catch(err => {
+        this.fetchError(err);
       });
   }
-  public createPosition(obj, cb) {
-    this.getDB('positions')
+
+  public createPosition(obj: DbPosition, cb: Function) {
+    this.getDB('positions', false, 'remote')
       .put(obj)
-      .then(function(response) {
+      .then(response => {
         cb(null, response);
       })
-      .catch(function(err) {
+      .catch(err => {
         cb(err);
       });
   }
-  public createItem(obj, cb) {
+
+  public createItem(obj: DbItem, cb: Function) {
     var itemDB = this.getDB('items');
     itemDB
       .put(obj)
-      .then(function(response) {
+      .then(response => {
         cb(null, response);
       })
-      .catch(function(err) {
+      .catch(err => {
         cb(err);
       });
   }
-  public updateItem(obj, cb) {
+
+  public updateItem(obj: DbItem, cb: Function) {
     //in pouch create and update actually is the same function
     //an item will be updated if the id and a rev already exists
     return this.createItem(obj, cb);
   }
-  public getItem(itemId, cb) {
-    var self = this;
+
+  public getItem(itemId: string, cb: Function) {
     this.getDB('items')
       .get(itemId)
-      .then(function(doc) {
-        self.getPositionsForItem(doc.identifier, function(positions) {
+      .then(doc => {
+        this.getPositionsForItem(doc.identifier, positions => {
           var item = {
             id: doc._id,
             doc: doc,
@@ -75,24 +79,24 @@ export class DbWrapper extends PouchWrapper {
           cb(item);
         });
       })
-      .catch(function(err) {
+      .catch(err => {
         console.error(err);
       });
   }
-  public getItems(cb) {
+
+  public getItems(cb: Function) {
     var items = this.getDB('items');
-    var self = this;
     items
       .allDocs({
         include_docs: true,
         attachments: true,
       })
-      .then(function(result) {
-        if (result.error) return self.fetchError(result);
+      .then(result => {
+        if (result.error) return this.fetchError(result);
 
-        result.rows.forEach(function(v, i) {
+        result.rows.forEach((v, i) => {
           result.rows[i]['positions'] = [];
-          self.getPositionsForItem(v.doc.identifier, function(positions) {
+          this.getPositionsForItem(v.doc.identifier, positions => {
             //append positions to vehicles:
             result.rows[i].positions = positions.rows;
 
@@ -101,13 +105,12 @@ export class DbWrapper extends PouchWrapper {
         });
         // handle result
       })
-      .catch(function(err) {
+      .catch(err => {
         cb(err);
       });
   }
-  public getItemsByTemplate(template, cb) {
-    var self = this;
 
+  public getItemsByTemplate(template: string, cb: Function) {
     this.getDB('items')
       .allDocs({
         include_docs: true,
@@ -115,13 +118,13 @@ export class DbWrapper extends PouchWrapper {
         startkey: template,
         endkey: template + '\uffff',
       })
-      .then(function(result) {
-        if (result.error) return self.fetchError(result);
+      .then(result => {
+        if (result.error) return this.fetchError(result);
         if (result.rows.length == 0) return cb(null, []);
 
-        result.rows.forEach(function(v, i) {
+        result.rows.forEach((v, i) => {
           //HAS TO BE REPLACED WITH PROMISE!
-          self.getPositionsForItem(v.doc.identifier, function(positions) {
+          this.getPositionsForItem(v.doc.identifier, positions => {
             //append positions to vehicles:
             if (positions.rows) result.rows[i].positions = positions.rows;
 
@@ -131,16 +134,16 @@ export class DbWrapper extends PouchWrapper {
 
         // handle result
       })
-      .catch(function(err) {
+      .catch(err => {
         console.error(err);
         cb(err);
       });
   }
-  public getVehicles(cb) {
+  public getVehicles(cb: Function) {
     this.getItemsByTemplate('VEHICLE', cb);
   }
   public appendItemsToMap(map) {
-    this.getItems(function(err, result) {
+    this.getItems((err, result) => {
       for (var i in result.rows) {
         var item = result.rows[i];
         //add onclick option to itemobject
@@ -154,27 +157,22 @@ export class DbWrapper extends PouchWrapper {
     //item is here not the same as an item in the database
     //it could be a L.marker, L.polygon etc
 
-    var self = this;
     //map.clearMap();
 
     for (var identifier in options.shown_items) {
       if (options.shown_items[identifier] == 'true')
-        self.getItem(identifier, function(result) {
+        this.getItem(identifier, result => {
           options.map.updateItemPosition(result);
         });
       else options.map.hideItem(identifier);
     }
   }
 
-  /** Method starts timelapse replay
-   * @param {Object} options.map
-   * @param {String} options.startDate       starting datetime of the replay
-   * @param {String} options.endDate         ending datetime of the replay
-   * @param {Number} options.hoursPerFrame   hoursPerFrame added to the animation per frame update
-   * @param {Number} options.frameLength     length in s in which a frame is shown
+  /**
+   * Method starts timelapse replay
    */
-  public startReplay(options, cb) {
-    let start_interval = function() {
+  public startReplay(options: ReplayOptions, cb: Function) {
+    let start_interval = () => {
       let currentDate = moment(options.startDate);
 
       let interval = setInterval(() => {
@@ -186,7 +184,7 @@ export class DbWrapper extends PouchWrapper {
         serverBus.$emit('replay_next_tick', currentDate);
 
         for (let i in replay_items) {
-          self.getItem(replay_items[i].id, function(loadeditem) {
+          this.getItem(replay_items[i].id, loadeditem => {
             let templatedItem = options.map.loadTemplatedItem(loadeditem);
             console.log(templatedItem);
             options.map.updateItemPosition(templatedItem);
@@ -213,7 +211,6 @@ export class DbWrapper extends PouchWrapper {
     };
 
     console.log('Start replay with following options:', options);
-    let self = this;
     //store old tracking type to
     //to reset map after replay
     let old_tracking_value: any = {};
@@ -256,11 +253,11 @@ export class DbWrapper extends PouchWrapper {
     }
 
     let i = 0;
-    let replay_items = [];
+    let replay_items: any[] = [];
     //loop through items
     for (let identifier in options.shown_items) {
       if (options.shown_items[identifier] == 'true') {
-        self.getItem(identifier, function(result) {
+        this.getItem(identifier, result => {
           replay_items.push(result);
 
           i++;
@@ -278,4 +275,3 @@ export class DbWrapper extends PouchWrapper {
     }
   }
 }
-// export default pouchwrapper;

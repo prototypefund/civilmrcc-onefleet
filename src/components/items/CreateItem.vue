@@ -10,9 +10,7 @@
             :label="template_option"
             :name="template_option"
             :key="template_option"
-          >
-            {{ template_option }}
-          </option>
+          >{{ template_option }}</option>
         </select>
 
         <span>Identifier</span>
@@ -55,13 +53,22 @@
               type="text"
               class="icon"
             />
-            <span
-              class="preview-icon"
-              :class="'el-icon-' + form_data.properties[field.name]"
-              >&nbsp;</span
-            >
+            <span class="preview-icon" :class="'el-icon-' + form_data.properties[field.name]">&nbsp;</span>
           </div>
           <!-- iconwrapper end -->
+
+          <!-- tags start -->
+          <tags-input
+            v-if="field.type == 'tag'"
+            element-id="tags"
+            v-model="form_data.properties[field.name]"
+            :existing-tags="
+              tags.getTagsForField(form_data.template, field.name)
+            "
+            :typeahead="true"
+            typeahead-style="dropdown"
+          ></tags-input>
+          <!-- tags end -->
 
           <input
             v-if="field.type != 'select' && field.type != 'icon'"
@@ -80,17 +87,20 @@
               v-for="option in field.options"
               :key="option"
               :value="field.options[option]"
-              >{{ option }}</option
-            >
+            >{{ option }}</option>
           </select>
         </div>
         <input type="submit" value="Send" />
       </form>
+      <p>
+        {{ form_data.template }}
+      </p>
     </div>
   </div>
 </template>
 <script>
 import templates from './templates.js';
+import tags from './tags.js';
 import { serverBus } from '../../main';
 export default {
   name: 'CreateItem',
@@ -102,12 +112,13 @@ export default {
   },
   data: function() {
     return {
-      twmplate: '',
+      template: '',
       vehicles: [],
       form_data: { properties: {}, template: this.givenTemplate },
       position_data: {
         positions: [{}],
       },
+      tags: tags,
     };
   },
   computed: {

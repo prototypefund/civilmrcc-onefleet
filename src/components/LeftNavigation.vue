@@ -9,16 +9,15 @@
       >
         <div class="action_area">
           <div>
-            more <br />
-            soon
+            more
+            <br />soon
           </div>
           <el-button
             @click="createItemWithTemplate(category.title)"
             type="danger"
             icon="fas fa-plus-circle"
+            >Add new {{ category.title }}</el-button
           >
-            Add new {{ category.title }}
-          </el-button>
         </div>
         <div class="category_list">
           <ul>
@@ -27,29 +26,11 @@
               :key="item.id"
               @click="flyToItem(item)"
             >
-              <el-button
-                @click="clickItem(item.id)"
-                style="float: right;"
-                type="danger"
-                icon="el-icon-edit"
-                circle
-              />
               <span>
                 <div class="item_name" v-if="item.doc.properties.name">
                   {{ item.doc.properties.name }}
                 </div>
                 <div class="item_name" v-else>{{ item.doc._id }}</div>
-                <el-tag
-                  v-if="item.positions && item.positions.length > 0"
-                  size="small"
-                  :type="getTimeTagType(item)"
-                  style="width:100px;"
-                >
-                  {{ showTimeTag(item) }} ago
-                </el-tag>
-                <el-tag v-else size="small" type="info" style="width:100px">
-                  no positions
-                </el-tag>
                 <el-switch
                   v-model="shown_items[item.id]"
                   :active-color="getItemColor(item.id)"
@@ -57,7 +38,23 @@
                   inactive-value="false"
                   @change="toggleItem(item.id)"
                 />
+                <el-tag
+                  v-if="item.positions && item.positions.length > 0"
+                  size="small"
+                  :type="getTimeTagType(item)"
+                  style="max-width:110px;"
+                  >{{ showTimeTag(item) }} ago</el-tag
+                >
+                <el-tag v-else size="small" type="info" style="width:110px"
+                  >no positions</el-tag
+                >
               </span>
+              <el-button
+                @click="clickItem(item.id)"
+                style="float: right;"
+                icon="el-icon-edit"
+                circle
+              />
             </li>
           </ul>
         </div>
@@ -178,6 +175,7 @@ export default {
       let self = this;
       let all_templates = templates.get('all');
       self.categories = [];
+
       for (var template in all_templates) {
         //i actually like js, but sometimes...
         //this is the easiest way to avoid async race conditions
@@ -231,7 +229,7 @@ export default {
     let self = this;
 
     //set on change listener
-    this.$db.setOnChange('items', 'leftnav_change', function() {
+    this.$db.setOnChange('positions', 'leftnav_change', function() {
       //reload vehicles if change is detected
       self.loadVehicles();
     });
@@ -253,10 +251,10 @@ export default {
 nav {
   position: absolute;
   left: 0;
-  width: 280px;
-  top: 60px;
+  width: var(--app-left-siderbar);
+  top: 40px;
   bottom: 0;
-  background-color: white;
+  background-color: var(--white);
 }
 nav .categories .item_name {
   margin-left: 5px;
@@ -268,16 +266,14 @@ nav .categories .item_name {
 .action_area {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 10px;
-  padding-right: 10px;
-  padding-left: 10px;
+  padding: 0.25em 1em;
 }
 
 .action_area div {
   display: flex;
   vertical-align: text-bottom;
   font-style: italic;
-  font-size: 0.8em;
+  font-size: 0.75em;
   color: #aaa;
 }
 
@@ -290,29 +286,25 @@ nav .categories .item_name {
 }
 
 .category_list li {
-  padding-top: 5px;
-  padding-right: 10px;
-  padding-bottom: 10px;
-  padding-left: 10px;
-
+  padding: 0.5em 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-width: 1px;
-  border-color: #eee;
+  border-color: var(--light-gray);
   border-bottom-style: solid;
 }
 .category_list li:hover {
   cursor: pointer;
-  font-weight: 500;
   transition: ease-in-out 0.3s;
-  background-color: #eee;
+  background-color: var(--light-gray);
 }
 
-el-switch {
-  margin-right: 5px;
+.el-switch {
+  margin-right: 0.5em;
 }
 
-.item_name:hover {
-  cursor: pointer;
-  font-weight: 500;
-  transition: ease-in-out 0.2s;
+.el-tag {
+  font-family: var(--font-family-monospace);
 }
 </style>
