@@ -92,8 +92,8 @@ This onefleet uses two separate docker images: One for the Vue-application, and 
 ```
 npm install
 npm run build
-docker build -t registry.gitlab.com/civilmrcc/onefleet/app .
-docker build -t registry.gitlab.com/civilmrcc/onefleet/services services
+docker build -t registry.gitlab.com/civilmrcc/onefleet/app:development .
+docker build -t registry.gitlab.com/civilmrcc/onefleet/services:development services
 ```
 
 #### Create docker containers (development)

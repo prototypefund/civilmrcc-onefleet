@@ -5,6 +5,7 @@
   "scripts": {
     "postinstall": "cp -n config.template.js config.js && echo 'Created new location config.' || echo 'Keeping existing location config.' ",
     "dev": "npm install --no-save && npm run start",
+    "build": "tsc main.ts",
     "start": "ts-node main.ts -t 15"
   },
   "dependencies": {
