@@ -46,7 +46,16 @@ lint:
   script:
     - npm run lint
 
-docker-development:
+docker_build_only:
+  stage: docker
+  image: docker:stable
+    needs:
+    - job: build
+  script:
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services    
+
+docker_build_and_push_development:
   stage: docker
   image: docker:stable
   environment:
@@ -54,9 +63,8 @@ docker-development:
   needs:
     - job: build
       artifacts: true
-  # TODO: Enable before merge
-  # only:
-  #   - develop
+  only:
+    - develop
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
@@ -65,7 +73,7 @@ docker-development:
     - docker push $CI_REGISTRY/civilmrcc/onefleet/services:development
     - docker logout $CI_REGISTRY
 
-docker-production:
+docker_build_and_push_production:
   stage: docker
   image: docker:stable
   environment:
@@ -73,10 +81,8 @@ docker-production:
   needs:
     - job: build
       artifacts: true
-  # TODO: Enable before merge
-  # only:
-  #   - master
-  when: manual
+  only:
+    - release
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:production .
