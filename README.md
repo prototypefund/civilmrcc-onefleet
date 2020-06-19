@@ -133,6 +133,12 @@ To create docker containers for a production environment you have to use `docker
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
+#### Docker container sensitive environment values
+
+The docker container for the location service needs to be provided with some sensitive credentials (Api-keys, database login, IMAP login etc.) in order to operate normally. These credentials can be entered in the file `.env`.
+
+If this file does not yet exist it can be copied from `.env.template`. This should happen automatically as a post-install step when running `npm install`.
+
 #### Debugging JavaScript files with Visual Studio Code and Chrome
 
 Enable remote debugging in Chrome. You can do that by starting Chrome with `chrome.exe --remote-debugging-port=9222`. If you are using Windows you can simply [edit the Chrome shortcut](https://stackoverflow.com/a/56457835/2306587) to start Chrome with remote debugging enabled.
