@@ -27,7 +27,6 @@ install:
 
 code_formatting:
   stage: code_formatting
-  allow_failure: true
   script:
     - npm run prettier:check
 

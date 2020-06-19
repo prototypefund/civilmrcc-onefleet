@@ -32,7 +32,7 @@ export default {
           {
             name: 'first_seen',
             title: 'First Seen',
-            type: 'datetime'
+            type: 'datetime',
           },
           {
             name: 'engine_working',
