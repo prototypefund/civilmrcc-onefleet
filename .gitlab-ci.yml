@@ -50,6 +50,9 @@ docker_build_only:
   image: docker:stable
   needs:
     - job: build
+  except:
+    - develop
+    - release
   script:
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
     - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services
