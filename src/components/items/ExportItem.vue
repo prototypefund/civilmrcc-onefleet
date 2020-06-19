@@ -39,7 +39,7 @@ import templates from './templates.js';
 import { serverBus } from '../../main';
 
 export default {
-  name: 'ShowItem',
+  name: 'ExportItem',
   props: ['exportItemId'],
   data: function() {
     return {

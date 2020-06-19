@@ -1,22 +1,40 @@
 <template>
   <div id="app">
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
-    <CreateItem v-if="modal == 'createItem'" :givenTemplate="modal_data"></CreateItem>
+    <CreateItem
+      v-if="modal == 'createItem'"
+      :givenTemplate="modal_data"
+    ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
-    <ExportItem v-show="exportItemId != false" :exportItemId="exportItemId"></ExportItem>
+    <ExportItem
+      v-show="exportItemId != false"
+      :exportItemId="exportItemId"
+    ></ExportItem>
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
     <TopNavigation :modus="modus"></TopNavigation>
 
-    <LeftNavigation v-show="modus == 'map'"></LeftNavigation>
+    <LeftNavigation
+      v-show="modus == 'map'"
+      :base_items="base_items"
+      :positions_per_item="positions_per_item"
+    />
     <Air v-if="show_air"></Air>
     <div id="mainWindow">
-      <MapArea v-show="modus == 'map'"></MapArea>
+      <MapArea v-show="modus == 'map'" />
     </div>
-    <ListView class="wide" v-show="modus == 'cases'"></ListView>
+    <ListView
+      class="wide"
+      v-show="modus == 'cases'"
+      :base_items="base_items"
+      :positions_per_item="positions_per_item"
+    />
     <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">toggle chat</div>chat
+      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
+        toggle chat
+      </div>
+      chat
     </div>
   </div>
 </template>
@@ -36,6 +54,8 @@ import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
 
 import { serverBus } from './main';
+// import { DbItem } from '@/types/db-item';
+// import { DbPosition } from '@/types/db-position';
 
 export default {
   name: 'app',
@@ -57,21 +77,62 @@ export default {
     modal: '',
     modal_data: '',
     show_air: false,
-    show_loadingscreen: false,
+    show_loadingscreen: false, // deactivated for debugging
     itemId: false,
     exportItemId: false,
     show_chat: false,
+    base_items: [],
+    base_positions: [],
+    positions_per_item: {},
   }),
   computed: {
     chatWindowClass: function() {
       return this.show_chat ? 'show_chat' : 'hide_chat';
     },
   },
+  watch: {
+    base_items: function() {
+      console.log('base_items new length:', this.base_items.length);
+    },
+    base_positions: function() {
+      console.log('base_positions new length: ', this.base_positions.length);
+    },
+  },
   methods: {
     showItemDetails: () => {
       this.itemid = 3;
     },
+    loadItems: function() {
+      this.$db.getBaseItems().then(result => {
+        this.base_items = result.rows.map(item => item.doc);
+      });
+    },
+    loadPositions: function() {
+      this.$db.getBasePositions().then(result => {
+        let base_positions = result.rows.map(position => position.doc);
+        this.positions_per_item = this.assignPositions(base_positions);
+        this.base_positions = base_positions;
+      });
+    },
+    assignPositions: function(base_positions) {
+      // todo: move this to db-wrapper
+      let positions_per_item = {};
+      for (let i in base_positions) {
+        let pos = base_positions[i];
+        if (!positions_per_item[pos.item_identifier])
+          positions_per_item[pos.item_identifier] = [];
+        positions_per_item[pos.item_identifier].push(pos);
+      }
+      return positions_per_item;
+    },
+    getPositionsForItem: function(base_item) {
+      // todo: move this to db-wrapper
+      let positions = this.positions_per_item[base_item._id];
+      if (!positions) positions = this.positions_per_item[base_item.identifier];
+      return positions;
+    },
   },
+
   created: function() {
     serverBus.$on('app_modus', app_modus => {
       this.$data.modus = app_modus;
@@ -91,9 +152,9 @@ export default {
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
-    //let self = this;
-    //set on change listener on positions because its usually the largest database
+
     let self = this;
+    //set on change listener on positions because its usually the largest database
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',
@@ -102,6 +163,17 @@ export default {
         self.show_loadingscreen = false;
       }
     );
+    this.$db.setOnChange('items', 'base_items_change', function() {
+      //reload base_items if change is detected
+      self.loadItems();
+    });
+    this.$db.setOnChange('positions', 'base_positions_change', function() {
+      //reload base_positions if change is detected
+      self.loadPositions();
+    });
+
+    this.loadItems();
+    this.loadPositions();
   },
 };
 </script>

@@ -4,7 +4,7 @@
 
     <el-collapse v-model="activeCategories">
       <el-collapse-item
-        v-for="category in categories"
+        v-for="category in allCategories"
         class="categories"
         :title="category.plural"
         :name="category.plural"
@@ -13,17 +13,18 @@
         <table>
           <thead>
             <th>id</th>
-            <th>created</th>
+            <th>first seen</th>
             <th v-for="field in category.fields">{{ field.name }}</th>
           </thead>
 
-          <tr v-for="item in category.items.rows">
-            <td>{{ item.doc._id }}</td>
-            <td v-if="item.positions && item.positions[0]">
-              {{ item.positions[0].doc.timestamp }}
+          <tr v-for="item in category.category_base_items">
+            <td>{{ item._id }}</td>
+            <td v-if="itemPositions(item) && itemPositions(item)[0]">
+              {{ itemPositions(item)[0].timestamp }}
             </td>
+            <td v-else>no positions</td>
             <td v-for="field in category.fields" :key="field.name">
-              {{ item.doc.properties[field.name] }}
+              {{ item.properties[field.name] }}
             </td>
             <!--<span>{{vehicle.positions}}</span>-->
           </tr>
@@ -33,98 +34,53 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import templates from './items/templates.js';
-import { serverBus } from '../main';
 export default {
   name: 'ListView',
 
+  props: {
+    base_items: { type: Array, required: true },
+    positions_per_item: { type: Object, required: false },
+  },
   data: function() {
     return {
-      vehicles: [],
-      shown_items: [],
-      categories: [],
       activeCategories: ['Vehicles'],
     };
   },
-  methods: {
-    isShown: function(identifier) {
-      return this.shown_items[identifier];
-    },
-    initItem: function(identifier, active) {
-      this.shown_items[identifier] = active;
-      serverBus.$emit('shown_items', this.shown_items);
-    },
-    toggleItem: function() {
-      serverBus.$emit('shown_items', this.shown_items);
-    },
-    getItemColor: function(itemid) {
-      var item = this.getItemById(itemid);
-      if (
-        item &&
-        typeof item.doc.properties != 'undefined' &&
-        typeof item.doc.properties.color != 'undefined'
-      )
-        return item.doc.properties.color;
-      else return '#13ce66';
-    },
-    getItemById: function(itemid) {
-      for (var i in this.vehicles) {
-        if (this.vehicles[i].id == itemid) return this.vehicles[i];
-      }
-      return false;
-    },
-  },
-  mounted: function() {
-    serverBus.$on('shown_items', shown_items => {
-      this.shown_items = shown_items;
-    });
+  computed: {
+    allCategories: function() {
+      let all_templates = templates.get('all');
+      let category_tabs = {};
 
-    //load templates to append them as categories to the left navigation
-    var self = this;
-    var all_templates = templates.get('all');
-    for (var template in all_templates) {
-      //i actually like js, but sometimes...
-      (function(template_index) {
-        self.$db.getItemsByTemplate(
-          all_templates[template_index].pouch_identifier,
-          function(error, result) {
-            if (error)
-              throw 'an error occured reading the template for the leftnav! ';
-
-            self.categories.push({
-              title: template_index,
-              plural: all_templates[template_index].plural,
-              items: result,
-              fields: all_templates[template_index].fields,
-            });
+      for (let item_index in this.base_items) {
+        let base_item = this.base_items[item_index];
+        let template_infos = all_templates[base_item.template];
+        // ignore items with unknown templates
+        if (template_infos) {
+          if (!category_tabs[base_item.template]) {
+            let template_infos = all_templates[base_item.template];
+            category_tabs[base_item.template] = {
+              plural: template_infos.plural,
+              pouch_identifier: template_infos.pouch_identifier,
+              category_base_items: [],
+              fields: template_infos.fields,
+            };
           }
-        );
-      })(template);
-    }
-
-    this.$db.getVehicles(function(err, result) {
-      self.$data.vehicles = result.rows;
-      for (var category_index in self.$data.categories) {
-        //get all items within a category
-        for (var item in self.$data.categories[category_index].items.rows) {
-          let is_active =
-            self.$data.categories[category_index].items.rows[item].doc
-              .properties.active;
-
-          let identifier =
-            self.$data.categories[category_index].items.rows[item].id;
-
-          self.initItem(identifier, is_active);
+          category_tabs[base_item.template].category_base_items.push(base_item);
         }
       }
-    });
-    this.$db.setOnChange('items', 'list_view', function() {
-      self.$db.getVehicles(function(err, result) {
-        self.$data.vehicles = result.rows;
-      });
-    });
+      return category_tabs;
+    },
   },
+  methods: {
+    itemPositions: function(base_item) {
+      // return null if no positions have been loaded yet:
+      if (Object.keys(this.positions_per_item).length === 0) return null;
+      else return this.positions_per_item[base_item.identifier] || [];
+    },
+  },
+  mounted: function() {},
 };
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->

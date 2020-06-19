@@ -1,5 +1,5 @@
 <template>
-  <li :class="itemLoadingClass" @click="flyToItem(item)">
+  <li :class="itemLoadingClass" @click="flyToItem()">
     <span>
       <div class="item_name">{{ itemName }}</div>
       <el-switch v-model="itemShowing" :active-color="itemColor" />
@@ -8,7 +8,7 @@
       </el-tag>
     </span>
     <el-button
-      @click="clickItem(item.id)"
+      @click="clickItem()"
       style="float: right;"
       icon="el-icon-edit"
       circle
@@ -26,77 +26,101 @@
 </template>
 
 <script lang="ts">
-// import templates from './templates.js';
 import { serverBus } from '../../main';
 export default {
   name: 'NavbarItem',
 
   props: {
-    itemId: {
-      type: String,
+    base_item: {
+      type: Object,
       required: true,
     },
-    item_category: {
-      type: String,
-      required: true,
+    positions: {
+      type: Array,
+      required: false,
     },
   },
 
   data: function() {
     return {
-      item: null,
       itemShowing: false,
     };
   },
 
+  watch: {
+    itemShowing: function() {
+      //   serverBus.$emit('set_item_visibility', this.base_item, this.itemShowing);
+      //   serverBus.$emit('show_item_on_map', this.itemId, this.itemShowing);
+      this.updateItemOnMap();
+    },
+    base_item: function() {
+      this.itemShowing = this.itemActive;
+      //   serverBus.$emit(
+      //     'update_item_on_map',
+      //     this.base_item,
+      //     this.positions,
+      //     this.itemShowing
+      //   );
+    },
+    positions: function() {
+      this.updateItemOnMap();
+    },
+  },
+
   computed: {
+    itemId: function() {
+      return this.base_item._id;
+    },
     itemName: function() {
-      if (this.item) {
-        if (this.item.doc.properties.name) return this.item.doc.properties.name;
-        else return this.itemId;
+      if (this.base_item) {
+        if (this.base_item.properties.name)
+          return this.base_item.properties.name;
+        else return this.base_item.template + ' ' + this.base_item.identifier;
       } else {
-        let identifier = this.itemId.substr(this.item_category.length + 1);
-        return identifier + ' (loading...)';
+        return this.base_item.identifier + ' (loading...)';
       }
     },
     itemLoadingClass: function() {
-      if (this.item) {
+      if (this.base_item) {
         return 'NavbarItem';
       } else {
         return 'NavbarItem item_loading';
       }
     },
     itemColor: function() {
-      if ((((this.item || {}).doc || {}).properties || {}).color)
-        return this.item.doc.properties.color;
-      else if ((((this.item || {}).doc || {}).properties || {}).boat_color)
-        return this.item.doc.properties.boat_color;
+      if (((this.base_item || {}).properties || {}).color)
+        return this.base_item.properties.color;
+      else if (((this.base_item || {}).properties || {}).boat_color)
+        return this.base_item.properties.boat_color;
       else return '#13ce66';
     },
     itemTemplate: function() {
-      if (((this.item || {}).doc || {}).template) return this.item.doc.template;
+      if ((this.base_item || {}).template) return this.base_item.template;
       else return '';
     },
     itemActive: function() {
-      if (((this.item || {}).doc || {}).properties) {
-        if (this.item.doc.template == 'case')
-          return this.item.doc.properties.status != 'closed';
-        else return this.item.doc.properties.active == 'true';
+      if ((this.base_item || {}).properties) {
+        if (this.base_item.template == 'case')
+          return this.base_item.properties.status != 'closed';
+        else return this.base_item.properties.active == 'true';
       }
       return false;
     },
+    latestPosition: function() {
+      // we assume that positions are already sorted by timestamp during the DB-fetch
+      if ((this.positions || []).length > 0)
+        return this.positions[this.positions.length - 1];
+      else return null;
+    },
     positionAgeText: function() {
-      if (((this.item || {}).positions || {}).length > 0) {
-        let lastPosition = this.item.positions[this.item.positions.length - 1];
-        return this.timeSince(lastPosition.doc.timestamp) + ' ago';
-      } else {
-        return 'no positions';
-      }
+      if (!this.positions) return 'loading...';
+      else if (this.latestPosition)
+        return this.timeSince(this.latestPosition.timestamp) + ' ago';
+      else return 'no positions';
     },
     positionAgeType: function() {
-      if (((this.item || {}).positions || {}).length > 0) {
-        let lastPosition = this.item.positions[this.item.positions.length - 1];
-        let lastDate = new Date(lastPosition.doc.timestamp);
+      if (this.latestPosition) {
+        let lastDate = new Date(this.latestPosition.timestamp);
         let now = new Date();
         let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
         if (seconds > 0 && seconds <= 1800) return 'success';
@@ -108,42 +132,23 @@ export default {
     },
   },
 
-  watch: {
-    itemShowing: function() {
-      serverBus.$emit('set_item_visibility', this.item, this.itemShowing);
-    },
-    item: function(newVal, oldVal) {
-      console.log('item changed in NavbarItem: ', this.item, newVal, oldVal);
-      this.itemShowing = this.itemActive;
-    },
-  },
-
   methods: {
-    loadItem: function() {
-      var self = this;
-      this.$db.getItem(this.itemId, function(item_from_db) {
-        console.log('navbaritem loadItem callback', item_from_db);
-        self.item = item_from_db;
-      });
+    clickItem: function() {
+      serverBus.$emit('itemId', this.base_item._id);
     },
-    clickItem: function(itemId) {
-      serverBus.$emit('itemId', itemId);
-    },
-    // click on the last position span
     flyToItem: function() {
-      if (((this.item || {}).positions || {}).length > 0) {
-        let lastPosition = this.item.positions[this.item.positions.length - 1];
-        lastPosition = { lat: lastPosition.doc.lat, lon: lastPosition.doc.lon };
-        serverBus.$emit('fly_to_position', lastPosition);
+      if (this.latestPosition) {
+        serverBus.$emit('fly_to_position', this.latestPosition);
       }
-
-      //   if (item && item.positions && item.positions.length > 0) {
-      //     let lastPosition = item.positions[item.positions.length - 1];
-      //     lastPosition = { lat: lastPosition.doc.lat, lon: lastPosition.doc.lon };
-      //     serverBus.$emit('fly_to_position', lastPosition);
-      //   }
     },
-
+    updateItemOnMap() {
+      serverBus.$emit(
+        'update_item_on_map',
+        this.base_item,
+        this.positions,
+        this.itemShowing
+      );
+    },
     timeSince: function(date) {
       //   date = new Date(date);
       let lastDate = new Date(date);
@@ -173,21 +178,8 @@ export default {
       return Math.floor(seconds) + ' seconds';
     },
   },
-  mounted: function() {
-    //load item from db
-    this.loadItem();
-    let self = this;
-    //set on change listener
-    this.$db.setOnChange('items', 'navitem_change', function() {
-      //reload vehicles if change is detected
-      self.loadItem();
-    });
-    //set on change listener
-    this.$db.setOnChange('positions', 'navitem_change', function() {
-      //reload vehicles if change is detected
-      self.loadItem();
-    });
-  },
+
+  mounted: function() {},
 };
 </script>
 
