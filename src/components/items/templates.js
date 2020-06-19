@@ -30,6 +30,11 @@ export default {
             },
           },
           {
+            name: 'first_seen',
+            title: 'First Seen',
+            type: 'datetime',
+          },
+          {
             name: 'engine_working',
             title: 'Engine Working',
             type: 'select',
@@ -183,6 +188,11 @@ export default {
             type: 'color',
           },
           {
+            name: 'fleetmon_vessel_id',
+            title: 'Fleetmon Vessel ID',
+            type: 'number',
+          },
+          {
             name: 'active',
             title: 'Active',
             type: 'select',
@@ -213,6 +223,11 @@ export default {
             name: 'icon',
             title: 'icon',
             type: 'icon',
+          },
+          {
+            name: 'testtag',
+            title: 'testtag',
+            type: 'tag',
           },
         ],
       },

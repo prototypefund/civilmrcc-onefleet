@@ -10,6 +10,7 @@
           v-model="form_data.identifier"
           placeholder="identifier"
           @input="form_data.identifier = $event.target.value.toUpperCase()"
+          readonly
         />
         <div v-for="field in template_data.fields" :key="field.name">
           <span>{{ field.title }}</span>
@@ -31,8 +32,25 @@
           </div>
           <!-- iconwrapper end -->
 
+          <!-- tags start -->
+          <tags-input
+            v-if="field.type == 'tag'"
+            element-id="tags"
+            v-model="form_data.properties[field.name]"
+            :existing-tags="
+              tags.getTagsForField(form_data.template, field.name)
+            "
+            :typeahead="true"
+            typeahead-style="dropdown"
+          ></tags-input>
+          <!-- tags end -->
+
           <input
-            v-if="field.type != 'select'"
+            v-if="
+              field.type != 'select' &&
+                field.type != 'icon' &&
+                field.type != 'tag'
+            "
             v-model="form_data.properties[field.name]"
             :name="field.name"
             :placeholder="field.title"
@@ -61,6 +79,7 @@
 <script>
 import templates from './templates.js';
 import Position from './Position';
+import tags from './tags.js';
 import { serverBus } from '../../main';
 
 export default {
@@ -79,6 +98,7 @@ export default {
     position_data: {
       positions: [{}],
     },
+    tags: tags,
   }),
   watch: {
     itemId: function(newVal) {

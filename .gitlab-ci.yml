@@ -27,7 +27,6 @@ install:
 
 code_formatting:
   stage: code_formatting
-  allow_failure: true
   script:
     - npm run prettier:check
 
@@ -46,26 +45,50 @@ lint:
   script:
     - npm run lint
 
-docker-app:
+docker_build_only:
   stage: docker
   image: docker:stable
-  allow_failure: true
-  only:
-    - master
+  needs:
+    - job: build
+  except:
+    - develop
+    - release
   script:
-    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services
+
+docker_build_and_push_development:
+  stage: docker
+  image: docker:stable
+  environment:
+    name: development
+  needs:
+    - job: build
+      artifacts: true
+  only:
+    - develop
+  script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY/civilmrcc/onefleet/app
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:development .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:development services
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/app:development
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/services:development
     - docker logout $CI_REGISTRY
 
-docker-services:
+docker_build_and_push_production:
   stage: docker
   image: docker:stable
-  allow_failure: true
+  environment:
+    name: production
+  needs:
+    - job: build
+      artifacts: true
   only:
-    - master
+    - release
   script:
-    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services services
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY/civilmrcc/onefleet/services
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/app:production .
+    - docker build -t $CI_REGISTRY/civilmrcc/onefleet/services:production services
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/app:production
+    - docker push $CI_REGISTRY/civilmrcc/onefleet/services:production
     - docker logout $CI_REGISTRY

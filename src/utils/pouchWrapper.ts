@@ -1,34 +1,49 @@
 import PouchDB from 'pouchdb-browser';
 import PouchDBAuthentication from 'pouchdb-authentication';
+import { Config } from '@/types/config';
 
 PouchDB.plugin(PouchDBAuthentication);
 
+/**
+ * PouchWrapper
+ */
 export class PouchWrapper {
-  public databases = {};
+  public databases: {
+    [index: string]: {
+      local: any;
+      remote: any;
+      // TODO: Use the correct type for databases
+      // local: PouchDB.Database<{}>;
+      // remote: PouchDB.Database<{}>;
+      onInitialReplicationDone: {
+        [index: string]: Function;
+      };
+      onChange: {
+        [index: string]: Function;
+      };
+    };
+  } = {};
+  // NOTE: This property seems to unused. Can it be removed?
   public logged_in;
-  public loginCallback;
-  public config = {
-    db_prefix: '',
-    db_remote_protocol: '',
-    db_remote_host: '',
-    db_remote_port: '',
-  };
+  public loginCallback: Function | undefined;
+  public config: Config;
 
-  constructor(config) {
+  constructor(config: Config) {
     this.config = config;
   }
 
-  public initDB(db_name, noprefix = false) {
-    var self = this;
-
-    console.log(this.getDBURL());
-
+  public initDB(db_name: string, noprefix = false) {
     if (typeof this.databases[db_name] == 'undefined') {
       let prefix = this.config.db_prefix;
       if (noprefix) {
         prefix = '';
       }
+
+      //init database object
+      //skip setup to do replication manually
       this.databases[db_name] = {
+        onChange: {},
+        onInitialReplicationDone: {},
         local: new PouchDB(db_name, { skip_setup: false }),
         remote: new PouchDB(
           this.getDBURL() +
@@ -38,34 +53,46 @@ export class PouchWrapper {
           { skip_setup: false }
         ),
       };
-
+      //first replication
       this.databases[db_name].local.replicate
         .from(this.databases[db_name].remote)
-        .on('complete', function(r, a, n) {
+        .on('complete', (r, a, n) => {
           // yay, we're done!
           console.log('initial replication done!');
+          console.log(this.databases[db_name]);
 
           //check if any function needs to be fired after initial replication
-          for (let n in self.databases[db_name].onInitialReplicationDone) {
+          for (let n in this.databases[db_name].onInitialReplicationDone) {
             if (
-              typeof self.databases[db_name].onInitialReplicationDone[n] ==
+              typeof this.databases[db_name].onInitialReplicationDone[n] ==
               'function'
             ) {
-              self.databases[db_name].onInitialReplicationDone[n]();
+              console.log('fire onInitialReplicationDone');
+              this.databases[db_name].onInitialReplicationDone[n]();
             }
           }
-          console.log('starting sync..');
-          self.databases[db_name].remote
+
+          for (let n in this.databases[db_name].onChange) {
+            if (typeof this.databases[db_name].onChange[n] == 'function') {
+              console.log('fire onChange');
+              console.log(n, this.databases[db_name].onChange[n]);
+              this.databases[db_name].onChange[n]();
+            }
+          }
+
+          //the database doesn't sync until now, its only replicated once
+          console.log(`starting sync for db ${db_name}..`);
+          this.databases[db_name].remote
             .sync(db_name, {
               live: true,
               retry: true,
             })
-            .on('change', function(change) {
+            .on('change', change => {
               console.log('data ch change', change);
               //each database can contain multiple onchange listeners, defined by index n
-              for (let n in self.databases[db_name].onChange) {
-                if (typeof self.databases[db_name].onChange[n] == 'function') {
-                  self.databases[db_name].onChange[n](change);
+              for (let n in this.databases[db_name].onChange) {
+                if (typeof this.databases[db_name].onChange[n] == 'function') {
+                  this.databases[db_name].onChange[n](change);
                 }
               }
             })
@@ -82,8 +109,15 @@ export class PouchWrapper {
         .on('error', function(err) {
           //TODO exception/logging
           console.log('error during inital replication:');
-          console.log(err);
-          if (err.error === 'unauthorized') {
+          console.log(err.toString());
+          console.log(err.result.status);
+          if (
+            err.error === 'unauthorized' ||
+            err.result.status === 'aborting'
+          ) {
+            alert(
+              'something went wrong during the initial replication, please login again'
+            );
             localStorage.clear();
             window.location.reload();
           }
@@ -97,9 +131,9 @@ export class PouchWrapper {
    *
    * @param {string} db_name - Database selector
    * @param {string} method_name - Index of the method
-   * @param {functoin} method - Function that is executed on db-change
+   * @param {function} method - Function that is executed on db-change
    */
-  public setOnChange(db_name, method_name, method) {
+  public setOnChange(db_name: string, method_name: string, method: Function) {
     var db = this.getDB(db_name);
     if (typeof this.databases[db_name].onChange == 'undefined') {
       this.databases[db_name].onChange = {};
@@ -112,9 +146,13 @@ export class PouchWrapper {
    *
    * @param {string} db_name - Database selector
    * @param {string} method_name - Index of the method
-   * @param {functoin} method - Function that is executed on db-initial-replication done
+   * @param {function} method - Function that is executed on db-initial-replication done
    */
-  public setOnInitialReplicationDone(db_name, method_name, method) {
+  public setOnInitialReplicationDone(
+    db_name: string,
+    method_name: string,
+    method: Function
+  ) {
     var db = this.getDB(db_name);
     if (
       typeof this.databases[db_name].onInitialReplicationDone == 'undefined'
@@ -124,23 +162,25 @@ export class PouchWrapper {
     this.databases[db_name].onInitialReplicationDone[method_name] = method;
   }
 
-  public getDB(db_name, noprefix = false) {
+  public getDB(db_name: string, noprefix = false, type = 'local') {
     if (typeof this.databases[db_name] == 'undefined') {
       this.initDB(db_name, noprefix);
     }
-    return this.databases[db_name].local;
+    return this.databases[db_name][type];
   }
 
   public showLogin() {
-    this.loginCallback();
+    if (this.loginCallback) {
+      this.loginCallback();
+    }
   }
 
   //sets callback function which will be called on showLogin()
-  public setLoginCallback(callback) {
+  public setLoginCallback(callback: Function) {
     this.loginCallback = callback;
   }
 
-  public login(username, password, db) {
+  public login(username: string, password: string, db) {
     db.login(username, password)
       .then(function(res) {
         console.log(res);
