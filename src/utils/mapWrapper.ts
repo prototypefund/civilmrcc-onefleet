@@ -1,35 +1,48 @@
-import storage from './storageWrapper';
-import { SARZones, SARZone } from '../constants/sar-zones';
 import * as L from 'leaflet';
+import 'leaflet-draw';
+import { SARZones } from '../constants/sar-zones';
+import storage from './storageWrapper';
+import { SARZone } from '@/types/sar-zone';
+import { MapItem } from '../types/map-item';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
  * It also provides some convenience methods for recurring map-related tasks.
  */
 class mapWrapper {
-  public map;
-  public loaded_items = {};
+  public map!: L.Map;
+  public loaded_items: {
+    [index: string]: {
+      marker: L.Marker<any>;
+      lineCaptions: L.Marker<any>[];
+      line: L.Polyline<any, any>;
+    };
+  } = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
 
   /**
    * Initialises the map backend component.
-   * @param {string} mapId
    */
   public init(mapId: string): void {
+    let mapcenter: [number, number];
+    let mapzoom: number;
     try {
       mapzoom = storage.get('mapzoom');
       mapcenter = JSON.parse(storage.get('mapcenter'));
     } catch (err) {
       console.error('could not load mapcenter and zoom from localstorage', err);
+      mapcenter = [38.575655, 10.710734];
+      mapzoom = 5;
     }
-    if (mapcenter == null) var mapcenter = [38.575655, 10.710734];
-    if (mapzoom == null) var mapzoom = 5;
+
+    if (!mapzoom) mapzoom = 5;
+    if (!mapcenter) mapcenter = [38.575655, 10.710734];
 
     this.map = L.map(mapId).setView(mapcenter, mapzoom);
 
     /** Tile setup */
-    let tile_url;
+    let tile_url: string;
     switch (localStorage.settings_maptiles) {
       default:
         tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
@@ -61,7 +74,7 @@ class mapWrapper {
 
     /** Control setup */
     L.control.scale({ imperial: false }).addTo(this.map);
-    L.control
+    (L.control as any)
       .polylineMeasure({
         position: 'topleft',
         unit: 'nauticalmiles',
@@ -73,13 +86,13 @@ class mapWrapper {
       .addTo(this.map);
 
     //** SAR Zones setup */
-    this.createSarZoneFeatureGroup(SARZones, this.map);
+    this.createSarZoneFeatureGroup(SARZones);
 
     //** Init draws on the map after startup. */
     this.initDraw();
 
     this.map.on('move', () => {
-      storage.set('mapzoom', this.map._zoom);
+      storage.set('mapzoom', (this.map as any)._zoom);
       storage.set(
         'mapcenter',
         JSON.stringify([this.map.getCenter().lat, this.map.getCenter().lng])
@@ -89,18 +102,11 @@ class mapWrapper {
     console.log('map initiated');
   }
 
-  /** Creates a featureGroup with polygons of each given SAR Zone from the parameter.
-   * Return a leaflet L.featureGroup.
-   * @param {Object[]} sarZones The constant sarZones object that is stored separately.
-   * @param {string} sarZones.name The name of the SAR zone. Used as tooltip.
-   * @param {string} sarZones.color A color by a SAR zone can be quickly identified on the map.
-   * @param {Object[]} sarZones.coordinates An array of lat/lon coordinates.
-   * @param {number} sarZones.coordinates.lat A latitude coordinate.
-   * @param {number} sarZones.coordinates.lon A longitude coordinate.
-   * @param {L.Map} map The map to which the sarZones should be added.
+  /**
+   * Creates a featureGroup with polygons of each given SAR Zone from the parameter.
    */
-  public createSarZoneFeatureGroup(sarZones: SARZone[], map: L.Map): void {
-    map.addLayer(this.sarZoneLayerGroup);
+  public createSarZoneFeatureGroup(sarZones: SARZone[]): void {
+    this.map.addLayer(this.sarZoneLayerGroup);
 
     for (let sarZoneObject of sarZones) {
       const coordinates = sarZoneObject.coordinates;
@@ -146,8 +152,8 @@ class mapWrapper {
 
   // Generate popup content based on layer type
   // - Returns HTML string, or null if unknown object
-  private getPopupContent(layer): string {
-    let latlngs, distance, area;
+  private getPopupContent(layer): string | null {
+    let latlngs, distance: number, area;
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
       return this.strLatLng(layer.getLatLng());
@@ -165,6 +171,7 @@ class mapWrapper {
       );
       // Rectangle/Polygon - area
     } else if (layer instanceof L.Polygon) {
+      layer = layer as any;
       (latlngs = layer._defaultShape
         ? layer._defaultShape()
         : layer.getLatLngs()),
@@ -175,6 +182,7 @@ class mapWrapper {
       return html + 'Area: ' + L.GeometryUtil.readableArea(area, true);
       // Polyline - distance
     } else if (layer instanceof L.Polyline) {
+      layer = layer as any;
       (latlngs = layer._defaultShape
         ? layer._defaultShape()
         : layer.getLatLngs()),
@@ -265,7 +273,7 @@ class mapWrapper {
           poly: {
             allowIntersection: true,
           },
-        },
+        } as any,
         draw: {
           polygon: {
             allowIntersection: true,
@@ -287,10 +295,9 @@ class mapWrapper {
 
     // Object(s) edited - update popups
     this.map.on(L.Draw.Event.EDITED, event => {
-      var layers = event.layers,
-        content = null;
+      var layers = (event as any).layers;
       layers.eachLayer(layer => {
-        content = this.getPopupContent(layer);
+        var content = this.getPopupContent(layer);
         if (content !== null) {
           layer.setPopupContent(content);
         }
@@ -302,17 +309,9 @@ class mapWrapper {
    * Prepares the given item for UI by converting templates to known base
    * templates, defining icons, and cropping the loaded number of positions
    * to an amount that can be handled by interactive display.
-   * @param {Object} item The item that should be updated.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.template The template of the item
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.icon The icon file name for the item
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.timestamp The timestamp of a position.
-   * @returns
    */
-  public loadTemplatedItem(item) {
+  public loadTemplatedItem(item: MapItem): MapItem {
+    console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -385,10 +384,10 @@ class mapWrapper {
    */
   public clickItem() {}
 
-  public generateLineCaption(item) {
+  public generateLineCaption(item: MapItem): L.Marker[] | undefined {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var markers = [];
+    var markers: any = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
@@ -418,21 +417,11 @@ class mapWrapper {
 
   /**
    * Return a new leaflet.Polyline consisting of the positions of the item.
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.color The item's color.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
-   * @returns L.Polyline
    */
-  public generateLine(item) {
+  public generateLine(item: MapItem): L.Polyline | undefined {
     /*let max_length = 5;
     item.positions.slice(-1 * max_length);*/
-    var pointList = [];
+    var pointList: any = [];
     if (item.positions.length > 0) {
       for (var i in item.positions) {
         var v = item.positions[i];
@@ -440,7 +429,7 @@ class mapWrapper {
         //pointList.push()
       }
 
-      var color;
+      let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
       else
@@ -602,7 +591,6 @@ class mapWrapper {
         smoothFactor: 1,
       });
     }
-    // return 'undefined' if the item has no positions
   }
 
   /**
@@ -683,21 +671,8 @@ class mapWrapper {
    * @see this.clickItem() The function to call when clicking on the marker.
    * @see L.Marker.openPopup() The function to call on mouseover.
    * @see L.Marker.closePopup() The function to call on mouseout.
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.identifier The item's identifier.
-   * @param {Object} item.doc.properties The item's properties.
-   * @param {string} item.doc.properties.name The item's name.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
-   * @param {number} item.positions.doc.heading The heading direction at a position.
-   * @returns L.Marker
    */
-  public generateMarker(item) {
+  public generateMarker(item: MapItem): L.Marker | undefined {
     if (typeof item.positions === 'undefined' || item.positions.length == 0) {
       return; // 'undefined' if the item has no positions
     }
@@ -796,7 +771,7 @@ class mapWrapper {
     // on click, call this mapWrapper's clickItem() function
     // without overwriting its "this" module (?), but
     // with binding its first parameter to the item's ID:
-    marker.on('click', L.bind(this.clickItem, null, item.id));
+    marker.on('click', (L as any).bind(this.clickItem, null, item.id));
     // Use the item's identifier (and its name if applicable) as Pop-up
     let popupcontent = (item.doc.identifier || '').toString();
     if (item.doc.properties.name) {
@@ -828,19 +803,13 @@ class mapWrapper {
    * @see this.loadTemplatedItem() Used to prepare item for display on map.
    * @see this.generateLine() Used to generate a polyline for the item.
    * @see this.generateMarker() Used to generate a marker for the item
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object} item.doc The item's database document object.
-   * @param {string} item.doc.template The template of the item
-   * @param {Object[]} item.positions The array of positions of the item.
    */
-  public addItemToMap(item): void {
+  public addItemToMap(item: MapItem): void {
     item = this.loadTemplatedItem(item);
 
-    var line = false,
-      marker: any = false,
-      lineCaptions: any = false;
+    var line: L.Polyline | undefined,
+      marker: L.Marker | undefined,
+      lineCaptions: L.Marker[] | undefined;
 
     if (item.positions.length == 1) {
       item.positions[1] = item.positions[0];
@@ -853,7 +822,11 @@ class mapWrapper {
       if (localStorage.settings_positiontimestamps == 'true')
         lineCaptions = this.generateLineCaption(item);
 
-      this.loaded_items[item.id] = {};
+      this.loaded_items[item.id] = {
+        line: {} as any,
+        marker: {} as any,
+        lineCaptions: {} as any,
+      };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
         this.loaded_items[item.id].marker = marker.addTo(this.map);
@@ -875,16 +848,11 @@ class mapWrapper {
    * Updates a loaded item's position on the map and ensures it is visible.
    *
    * @see this.addItemToMap() Used to add an item to the map if not present.
-   *
-   * @param {Object} item The item that should be updated.
-   * @param {string} item.id The ID of the item.
-   * @param {Object[]} item.positions The array of positions of the item.
-   * @param {Object} item.positions.doc A position's database document object.
-   * @param {number} item.positions.doc.lat The latitude coordinate.
-   * @param {number} item.positions.doc.lon The longitude coordinate.
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
-  public updateItemPosition(item): boolean {
+  public updateItemPosition(item: MapItem): false | undefined {
+    console.log('updateItemPosition');
+    console.log(item);
     if (item.positions.length < 1) {
       return false;
     }
@@ -894,10 +862,9 @@ class mapWrapper {
       let lat = item.positions[item.positions.length - 1].doc.lat;
       let lon = item.positions[item.positions.length - 1].doc.lon;
       if (this.loaded_items[item.id].marker) {
-        this.loaded_items[item.id].marker
+        (this.loaded_items[item.id].marker
           .setLatLng([lat, lon])
-          .setOpacity(1)
-          .update();
+          .setOpacity(1) as any).update();
       }
 
       if (this.loaded_items[item.id].line) {
@@ -910,7 +877,9 @@ class mapWrapper {
 
       if (this.loaded_items[item.id].lineCaptions) {
         for (let i in this.loaded_items[item.id].lineCaptions) {
-          this.loaded_items[item.id].lineCaptions[i].setOpacity(1).update();
+          (this.loaded_items[item.id].lineCaptions[i].setOpacity(
+            1
+          ) as any).update();
         }
       }
     }
@@ -918,32 +887,30 @@ class mapWrapper {
 
   /**
    * Hides the given item from the map.
-   * @param {string} item_id The ID of the item that should be hidden
    */
   public hideItem(item_id: string): void {
     let item = this.loaded_items[item_id];
     if (item) {
-      item.marker.setOpacity(0).update();
+      if (item.marker) {
+        (item.marker.setOpacity(0) as any).update();
+      }
       if (item.line) {
         item.line.setStyle({ opacity: 0 });
       }
       for (let i in item.lineCaptions) {
-        item.lineCaptions[i].setOpacity(0).update();
+        (item.lineCaptions[i].setOpacity(0) as any).update();
       }
     }
   }
 
   /**
    * Calculates the geographical distance between two points on the map, in meters.
-   * @param {Object} point1 The first point for distance calculation
-   * @param {number} point1.lat Latitude of first point
-   * @param {number} point1.lon Longitude of first point
-   * @param {Object} point2 The second point for distance calculation
-   * @param {number} point2.lat Latitude of second point
-   * @param {number} point2.lon Longitude of second point
    * @returns {number} The distance in meters (CI unit)
    */
-  public getDistance(point1, point2): number {
+  public getDistance(
+    point1: { lat: number; lon: number },
+    point2: { lat: number; lon: number }
+  ): number {
     let latlng1 = L.latLng(point1.lat, point1.lon);
     let latlng2 = L.latLng(point2.lat, point2.lon);
     return latlng1.distanceTo(latlng2);

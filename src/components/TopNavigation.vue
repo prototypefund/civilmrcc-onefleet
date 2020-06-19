@@ -1,71 +1,62 @@
 <template>
   <nav>
-    <div id="brand">
-      OneFleet
+    <div style="display:flex;">
+      <div id="brand">OneFleet</div>
+      <ul class="nav-actions">
+        <li v-on:click="openModal('createItem')">
+          <a>
+            <i class="fas fa-plus-circle"></i>
+            <span>Add</span>
+          </a>
+        </li>
+        <li v-on:click="show_timeControl = !show_timeControl">
+          <a>
+            <i class="fas fa-play"></i>
+            <span>Replay</span>
+          </a>
+        </li>
+      </ul>
     </div>
-    <ul id="nav-left">
-      <li v-on:click="openModal('createItem')">
-        <a>
-          <i class="fas fa-plus-circle"></i>
-          <span>
-            Add
-          </span>
-        </a>
-      </li>
-      <li v-on:click="changeModus('map')">
+    <ul id="nav-views">
+      <li class="active" v-on:click="changeModus('map')">
         <a>
           <i class="fas fa-map-marked"></i>
-          <span>
-            Map
-          </span>
+          <span>Map</span>
         </a>
       </li>
       <li v-on:click="changeModus('cases')">
         <a>
           <i class="fas fa-list-alt"></i>
-          <span>
-            List
-          </span>
-        </a>
-      </li>
-      <li v-on:click="show_timeControl = !show_timeControl">
-        <a>
-          <i class="fas fa-play"></i>
-          <span>
-            Replay
-          </span>
+          <span>List</span>
         </a>
       </li>
     </ul>
-    <TimeControl v-if="show_timeControl"></TimeControl>
     <ul id="nav-right">
       <li v-on:click="toggleAir()">
         <a>
           <i class="fas fa-plane"></i>
-          <span>
-            Air
-          </span>
+          <span>Air</span>
         </a>
       </li>
       <el-dropdown>
         <span class="el-dropdown-link">
           <i class="fas fa-user"></i>
           <span>
-            {{ username }}<i class="el-icon-arrow-down el-icon--left"></i>
+            {{ username }}
+            <i class="el-icon-arrow-down el-icon--left"></i>
           </span>
         </span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item v-on:click="openModal('settings')"
-            ><a v-on:click="openModal('settings')"
-              >Settings</a
-            ></el-dropdown-item
-          >
-          <el-dropdown-item v-on:click="logout()"
-            ><a v-on:click="logout()">Logout</a></el-dropdown-item
-          >
+          <el-dropdown-item v-on:click="openModal('settings')">
+            <a v-on:click="openModal('settings')">Settings</a>
+          </el-dropdown-item>
+          <el-dropdown-item v-on:click="logout()">
+            <a v-on:click="logout()">Logout</a>
+          </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </ul>
+    <TimeControl v-if="show_timeControl"></TimeControl>
   </nav>
 </template>
 
@@ -112,91 +103,75 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 nav {
-  position: absolute;
+  position: fixed;
+  display: flex;
+  align-items: center;
   top: 0;
   right: 0;
   left: 0;
-  height: 60px;
-  background: rgb(55, 60, 68);
+  z-index: 999;
+  justify-content: space-between;
+  min-height: var(--app-top);
+  background: var(--primary-darker);
 }
 
 nav #brand {
-  height: 60px;
-  background: #fb6e87;
-  float: left;
-  padding: 15px;
-  font-size: 22px;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  color: var(--white);
+  padding: 0 1em;
 }
 
-#nav-left {
-  float: left;
-  list-style: none;
-  height: 60px;
-}
 nav li {
   float: left;
-  height: 60px;
-  padding-top: 8px;
-  padding-left: 20px;
-  padding-right: 20px;
   cursor: pointer;
+  opacity: 0.75;
+  margin: 0 0.25em;
+  border-radius: var(--border-radius);
 }
-nav li:hover {
-  background: #000;
+nav li:hover,
+nav li.active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.25);
 }
 nav li a {
   text-align: center;
-  font-size: 22px;
-}
-nav li a span {
-  display: block;
-  margin-top: -5px;
-  font-size: 12px;
-}
-
-nav li a i {
-  font-size: 26px;
+  display: flex;
+  font-size: 14px;
+  align-items: center;
+  padding: 0.25em 0.5em;
+  color: var(--white);
 }
 
-nav a {
-  color: rgb(207, 211, 219) !important;
+nav li a .svg-inline--fa {
+  margin-right: 0.5em;
 }
 
 nav li:hover a {
-  color: rgb(255, 255, 255) !important;
+  color: var(--white);
 }
 #nav-right {
-  float: right;
+  display: flex;
+  justify-self: flex-end;
+  align-items: center;
 }
 
 .el-dropdown {
-  margin-top: 29px;
-  margin-right: 15px;
-  font-size: 17px;
-  color: rgb(207, 211, 219) !important;
-}
-
-.fas.fa-user.el-dropdown-selfdefine {
-  font-size: 26px;
-  margin-left: 6px;
+  color: var(--white);
+  margin: 0 0.5em;
 }
 
 .el-dropdown {
-  margin-top: 18px;
-  margin-right: 15px;
-  font-size: 17px;
-  color: rgb(207, 211, 219) !important;
+  font-size: 14px;
+  color: var(--white);
 }
 .el-dropdown-link {
-  display: block;
-  margin-top: -2px;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
 }
 
-.el-dropdown-link .fa-user {
-  font-size: 17px;
-  margin-left: 12px;
+.el-dropdown-link .svg-inline--fa {
+  margin-right: 0.5em;
 }
 .el-dropdown-link span {
   display: block;

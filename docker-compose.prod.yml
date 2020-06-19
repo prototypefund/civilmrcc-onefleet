@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  app:
+    image: registry.gitlab.com/civilmrcc/onefleet/app:production
+
+  ais:
+    image: registry.gitlab.com/civilmrcc/onefleet/services:production
+
+  location:
+    image: registry.gitlab.com/civilmrcc/onefleet/services:production

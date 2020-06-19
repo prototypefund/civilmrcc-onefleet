@@ -6,11 +6,11 @@ module.exports = {
   dbPassword: process.env.DB_PASSWORD ? process.env.DB_PASSWORD : 'admin',
   dbPrefix: process.env.DB_PREFIX ? process.env.DB_PREFIX : '',
   marine_traffic_exportvessel_api_key:
-    process.env.marine_traffic_exportvessel_api_key,
+    process.env.MARINE_TRAFFIC_EXPORTVESSEL_API_KEY,
   marine_traffic_exportvesseltrack_api_key:
-    process.env.marine_traffic_exportvesseltrack_api_key,
+    process.env.MARINE_TRAFFIC_EXPORTVESSELTRACK_API_KEY,
   /*mailservice.js*/
-  imap_username: process.env.imap_username,
-  imap_password: process.env.imap_password,
-  imap_host: process.env.imap_host,
+  imap_username: process.env.IMAP_USERNAME,
+  imap_password: process.env.IMAP_PASSWORD,
+  imap_host: process.env.IMAP_HOST,
 };

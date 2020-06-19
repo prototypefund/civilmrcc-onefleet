@@ -1,46 +1,60 @@
 <template>
-  <div>
-    <div v-if="showReplayMode" class="timeControl replay">
-      <p>Replay ongoing</p>
-      <div>
-        {{ startDate }} -
-        {{ endDate }}
-      </div>
+  <div class="timeControl">
+    <div v-if="showReplayMode" class="replay">
+      <p>
+        <span class="opacity:0.5;">Replay ongoing:</span>
+        From:
+        <strong>{{ startDate }}</strong> – To:
+        <strong>{{ endDate }}</strong>
+      </p>
     </div>
-    <form
-      @submit="startReplay"
-      class="timeControl form-style-6"
-      v-if="!showReplayMode"
-    >
-      <input
-        type="datetime-local"
-        placeholder="date from"
-        v-model="replayData.startDate"
-      />
-      <input
-        type="datetime-local"
-        placeholder="date to"
-        v-model="replayData.endDate"
-      />
-      <input
-        type="number"
-        placeholder="hours per frame"
-        style="width:40%"
-        v-model="replayData.hoursPerFrame"
-      />
-      <input
-        type="number"
-        placeholder="frame length in s"
-        style="width:40%; float:right:"
-        v-model="replayData.frameLength"
-      />
-      <el-button
-        type="success"
-        icon="el-icon-video-play"
-        circle
-        @click="startReplay"
-      ></el-button>
-    </form>
+    <div class="container">
+      <form @submit="startReplay" v-if="!showReplayMode">
+        <div>
+          <label for="date_from">From:</label>
+          <el-input
+            type="datetime-local"
+            id="date_from"
+            placeholder="date from"
+            v-model="replayData.startDate"
+          />
+        </div>
+        <div>
+          <label for="date_to">To:</label>
+          <el-input
+            type="datetime-local"
+            id="date_to"
+            placeholder="date to"
+            v-model="replayData.endDate"
+          />
+        </div>
+        <div>
+          <label for="hours_per_frame">H per frame</label>
+          <el-input
+            style="width:80px;"
+            id="hours_per_frame"
+            type="number"
+            min="1"
+            placeholder="hours per frame"
+            v-model="replayData.hoursPerFrame"
+          />
+        </div>
+        <div>
+          <label for="frame_length">Frames per s</label>
+          <el-input
+            style="width:80px;"
+            type="number"
+            id="frame_length"
+            min="1"
+            placeholder="frame length in s"
+            v-model="replayData.frameLength"
+          />
+        </div>
+        <el-button type="primary" circle @click="startReplay">
+          <i class="fas fa-play" style="margin:0px;"></i>
+        </el-button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -93,17 +107,44 @@ export default {
 };
 </script>
 <style scoped>
+.el-button--primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
 .timeControl {
-  background: #fff;
-  width: 400px;
-  position: absolute;
-  z-index: 999;
-  left: 50%;
-  margin-left: -200px;
-  margin-top: 60px;
+  top: var(--app-top);
+  right: 0;
+  width: calc(100% - var(--app-left-siderbar));
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  background: var(--primary-lighter);
+  border-bottom: 1px solid var(--primary-light);
+  font-size: 11px;
 }
 
-.timeControl.replay {
-  padding: 5px;
+.timeControl .container {
+  padding: 1em;
+}
+
+.timeControl form {
+  display: flex;
+  align-items: center;
+}
+
+.timeControl form > div {
+  margin-right: 2em;
+}
+.timeControl form > div label {
+  display: block;
+  margin-bottom: 0.25em;
+  color: var(--dark-gray);
+  font-family: var(--font-family-monospace);
+}
+.replay {
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
 }
 </style>

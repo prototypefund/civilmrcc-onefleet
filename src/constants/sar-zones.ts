@@ -1,3 +1,5 @@
+import { SARCoordinates, SARZone } from '@/types/sar-zone';
+
 /**
  * SAR-Zone coordinates in LatLng format
  * If you need to convert some position data, here is a tool: https://www.pgc.umn.edu/apps/convert/
@@ -105,19 +107,3 @@ export const SARZones: SARZone[] = [
   },
   { coordinates: CataniaSarZoneCoordinates, name: 'Catania', color: '#003F83' },
 ];
-
-/**
- * Object of OneFleet SAR Zone
- */
-export interface SARZone {
-  /** The name of the specific SAR zone matching to the coordinates */
-  name: string;
-  /** The color of the SAR zone */
-  color: string;
-  coordinates: SARCoordinates;
-}
-
-/**
- * Array of LatLng coordinates which describes a polygon of the SAR zone bounds
- */
-export type SARCoordinates = [number, number][];

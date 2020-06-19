@@ -1,5 +1,5 @@
 <template>
-  <div id="mapArea">Map</div>
+  <div id="mapArea"></div>
 </template>
 
 <script>
@@ -64,9 +64,8 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style>
 #mapArea {
-  height: -webkit-calc(100vh - 60px);
-  height: -moz-calc(100vh - 60px);
-  height: calc(100vh - 60px);
+  height: calc(100vh - var(--app-top));
+  background: var(--white);
 }
 
 .landmark-marker,
