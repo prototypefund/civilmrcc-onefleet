@@ -24,7 +24,11 @@
               type="text"
               class="icon"
             />
-            <span class="preview-icon" :class="'el-icon-' + form_data.properties[field.name]">&nbsp;</span>
+            <span
+              class="preview-icon"
+              :class="'el-icon-' + form_data.properties[field.name]"
+              >&nbsp;</span
+            >
           </div>
           <!-- iconwrapper end -->
 
@@ -62,7 +66,8 @@
               v-for="option in field.options"
               :key="option"
               :value="field.options[option]"
-            >{{ option }}</option>
+              >{{ option }}</option
+            >
           </select>
         </div>
         <a v-on:click="showExportModal(itemId)">Export Locations</a>
