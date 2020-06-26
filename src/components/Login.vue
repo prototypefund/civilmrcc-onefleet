@@ -9,20 +9,22 @@
         <span>Password</span>
         <input type="password" placeholder="password" v-model="password" />
 
-        <span @click="showSettings = !showSettings" id="settingsToggle"
-          ><i class="fas fa-cog" v-bind:class="{ active: showSettings }"></i
-        ></span>
+        <span @click="showSettings = !showSettings" id="settingsToggle">
+          <i class="fas fa-cog" v-bind:class="{ active: showSettings }"></i>
+        </span>
         <div v-show="showSettings == true">
           <input
             type="text"
             placeholder="database url"
             v-model="db_remote_host"
-          /><br />
+          />
+          <br />
           <input
             type="text"
             placeholder="database port"
             v-model="db_remote_port"
-          /><br />
+          />
+          <br />
         </div>
         <input type="submit" value="Send" />
       </form>
@@ -60,7 +62,7 @@ export default {
   },
   mounted: function() {
     this.$data.db_remote_host =
-      config.db_remote_host || localStorage.db_remote_host;
+      localStorage.db_remote_host || window.location.hostname;
     this.$data.db_remote_port =
       localStorage.db_remote_port || config.db_remote_port;
   },
