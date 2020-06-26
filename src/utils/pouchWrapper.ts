@@ -198,7 +198,8 @@ export class PouchWrapper {
   }
 
   public getDBURL() {
-    let db_remote_host: string = this.config.db_remote_host;
+    let db_remote_host: string =
+      localStorage.db_remote_host || window.location.hostname;
 
     if (typeof localStorage.db_remote_host != 'undefined')
       db_remote_host = localStorage.db_remote_host;
