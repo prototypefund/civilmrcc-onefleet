@@ -218,11 +218,6 @@ class mapWrapper {
           'leaflet-bar leaflet-control leaflet-control-custom'
         );
 
-        container.style.backgroundColor = 'white';
-        container.style.backgroundSize = '30px 30px';
-        container.style.width = '30px';
-        container.style.height = '30px';
-
         let aTag = L.DomUtil.create(
           'a',
           'polyline-measure-unicode-icon',
