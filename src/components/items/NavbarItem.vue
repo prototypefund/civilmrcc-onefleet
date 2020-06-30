@@ -44,34 +44,29 @@ export default {
   data: function() {
     return {
       itemShowing: false,
+      showByUserPreference: false,
     };
   },
 
   watch: {
     itemShowing: function() {
-      //   serverBus.$emit('set_item_visibility', this.base_item, this.itemShowing);
-      //   serverBus.$emit('show_item_on_map', this.itemId, this.itemShowing);
+      if (this.itemShowing != this.itemActive && !this.showByUserPreference)
+        this.showByUserPreference = true;
       this.updateItemOnMap();
     },
     base_item: function() {
-      this.itemShowing = this.itemActive;
-      //   serverBus.$emit(
-      //     'update_item_on_map',
-      //     this.base_item,
-      //     this.positions,
-      //     this.itemShowing
-      //   );
+      if (!this.showByUserPreference) this.itemShowing = this.itemActive;
     },
     positions: function() {
-      this.updateItemOnMap();
+      if (!this.showByUserPreference) this.itemShowing = this.itemActive;
     },
   },
 
   computed: {
-    itemId: function() {
+    itemId() {
       return this.base_item._id;
     },
-    itemName: function() {
+    itemName() {
       if (this.base_item) {
         if (this.base_item.properties.name)
           return this.base_item.properties.name;
@@ -80,25 +75,25 @@ export default {
         return this.base_item.identifier + ' (loading...)';
       }
     },
-    itemLoadingClass: function() {
+    itemLoadingClass() {
       if (this.base_item) {
         return 'NavbarItem';
       } else {
         return 'NavbarItem item_loading';
       }
     },
-    itemColor: function() {
+    itemColor() {
       if (((this.base_item || {}).properties || {}).color)
         return this.base_item.properties.color;
       else if (((this.base_item || {}).properties || {}).boat_color)
         return this.base_item.properties.boat_color;
       else return '#13ce66';
     },
-    itemTemplate: function() {
+    itemTemplate() {
       if ((this.base_item || {}).template) return this.base_item.template;
       else return '';
     },
-    itemActive: function() {
+    itemActive() {
       if ((this.base_item || {}).properties) {
         if (this.base_item.template == 'case')
           return this.base_item.properties.status != 'closed';
@@ -106,19 +101,19 @@ export default {
       }
       return false;
     },
-    latestPosition: function() {
+    latestPosition() {
       // we assume that positions are already sorted by timestamp during the DB-fetch
       if ((this.positions || []).length > 0)
         return this.positions[this.positions.length - 1];
       else return null;
     },
-    positionAgeText: function() {
-      if (!this.positions) return 'loading...';
+    positionAgeText() {
+      if (!this.positions) return 'loading positions...';
       else if (this.latestPosition)
         return this.timeSince(this.latestPosition.timestamp) + ' ago';
       else return 'no positions';
     },
-    positionAgeType: function() {
+    positionAgeType() {
       if (this.latestPosition) {
         let lastDate = new Date(this.latestPosition.timestamp);
         let now = new Date();

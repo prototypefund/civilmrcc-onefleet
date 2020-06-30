@@ -419,7 +419,7 @@ class mapWrapper {
       return new L.Polyline(pointList, {
         color: color,
         weight: 3,
-        opacity: 0.5,
+        opacity: 1,
         smoothFactor: 1,
       });
     }
@@ -795,7 +795,10 @@ class mapWrapper {
               : base_item.properties['icon'],
         },
       },
-      positions: item_positions.map(item => ({ doc: item })),
+      positions:
+        item_positions != undefined
+          ? item_positions.map(item => ({ doc: item }))
+          : [],
     };
   }
 

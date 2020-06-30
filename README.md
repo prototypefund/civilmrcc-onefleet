@@ -36,7 +36,7 @@ We would love for you to contribute to OneFleet and help make it even better tha
 
 ## Development
 
-Recommended editor is [Visual Studio Code](https://code.visualstudio.com/) with the extension [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) to support `.vue` files.
+Recommended editor is [Visual Studio Code](https://code.visualstudio.com/) with the extension [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) to support `.vue` files. The [Vue-devtools](https://github.com/vuejs/vue-devtools) plugin for Firefox or Chrome/Chromium is also highly recommended.
 
 ## **Installation Guide**
 

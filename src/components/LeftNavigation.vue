@@ -21,6 +21,9 @@
           </el-button>
         </div>
         <div class="category_list">
+          <div v-if="category.category_base_items.length == 0">
+            loading {{ category.plural }}...
+          </div>
           <ul>
             <NavbarItem
               v-for="base_item in category.category_base_items"
@@ -58,19 +61,19 @@ export default {
       let all_templates = templates.get('all');
       let category_tabs = {};
 
+      // set up categories for the tabs bar so that they are shown even before items are loaded
+      for (let template_index in all_templates) {
+        category_tabs[template_index] = {
+          plural: all_templates[template_index].plural,
+          pouch_identifier: all_templates[template_index].pouch_identifier,
+          category_base_items: [],
+        };
+      }
+
+      // fill categories with items
       for (let item_index in this.base_items) {
         let base_item = this.base_items[item_index];
-        let template_infos = all_templates[base_item.template];
-        // ignore items with unknown templates
-        if (template_infos) {
-          if (!category_tabs[base_item.template]) {
-            let template_infos = all_templates[base_item.template];
-            category_tabs[base_item.template] = {
-              plural: template_infos.plural,
-              pouch_identifier: template_infos.pouch_identifier,
-              category_base_items: [],
-            };
-          }
+        if (all_templates[base_item.template]) {
           category_tabs[base_item.template].category_base_items.push(base_item);
         }
       }
@@ -132,6 +135,16 @@ nav .categories .item_name {
 .action_area div {
   display: flex;
   vertical-align: text-bottom;
+  font-style: italic;
+  font-size: 0.75em;
+  color: #aaa;
+}
+
+.category_list div {
+  padding: 0.5em 1em;
+  display: flex;
+  vertical-align: top;
+  align: center;
   font-style: italic;
   font-size: 0.75em;
   color: #aaa;
