@@ -1,8 +1,8 @@
 <template>
   <nav>
-    <el-tabs v-model="activeCategories">
+    <el-tabs v-model="selected_tab">
       <el-tab-pane
-        v-for="category in categories"
+        v-for="(category, category_title) in allCategories"
         :label="category.plural"
         :name="category.plural"
         :key="category.plural"
@@ -13,49 +13,24 @@
             <br />soon
           </div>
           <el-button
-            @click="createItemWithTemplate(category.title)"
+            @click="createItemWithTemplate(category_title)"
             type="danger"
             icon="fas fa-plus-circle"
-            >Add new {{ category.title }}</el-button
           >
+            Add new {{ category_title }}
+          </el-button>
         </div>
         <div class="category_list">
+          <div v-if="category.category_base_items.length == 0">
+            loading {{ category.plural }}...
+          </div>
           <ul>
-            <li
-              v-for="item in category.items.rows"
-              :key="item.id"
-              @click="flyToItem(item)"
-            >
-              <span>
-                <div class="item_name" v-if="item.doc.properties.name">
-                  {{ item.doc.properties.name }}
-                </div>
-                <div class="item_name" v-else>{{ item.doc._id }}</div>
-                <el-switch
-                  v-model="shown_items[item.id]"
-                  :active-color="getItemColor(item.id)"
-                  active-value="true"
-                  inactive-value="false"
-                  @change="toggleItem(item.id)"
-                />
-                <el-tag
-                  v-if="item.positions && item.positions.length > 0"
-                  size="small"
-                  :type="getTimeTagType(item)"
-                  style="max-width:110px;"
-                  >{{ showTimeTag(item) }} ago</el-tag
-                >
-                <el-tag v-else size="small" type="info" style="width:110px"
-                  >no positions</el-tag
-                >
-              </span>
-              <el-button
-                @click="clickItem(item.id)"
-                style="float: right;"
-                icon="el-icon-edit"
-                circle
-              />
-            </li>
+            <NavbarItem
+              v-for="base_item in category.category_base_items"
+              :key="base_item._id"
+              :base_item="base_item"
+              :positions="itemPositions(base_item)"
+            ></NavbarItem>
           </ul>
         </div>
       </el-tab-pane>
@@ -63,177 +38,65 @@
   </nav>
 </template>
 
-<script>
+<script lang="ts">
+import NavbarItem from './items/NavbarItem.vue';
 import templates from './items/templates.js';
 import { serverBus } from '../main';
 export default {
   name: 'LeftNavigation',
-
+  components: {
+    NavbarItem,
+  },
+  props: {
+    base_items: { type: Array, required: true },
+    positions_per_item: { type: Object, required: false },
+  },
   data: function() {
     return {
-      vehicles: [],
-      shown_items: [],
-      categories: [],
-      activeCategories: 'Vehicles',
+      selected_tab: 'Vehicles',
     };
   },
-  methods: {
-    isShown: function(identifier) {
-      return this.shown_items[identifier];
-    },
-    initItem: function(identifier, active) {
-      this.shown_items[identifier] = active;
-
-      serverBus.$emit('shown_items', this.shown_items);
-    },
-    toggleItem: function() {
-      serverBus.$emit('shown_items', this.shown_items);
-    },
-
-    // click on the itemname span
-    clickItem: function(itemId) {
-      serverBus.$emit('itemId', itemId);
-    },
-
-    // click on the last position span
-    flyToItem: function(item) {
-      if (item && item.positions && item.positions.length > 0) {
-        let lastPosition = item.positions[item.positions.length - 1];
-        lastPosition = { lat: lastPosition.doc.lat, lon: lastPosition.doc.lon };
-        serverBus.$emit('fly_to_position', lastPosition);
-      }
-    },
-
-    getItemColor: function(itemId) {
-      var item = this.getItemById(itemId);
-      if (
-        item &&
-        typeof item.doc.properties != 'undefined' &&
-        typeof item.doc.properties.color != 'undefined'
-      )
-        return item.doc.properties.color;
-      else return '#13ce66';
-    },
-
-    getItemById: function(itemId) {
-      for (var i in this.vehicles) {
-        if (this.vehicles[i].id == itemId) return this.vehicles[i];
-      }
-      return false;
-    },
-
-    showTimeTag: function(item) {
-      if (item.positions[item.positions.length - 1])
-        return this.timeSince(
-          item.positions[item.positions.length - 1].doc.timestamp
-        );
-    },
-
-    getTimeTagType: function(item) {
-      if (item.positions[item.positions.length - 1]) {
-        let date = new Date(
-          item.positions[item.positions.length - 1].doc.timestamp
-        );
-        let seconds = Math.floor((new Date() - date) / 1000);
-        let type;
-        if (seconds > 0 && seconds <= 1800) type = 'success';
-        else if (seconds > 1800 && seconds <= 86400) type = 'warning';
-        else if (seconds > 86400) type = 'danger';
-        return type;
-      }
-    },
-
-    timeSince: function(date) {
-      date = new Date(date);
-      let seconds = Math.floor((new Date() - date) / 1000);
-
-      let interval = Math.floor(seconds / 31536000);
-
-      if (interval > 1) {
-        return interval + ' years';
-      }
-      interval = Math.floor(seconds / 2592000);
-      if (interval > 1) {
-        return interval + ' months';
-      }
-      interval = Math.floor(seconds / 86400);
-      if (interval > 1) {
-        return interval + ' days';
-      }
-      interval = Math.floor(seconds / 3600);
-      if (interval > 1) {
-        return interval + ' hours';
-      }
-      interval = Math.floor(seconds / 60);
-      if (interval > 1) {
-        return interval + ' minutes';
-      }
-      return Math.floor(seconds) + ' seconds';
-    },
-
-    loadVehicles: function() {
-      let self = this;
+  computed: {
+    allCategories: function() {
       let all_templates = templates.get('all');
-      self.categories = [];
+      let category_tabs = {};
 
-      for (var template in all_templates) {
-        //i actually like js, but sometimes...
-        //this is the easiest way to avoid async race conditions
-        (function(template_index) {
-          self.$db.getItemsByTemplate(
-            all_templates[template_index].pouch_identifier,
-            function(error, result) {
-              if (error)
-                throw 'an error occured reading the template for the leftnav! ';
-
-              self.categories.push({
-                title: template_index,
-                plural: all_templates[template_index].plural,
-                items: result,
-              });
-            }
-          );
-        })(template);
+      // set up categories for the tabs bar so that they are shown even before items are loaded
+      for (let template_index in all_templates) {
+        category_tabs[template_index] = {
+          plural: all_templates[template_index].plural,
+          pouch_identifier: all_templates[template_index].pouch_identifier,
+          category_base_items: [],
+        };
       }
 
-      this.$db.getVehicles(function(err, result) {
-        self.$data.vehicles = result.rows;
-        for (var category_index in self.$data.categories) {
-          //get all items within a category
-          for (var item in self.$data.categories[category_index].items.rows) {
-            let is_active =
-              self.$data.categories[category_index].items.rows[item].doc
-                .properties.active;
-
-            let identifier =
-              self.$data.categories[category_index].items.rows[item].id;
-
-            self.initItem(identifier, is_active);
-          }
+      // fill categories with items
+      for (let item_index in this.base_items) {
+        let base_item = this.base_items[item_index];
+        if (all_templates[base_item.template]) {
+          category_tabs[base_item.template].category_base_items.push(base_item);
         }
-      });
+      }
+      return category_tabs;
+    },
+  },
+
+  watch: {},
+
+  methods: {
+    itemPositions(base_item) {
+      // return null if no positions have been loaded yet:
+      if (Object.keys(this.positions_per_item).length === 0) return null;
+      else return this.positions_per_item[base_item.identifier] || [];
     },
 
-    createItemWithTemplate: function(template_to_use) {
+    createItemWithTemplate(template_to_use) {
       serverBus.$emit('modal_modus', 'createItem', template_to_use);
     },
   },
-  mounted: function() {
-    serverBus.$on('shown_items', shown_items => {
-      this.shown_items = shown_items;
-    });
+  mounted: function() {},
 
-    //load vehicles
-    this.loadVehicles();
-
-    let self = this;
-
-    //set on change listener
-    this.$db.setOnChange('positions', 'leftnav_change', function() {
-      //reload vehicles if change is detected
-      self.loadVehicles();
-    });
-  },
+  created: function() {},
 };
 </script>
 
@@ -272,6 +135,16 @@ nav .categories .item_name {
 .action_area div {
   display: flex;
   vertical-align: text-bottom;
+  font-style: italic;
+  font-size: 0.75em;
+  color: #aaa;
+}
+
+.category_list div {
+  padding: 0.5em 1em;
+  display: flex;
+  vertical-align: top;
+  align: center;
   font-style: italic;
   font-size: 0.75em;
   color: #aaa;

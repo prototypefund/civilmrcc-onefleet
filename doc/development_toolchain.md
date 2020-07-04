@@ -16,10 +16,10 @@ Here are some editors commonly used in this project:
 
 - [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) for supporting `.vue` files
 - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) Code formatter
-- [GitLab Workflow](https://marketplace.visualstudio.com/items?itemName=fatihacet.gitlab-workflow) Integrate GitLab into VSCode
 
 #### VSCode: Optional Plugins
 
+- [GitLab Workflow](https://marketplace.visualstudio.com/items?itemName=fatihacet.gitlab-workflow) Integrate GitLab into VSCode
 - [Git Graph](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph) View a Git Graph of your repository, and perform Git actions from the graph.
 - [Document This](https://marketplace.visualstudio.com/items?itemName=joelday.docthis) Automatically generates detailed JSDoc comments in TypeScript and JavaScript files.
 - [Mermaid Syntax Highlighting](https://marketplace.visualstudio.com/items?itemName=bpruitt-goddard.mermaid-markdown-syntax-highlighting) syntax highlighting & completion for Marmaid diagrams
@@ -30,6 +30,10 @@ Here are some editors commonly used in this project:
 ## Setting up your development environment beyond "npm install"
 
 tbc
+
+#### Development Web Browser: Suggested Plugins
+
+- The [Vue-devtools](https://github.com/vuejs/vue-devtools) plugin for Firefox or Chrome/Chromium is highly recommended.
 
 ## Typical development workflow
 

@@ -4,6 +4,8 @@ import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
 import { MapItem } from '../types/map-item';
+import { DbItem } from '@/types/db-item';
+import { DbPosition } from '@/types/db-position';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
@@ -306,7 +308,6 @@ class mapWrapper {
    * to an amount that can be handled by interactive display.
    */
   public loadTemplatedItem(item: MapItem): MapItem {
-    console.log('loadTemplatedItem');
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -337,23 +338,6 @@ class mapWrapper {
       });
     }
 
-    // Every item is based on one of the following base templates:
-    // point: a single point
-    // line: a series of n points
-    // track: series of n points with a main point
-    // polygon: series of points
-    switch (item.doc.template) {
-      case 'vehicle':
-        item.doc.base_template = 'line';
-        if (typeof item.doc.properties.icon !== 'undefined')
-          item.doc.properties.icon = './vehicle.png';
-        break;
-      case 'case':
-        //item.doc.template = 'point';
-        if (typeof item.doc.properties.icon !== 'undefined')
-          item.doc.properties.icon = './vehicle.png';
-        break;
-    }
     return item;
   }
 
@@ -367,11 +351,6 @@ class mapWrapper {
       i++;
     });
   }
-
-  /**
-   * Not implemented. But see src/components/items/ShowItem.vue
-   */
-  public showItem() {}
 
   /**
    * Implemented in src/components/MapArea.vue
@@ -424,165 +403,18 @@ class mapWrapper {
         //pointList.push()
       }
 
+      // color should always be defined: see this._buildMapItemFromDbItem()
       let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
       else
-        color = [
-          'AliceBlue',
-          'AntiqueWhite',
-          'Aqua',
-          'Aquamarine',
-          'Azure',
-          'Beige',
-          'Bisque',
-          'Black',
-          'BlanchedAlmond',
-          'Blue',
-          'BlueViolet',
-          'Brown',
-          'BurlyWood',
-          'CadetBlue',
-          'Chartreuse',
-          'Chocolate',
-          'Coral',
-          'CornflowerBlue',
-          'Cornsilk',
-          'Crimson',
-          'Cyan',
-          'DarkBlue',
-          'DarkCyan',
-          'DarkGoldenRod',
-          'DarkGray',
-          'DarkGrey',
-          'DarkGreen',
-          'DarkKhaki',
-          'DarkMagenta',
-          'DarkOliveGreen',
-          'DarkOrange',
-          'DarkOrchid',
-          'DarkRed',
-          'DarkSalmon',
-          'DarkSeaGreen',
-          'DarkSlateBlue',
-          'DarkSlateGray',
-          'DarkSlateGrey',
-          'DarkTurquoise',
-          'DarkViolet',
-          'DeepPink',
-          'DeepSkyBlue',
-          'DimGray',
-          'DimGrey',
-          'DodgerBlue',
-          'FireBrick',
-          'FloralWhite',
-          'ForestGreen',
-          'Fuchsia',
-          'Gainsboro',
-          'GhostWhite',
-          'Gold',
-          'GoldenRod',
-          'Gray',
-          'Grey',
-          'Green',
-          'GreenYellow',
-          'HoneyDew',
-          'HotPink',
-          'IndianRed',
-          'Indigo',
-          'Ivory',
-          'Khaki',
-          'Lavender',
-          'LavenderBlush',
-          'LawnGreen',
-          'LemonChiffon',
-          'LightBlue',
-          'LightCoral',
-          'LightCyan',
-          'LightGoldenRodYellow',
-          'LightGray',
-          'LightGrey',
-          'LightGreen',
-          'LightPink',
-          'LightSalmon',
-          'LightSeaGreen',
-          'LightSkyBlue',
-          'LightSlateGray',
-          'LightSlateGrey',
-          'LightSteelBlue',
-          'LightYellow',
-          'Lime',
-          'LimeGreen',
-          'Linen',
-          'Magenta',
-          'Maroon',
-          'MediumAquaMarine',
-          'MediumBlue',
-          'MediumOrchid',
-          'MediumPurple',
-          'MediumSeaGreen',
-          'MediumSlateBlue',
-          'MediumSpringGreen',
-          'MediumTurquoise',
-          'MediumVioletRed',
-          'MidnightBlue',
-          'MintCream',
-          'MistyRose',
-          'Moccasin',
-          'NavajoWhite',
-          'Navy',
-          'OldLace',
-          'Olive',
-          'OliveDrab',
-          'Orange',
-          'OrangeRed',
-          'Orchid',
-          'PaleGoldenRod',
-          'PaleGreen',
-          'PaleTurquoise',
-          'PaleVioletRed',
-          'PapayaWhip',
-          'PeachPuff',
-          'Peru',
-          'Pink',
-          'Plum',
-          'PowderBlue',
-          'Purple',
-          'RebeccaPurple',
-          'Red',
-          'RosyBrown',
-          'RoyalBlue',
-          'SaddleBrown',
-          'Salmon',
-          'SandyBrown',
-          'SeaGreen',
-          'SeaShell',
-          'Sienna',
-          'Silver',
-          'SkyBlue',
-          'SlateBlue',
-          'SlateGray',
-          'SlateGrey',
-          'Snow',
-          'SpringGreen',
-          'SteelBlue',
-          'Tan',
-          'Teal',
-          'Thistle',
-          'Tomato',
-          'Turquoise',
-          'Violet',
-          'Wheat',
-          'White',
-          'WhiteSmoke',
-          'Yellow',
-          'YellowGreen',
-        ][Math.floor(Math.random() * 148)];
+        color =
+          '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
 
       return new L.Polyline(pointList, {
         color: color,
         weight: 3,
-        opacity: 0.5,
+        opacity: 1,
         smoothFactor: 1,
       });
     }
@@ -643,6 +475,8 @@ class mapWrapper {
     iconimg.style.color = color;
     iconimg.style.width = size + 'pt';
     iconimg.style.textAlign = 'center';
+    // iconimg.style.webkitTextStrokeColor = 'black';
+    // iconimg.style.webkitTextStrokeWidth = '0.3px';
     iconhtml.appendChild(iconimg);
 
     if (caption) {
@@ -652,8 +486,50 @@ class mapWrapper {
       iconhtml.appendChild(span);
     }
 
-    iconhtml.style.marginLeft = '-12px';
-    iconhtml.style.marginTop = '-20px';
+    iconhtml.style.marginLeft = '-15px';
+    iconhtml.style.marginTop = '-22px';
+    return iconhtml.outerHTML;
+  }
+
+  /**
+   * Generate marker icon HTML content string, using any unicode character.
+   * @param character The unicode character to use as icon. Some rotation and scaling may be necessary.
+   * @param rotation The rotation of the icon. May consist of item's heading plus some constant rotation.
+   * @param size The size of the icon. Currently in unit 'pt', but may change.
+   * @param color The color for the icon. By using unicode characters, we can easily reflect boat color by icon color.
+   * @param caption The caption to display near the maker. May be an empty string.
+   * @returns A HTML String that can be given to a leaflet divIcon constructor.
+   */
+  private _createSVGMarkerHTML(
+    icon_type: string,
+    rotation: number,
+    size: number,
+    color: string,
+    caption: string
+  ): string {
+    let iconhtml = document.createElement('div');
+
+    let iconimg = document.createElement('div');
+    iconimg.className = 'fas fa-' + icon_type;
+    // iconimg.style.fontSize = size + 'pt';
+    iconimg.style.transform = 'rotate(' + rotation + 'deg)';
+    iconimg.style.color = color;
+    // iconimg.style.width = size + 'pt';
+    // iconimg.style.textAlign = 'center';
+    iconimg.style.strokeWidth = '1px';
+    iconimg.style.webkitTextStrokeColor = 'black';
+    iconimg.style.webkitTextStrokeWidth = '1px';
+    iconhtml.appendChild(iconimg);
+
+    if (caption) {
+      let span = document.createElement('span');
+      span.className = 'itemCaption';
+      span.append(caption);
+      iconhtml.appendChild(span);
+    }
+
+    iconhtml.style.marginLeft = '-7px';
+    iconhtml.style.marginTop = '-10px';
     return iconhtml.outerHTML;
   }
 
@@ -685,21 +561,31 @@ class mapWrapper {
       if (item.doc.properties.name) {
         caption = item.doc.properties.name;
       } else {
-        caption = item.id;
+        caption = item.doc.template + ' ' + item.doc.identifier;
       }
     }
 
     let icon;
     if (item.doc.properties.icon) {
       // use item-specific icon if given
+      // icon = L.divIcon({
+      //   className: 'vehicle-marker',
+      //   html:
+      //     '<div><span class="fas fa-' +
+      //     item.doc.properties.icon +
+      //     '"></span>' +
+      //     caption +
+      //     '</div>',
+      // });
       icon = L.divIcon({
         className: 'vehicle-marker',
-        html:
-          '<div><span class="el-icon-' +
-          item.doc.properties.icon +
-          '"></span>' +
-          caption +
-          '</div>',
+        html: this._createSVGMarkerHTML(
+          item.doc.properties.icon,
+          (lastKnownPosition.doc.heading || 0) - 90,
+          20,
+          item.doc.properties.color || 'black',
+          caption
+        ),
       });
     } else if (item.doc.template == 'case') {
       // set default case icon
@@ -709,7 +595,7 @@ class mapWrapper {
           '⊳', // unicode 0x22B3 / html &#8883;
           (lastKnownPosition.doc.heading || 0) - 90,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -721,7 +607,7 @@ class mapWrapper {
           '⟟', // unicode 0x27DF / html &#10207;
           lastKnownPosition.doc.heading || 0,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -733,7 +619,7 @@ class mapWrapper {
           '✈︎', // unicode 0x2708 / html &#9992;
           lastKnownPosition.doc.heading || 0,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -749,7 +635,7 @@ class mapWrapper {
           '⩥', // unicode 0x2A65 / html &#10853;
           (lastKnownPosition.doc.heading || 0) - 90,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -818,9 +704,9 @@ class mapWrapper {
         lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {
-        line: {} as any,
-        marker: {} as any,
-        lineCaptions: {} as any,
+        line: undefined as any,
+        marker: undefined as any,
+        lineCaptions: undefined as any,
       };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
@@ -832,7 +718,7 @@ class mapWrapper {
           this.loaded_items[item.id].lineCaptions[i].addTo(this.map);
         }
       }
-      if (item.doc.base_template == 'line' && line) {
+      if (line) {
         this.loaded_items[item.id].line = line;
         this.loaded_items[item.id].line.addTo(this.map);
       }
@@ -846,8 +732,8 @@ class mapWrapper {
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   public updateItemPosition(item: MapItem): false | undefined {
-    console.log('updateItemPosition');
-    console.log(item);
+    // console.log('updateItemPosition');
+    // console.log(item);
     if (item.positions.length < 1) {
       return false;
     }
@@ -878,6 +764,53 @@ class mapWrapper {
         }
       }
     }
+  }
+
+  private _buildMapItemFromDbItem(
+    base_item: DbItem,
+    item_positions: Array<DbPosition>
+  ): MapItem {
+    return {
+      id: base_item._id,
+      doc: {
+        template: base_item.template,
+        identifier: base_item.identifier,
+        properties: {
+          name: base_item.properties.hasOwnProperty('name')
+            ? base_item.properties['name']
+            : base_item.template + ' ' + base_item.identifier,
+          color: base_item.properties.hasOwnProperty('color')
+            ? base_item.properties['color']
+            : base_item.properties.hasOwnProperty('boat_color')
+            ? base_item.properties['boat_color']
+            : 'Black',
+          icon:
+            base_item.properties['air'] == 'true'
+              ? 'plane'
+              : base_item.properties['icon'],
+        },
+      },
+      positions:
+        item_positions != undefined
+          ? item_positions.map(item => ({ doc: item }))
+          : [],
+    };
+  }
+
+  /**
+   * Sets a map item's visibility and adds any new positions it might have gained
+   * If the item is not on the map yet, add it to the map.
+   */
+  public updateItemOnMap(
+    base_item: DbItem,
+    item_positions: Array<DbPosition>,
+    show_item: boolean
+  ): void {
+    if (show_item) {
+      // todo: only build this when really necessary
+      let map_item = this._buildMapItemFromDbItem(base_item, item_positions);
+      this.updateItemPosition(map_item);
+    } else this.hideItem(base_item._id);
   }
 
   /**

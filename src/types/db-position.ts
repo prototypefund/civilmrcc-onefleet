@@ -1,7 +1,11 @@
 export interface DbPosition {
   _id: string;
-  lat: string;
-  lon: string;
+  _rev: string;
+  lat: number;
+  lon: number;
+  altitude: number;
+  heading: number;
+  speed: number;
   item_identifier: string;
   source: string;
   timestamp: string;

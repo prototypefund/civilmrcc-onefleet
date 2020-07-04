@@ -76,9 +76,10 @@
     </div>
   </div>
 </template>
-<script>
+
+<script lang="ts">
 import templates from './templates.js';
-import Position from './Position';
+import Position from './Position.vue';
 import tags from './tags.js';
 import { serverBus } from '../../main';
 
@@ -105,23 +106,33 @@ export default {
       // watch it
       const self = this;
       //load doc
-      this.$db.getItem(newVal, function(item) {
-        const doc = item.doc;
-        //load template for doc
-        self.loadTemplate(doc.template);
+      if (newVal) {
+        // newVal may change types from string to boolean. fixme.
+        this.$db.getItem(newVal, function(item) {
+          const doc = item.doc;
+          //load template for doc
+          self.loadTemplate(doc.template);
 
-        //load doc into form_data and historical formdata for changelog
-        self.form_data = doc;
-        self.historical_form_data = JSON.parse(JSON.stringify(doc));
+          //load doc into form_data and historical formdata for changelog
+          self.form_data = doc;
+          self.historical_form_data = JSON.parse(JSON.stringify(doc));
 
-        //load last position
-        item.positions.forEach(function(v, i) {
-          //last position
-          if (i == item.positions.length - 1) {
-            self.last_position = v.doc;
-          }
+          //load last position
+          item.positions.forEach(function(v, i) {
+            //last position
+            if (i == item.positions.length - 1) {
+              self.last_position = v.doc;
+            }
+          });
         });
-      });
+      } else {
+        // dialog was closed, so reset the fields:
+        this.form_data = { properties: {} };
+        this.template_data = {};
+        this.last_position = {};
+        this.historical_form_data = {};
+        this.position_data = { positions: [{}] };
+      }
     },
   },
   methods: {
@@ -140,7 +151,10 @@ export default {
     },
     storeItem: function(e) {
       e.preventDefault();
-      const changes = [];
+      const changes: {
+        old: string;
+        new: string;
+      }[] = [];
       //compare the changed form data with historic properties to identify changes
       for (let i in this.form_data.properties) {
         if (
@@ -157,6 +171,7 @@ export default {
         //this.$db.addItemLog(this.itemId, changes[i]);
       }*/
 
+      var self = this;
       this.$db.createItem(this.form_data, function(err, result) {
         if (err) {
           if (err.name == 'conflict')
@@ -165,7 +180,7 @@ export default {
 
           console.error(err);
         } else {
-          if (result.ok == true) self.itemId = false;
+          if (result.ok == true) self.closeModal();
           alert('The item has been updated');
         }
       });

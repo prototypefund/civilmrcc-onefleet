@@ -104,7 +104,7 @@
     </div>
   </div>
 </template>
-<script>
+<script lang="ts">
 import templates from './templates.js';
 import tags from './tags.js';
 import { serverBus } from '../../main';
@@ -120,7 +120,10 @@ export default {
     return {
       template: '',
       vehicles: [],
-      form_data: { properties: {}, template: this.givenTemplate },
+      form_data: {
+        properties: this.prefillTemplate(),
+        template: this.givenTemplate,
+      },
       position_data: {
         positions: [{}],
       },
@@ -138,6 +141,12 @@ export default {
   },
 
   methods: {
+    prefillTemplate() {
+      let random_color =
+        '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
+      if (this.givenTemplate == 'case') return { boat_color: random_color };
+      else return { color: random_color };
+    },
     createItem: function(e) {
       var self = this;
 

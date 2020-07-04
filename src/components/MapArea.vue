@@ -2,28 +2,47 @@
   <div id="mapArea"></div>
 </template>
 
-<script>
+<script lang="ts">
+// // NOTE: Vue linter incorrectly thinks that "DbItem" is unused
+// // eslint-disable-next-line
+// import { DbItem } from '@/types/db-item';
+// // NOTE: Vue linter incorrectly thinks that "DbPosition" is unused
+// // eslint-disable-next-line
+// import { DbPosition } from '@/types/db-position';
+// // NOTE: Vue linter incorrectly thinks that "MapItem" is unused
+// // eslint-disable-next-line
+// import { MapItem } from '@/types/map-item';
+
 import { serverBus } from '../main';
+
 export default {
   name: 'MapArea',
-  data: function() {
+  props: {},
+
+  data() {
     return {
       map_initialized: false,
     };
   },
+
+  watch: {},
+
+  methods: {},
+
   mounted: function() {
     var self = this;
 
-    serverBus.$on('shown_items', shown_items => {
-      self.shown_items = shown_items;
-      self.$db.updateShownItemsOnMap(this.$map, {
-        shown_items: shown_items,
-        map: self.$map,
-      });
-    });
+    this.$map.init('mapArea');
+
+    serverBus.$on(
+      'update_item_on_map',
+      (base_item, item_positions, show_item) => {
+        this.$map.updateItemOnMap(base_item, item_positions, show_item);
+      }
+    );
 
     serverBus.$on('fly_to_position', position => {
-      self.$map.flyTo(position);
+      this.$map.flyTo(position);
     });
 
     serverBus.$on('start_replay', replayData => {
@@ -36,26 +55,9 @@ export default {
       });
     });
 
-    this.$map.init('mapArea');
     this.$map.clickItem = function(itemId) {
       serverBus.$emit('itemId', itemId);
     };
-    this.$db.updateShownItemsOnMap(this.$map, {
-      shown_items: self.shown_items,
-      map: this.$map,
-    });
-    this.$db.setOnChange('positions', 'map_area', function(change) {
-      if (change.direction == 'push') {
-        change.change.docs.forEach(function(item) {
-          let identifier = 'VEHICLE_' + item.item_identifier;
-          if (self.shown_items[identifier] == 'true') {
-            self.$db.getItem(identifier, function(item) {
-              self.$map.updateItemPosition(self.$map.loadTemplatedItem(item));
-            });
-          }
-        });
-      }
-    });
   },
   created: function() {},
 };

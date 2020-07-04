@@ -84,6 +84,23 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
+  public getBaseItems() {
+    return this.getDB('items').allDocs({
+      include_docs: true,
+      attachments: true,
+    });
+  }
+
+  public getBasePositions() {
+    return this.getDB('positions').allDocs({
+      include_docs: true,
+      attachments: true,
+      limit: 10000,
+      skip: 0,
+      descending: false,
+    });
+  }
+
   public getItems(cb: Function) {
     var items = this.getDB('items');
     items
