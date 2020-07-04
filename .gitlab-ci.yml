@@ -92,3 +92,6 @@ docker_build_and_push_production:
     - docker push $CI_REGISTRY/civilmrcc/onefleet/app:production
     - docker push $CI_REGISTRY/civilmrcc/onefleet/services:production
     - docker logout $CI_REGISTRY
+
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
