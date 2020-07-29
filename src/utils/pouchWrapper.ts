@@ -74,7 +74,6 @@ export class PouchWrapper {
 
           for (let n in this.databases[db_name].onChange) {
             if (typeof this.databases[db_name].onChange[n] == 'function') {
-
               //fire onChange
               this.databases[db_name].onChange[n]();
             }
