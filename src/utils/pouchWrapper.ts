@@ -67,15 +67,14 @@ export class PouchWrapper {
               typeof this.databases[db_name].onInitialReplicationDone[n] ==
               'function'
             ) {
-              console.log('fire onInitialReplicationDone');
+              //fire onInitialReplicationDone
               this.databases[db_name].onInitialReplicationDone[n]();
             }
           }
 
           for (let n in this.databases[db_name].onChange) {
             if (typeof this.databases[db_name].onChange[n] == 'function') {
-              console.log('fire onChange');
-              console.log(n, this.databases[db_name].onChange[n]);
+              //fire onChange
               this.databases[db_name].onChange[n]();
             }
           }
@@ -211,10 +210,6 @@ export class PouchWrapper {
       return (
         this.config.db_remote_protocol +
         '://' +
-        localStorage.username +
-        ':' +
-        localStorage.password +
-        '@' +
         db_remote_host +
         ':' +
         this.config.db_remote_port +

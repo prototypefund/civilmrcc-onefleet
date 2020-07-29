@@ -54,9 +54,12 @@ export default {
     },
     login: function() {
       localStorage.username = this.username;
-      localStorage.password = this.password;
       localStorage.db_remote_host = this.db_remote_host;
       localStorage.db_remote_port = this.db_remote_port;
+
+      let db = this.$db.getDB('items');
+      db.login(this.username, this.password);
+
       window.location.reload();
     },
   },
