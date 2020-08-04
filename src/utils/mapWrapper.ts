@@ -404,6 +404,7 @@ class mapWrapper {
       }
 
       // color should always be defined: see this._buildMapItemFromDbItem()
+
       let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
@@ -704,9 +705,10 @@ class mapWrapper {
         lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {
-        line: undefined as any,
-        marker: undefined as any,
-        lineCaptions: undefined as any,
+
+        line: {} as any,
+        marker: {} as any,
+        lineCaptions: {} as any
       };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
@@ -733,7 +735,7 @@ class mapWrapper {
    */
   public updateItemPosition(item: MapItem): false | undefined {
     // console.log('updateItemPosition');
-    // console.log(item);
+    // console.log(item)
     if (item.positions.length < 1) {
       return false;
     }

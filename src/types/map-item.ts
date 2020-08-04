@@ -1,9 +1,9 @@
 import { DbPosition } from './db-position';
 import { DbItem } from './db-item';
 
+
 export interface MapItem {
   id: string;
-  // doc: DbItem;  // actually, we might want to allow doc to diverge from DbItem.
   doc: {
     template: string;
     identifier: string;
@@ -14,6 +14,11 @@ export interface MapItem {
     };
   };
   positions: {
-    doc: DbPosition;
+    doc: {
+      timestamp: string;
+      heading: number;
+      lat: number;
+      lon: number;
+    };
   }[];
 }

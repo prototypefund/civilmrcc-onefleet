@@ -79,7 +79,11 @@
 
 <script lang="ts">
 import templates from './templates.js';
+<<<<<<< HEAD
 import Position from './Position.vue';
+=======
+import Position from './Position';
+>>>>>>> 104404ff942b909d66d754836d7e19630c5d9155
 import tags from './tags.js';
 import { serverBus } from '../../main';
 

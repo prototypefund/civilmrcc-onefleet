@@ -1,5 +1,5 @@
 export default {
-  get: function(name) {
+  get: function (name) {
     var templates = {
       case: {
         plural: 'Cases',
@@ -229,6 +229,29 @@ export default {
             title: 'testtag',
             type: 'tag',
           },
+        ],
+      },
+      droppoint: {
+        plural: 'Droppoint',
+        pouch_identifier: 'DROPPOINT',
+        add_initial_position: true,
+        type: 'point',
+        fields: [
+          {
+            name: 'name',
+            title: 'title',
+            type: 'text',
+          },
+          {
+            name: 'created_by_vehicle',
+            title: 'Create by vehile',
+            type: 'text',
+          },
+          {
+            name: 'comment',
+            title: 'comment',
+            type: 'text',
+          }
         ],
       },
     };
