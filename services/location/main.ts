@@ -37,11 +37,11 @@ class LocationService {
     this.dbConfig = process.env.DEVELOPMENT
       ? {}
       : {
-        auth: {
-          username: config.dbUser,
-          password: config.dbPassword,
-        },
-      };
+          auth: {
+            username: config.dbUser,
+            password: config.dbPassword,
+          },
+        };
     console.log(this.dbConfig);
     this.itemDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
@@ -89,11 +89,11 @@ class LocationService {
 
       this.locationsDB
         .put(entry)
-        .then(function (response) {
+        .then(function(response) {
           console.log('location created');
           console.log(entry);
         })
-        .catch(function (err) {
+        .catch(function(err) {
           console.log(entry);
           console.log(err);
         });
@@ -106,10 +106,10 @@ class LocationService {
     var itemDB = this.itemDB;
     itemDB
       .put(obj)
-      .then(function (response) {
+      .then(function(response) {
         cb(null, response);
       })
-      .catch(function (err) {
+      .catch(function(err) {
         cb(err);
       });
   }
@@ -122,12 +122,12 @@ class LocationService {
         attachments: true,
         startkey: identifier,
       })
-      .then(function (result) {
+      .then(function(result) {
         if (result.error) callback(result.error);
         else callback(false, result.rows);
         // handle result
       })
-      .catch(function (err) {
+      .catch(function(err) {
         console.log('error while getting vehicles: ', err);
       });
   }
@@ -278,7 +278,7 @@ class LocationService {
                     };
                   })(i)
                 )
-                .catch(function (err) {
+                .catch(function(err) {
                   console.log(err);
                 });
             } else {
@@ -412,20 +412,20 @@ class LocationService {
     // stop listening
     //mailListener.stop();
 
-    mailListener.on('server:connected', function () {
+    mailListener.on('server:connected', function() {
       console.log('imapConnected');
     });
 
-    mailListener.on('server:disconnected', function () {
+    mailListener.on('server:disconnected', function() {
       console.log('imapDisconnected');
     });
 
-    mailListener.on('error', function (err) {
+    mailListener.on('error', function(err) {
       console.log('err:');
       console.log(err);
     });
 
-    mailListener.on('mail', function (mail, seqno, attributes) {
+    mailListener.on('mail', function(mail, seqno, attributes) {
       console.log('got mail!');
       listener_config.mail_callback(mail, seqno, attributes);
     });
@@ -533,7 +533,11 @@ class LocationService {
                       )
                       .trim();
 
-                    let identifier = String('DROPPOINT' + '_' + new Date(mail.headers.date).toISOString());
+                    let identifier = String(
+                      'DROPPOINT' +
+                        '_' +
+                        new Date(mail.headers.date).toISOString()
+                    );
                     console.log('no found! create droppoint');
                     let item = {
                       //generate id like VEHICLE_SHIPSNAME
@@ -543,16 +547,25 @@ class LocationService {
                       properties: {
                         created_by_vehicle: res[i].doc.identifier,
                         name: res[i].doc.identifier,
-                        comment: 'droppoint created by ' + res[i].doc.identifier
-                      }
-                    }
-                    this.insertItem(item, function (err, result) {
+                        comment:
+                          'droppoint created by ' + res[i].doc.identifier,
+                      },
+                    };
+                    this.insertItem(item, function(err, result) {
                       if (err) {
                         if (err.name == 'conflict')
-                          console.log('The id is already taken, please choose another one');
-                        else console.log(err, 'An unknown error occured while creating the item');
+                          console.log(
+                            'The id is already taken, please choose another one'
+                          );
+                        else
+                          console.log(
+                            err,
+                            'An unknown error occured while creating the item'
+                          );
                       } else if (result.ok == true) {
-                        console.log(`droppoint ${item._id} created. add position...`);
+                        console.log(
+                          `droppoint ${item._id} created. add position...`
+                        );
 
                         self.insertLocation(res[i].doc.identifier, {
                           timestamp: new Date(mail.headers.date),
@@ -563,7 +576,6 @@ class LocationService {
                           course: -1,
                           source: 'iridium_mailservice',
                         });
-
                       } else {
                         console.log(result);
                       }
@@ -661,18 +673,18 @@ class LocationService {
               };
               this.locationsDB
                 .put(entry)
-                .then(function (response) {
+                .then(function(response) {
                   console.log('location created');
                   console.log(entry);
                 })
-                .catch(function (err) {
+                .catch(function(err) {
                   console.log(entry);
                   console.log(err);
                 });
             };
           })(i)
         )
-        .catch(function (err) {
+        .catch(function(err) {
           console.log(err);
         });
       i++;
@@ -786,8 +798,8 @@ class LocationService {
 
           let identifier = String(
             'VEHICLE' +
-            '_' +
-            row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
+              '_' +
+              row.name.replace(/[&\/\\#,+ ()$~%.'":*?<>{}]/g, '')
           ).toUpperCase();
           let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
           console.log(`vehicle ${row.name} exists in db. add position...`);
@@ -797,17 +809,15 @@ class LocationService {
       .on(
         'end',
         rowCount2 =>
-          function () {
+          function() {
             console.log('fin.');
           }
       );
   }
 
+  private importHistoricalData() {}
 
-  private importHistoricalData() { }
-
-  public deletePositionsOlderThan = async function (olderThanDate) {
-
+  public deletePositionsOlderThan = async function(olderThanDate) {
     console.log('delete positions older than ' + olderThanDate);
 
     const parsedDate = moment(olderThanDate, [

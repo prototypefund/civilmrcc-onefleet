@@ -1,5 +1,5 @@
 export default {
-  get: function (name) {
+  get: function(name) {
     var templates = {
       case: {
         plural: 'Cases',
@@ -251,7 +251,7 @@ export default {
             name: 'comment',
             title: 'comment',
             type: 'text',
-          }
+          },
         ],
       },
     };

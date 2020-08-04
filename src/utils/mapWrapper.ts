@@ -705,10 +705,9 @@ class mapWrapper {
         lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {
-
         line: {} as any,
         marker: {} as any,
-        lineCaptions: {} as any
+        lineCaptions: {} as any,
       };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
