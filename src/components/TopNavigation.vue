@@ -18,11 +18,7 @@
       </ul>
     </div>
     <ul id="nav-views">
-<<<<<<< HEAD
       <li :class="{ active: modus == 'map' }" v-on:click="changeModus('map')">
-=======
-      <li class="active" v-on:click="changeModus('map')">
->>>>>>> 104404ff942b909d66d754836d7e19630c5d9155
         <a>
           <i class="fas fa-map-marked"></i>
           <span>Map</span>
