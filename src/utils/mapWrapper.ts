@@ -158,7 +158,13 @@ class mapWrapper {
     let latlngs, distance: number, area;
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-      return this.strLatLng(layer.getLatLng());
+      return (
+        '<a href="#" onclick="createItem([' +
+        layer.getLatLng().lng +
+        ',' +
+        layer.getLatLng().lat +
+        ']);">Create Item</a>'
+      );
       // Circle - lat/long, radius
     } else if (layer instanceof L.Circle) {
       var center = layer.getLatLng(),

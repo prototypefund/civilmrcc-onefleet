@@ -3,7 +3,7 @@
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
     <CreateItem
       v-if="modal == 'createItem'"
-      :givenTemplate="modal_data"
+      :properties="modal_data"
     ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
     <ExportItem
