@@ -98,9 +98,7 @@
         </div>
         <input type="submit" value="Send" />
       </form>
-      <p>
-        {{ form_data.template }}
-      </p>
+      <p>{{ form_data.template }}</p>
     </div>
   </div>
 </template>
@@ -111,8 +109,7 @@ import { serverBus } from '../../main';
 export default {
   name: 'CreateItem',
   props: {
-    givenTemplate: {
-      type: String,
+    properties: {
       default: '',
     },
   },
@@ -201,6 +198,22 @@ export default {
       // Using the service bus
       serverBus.$emit('modal_modus', '');
     },
+  },
+  created: function() {
+    /*
+    the properties object can either contain a template_name
+    or a positioin which is passed from modal_data which 
+    is passed to the :properties inside the App.vue.
+    It would be better to pass it into a properties object like
+    :properties="{template:'vehicle', position:[13,37]}"
+    */
+    if (typeof this.properties === 'string') {
+      this.givenTemplate = this.properties;
+      this.form_data.template = this.properties;
+    } else if (Array.isArray(this.properties)) {
+      this.position_data.positions[0].lon = this.properties[0];
+      this.position_data.positions[0].lat = this.properties[1];
+    }
   },
 };
 </script>

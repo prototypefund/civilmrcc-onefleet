@@ -32,6 +32,16 @@ Vue.prototype.$map = mapWrapper;
 
 Vue.use(ElementUI);
 
-new Vue({
+var vm = new Vue({
   render: h => h(App),
 }).$mount('#app');
+
+declare global {
+  interface Window {
+    createItem: any;
+  }
+}
+
+window.createItem = function(properties) {
+  serverBus.$emit('modal_modus', 'createItem', properties);
+};
