@@ -10,8 +10,7 @@
             :label="template_option"
             :name="template_option"
             :key="template_option"
-            >{{ template_option }}</option
-          >
+          >{{ template_option }}</option>
         </select>
 
         <span>Identifier</span>
@@ -23,23 +22,7 @@
         />
 
         <div id="position" v-if="template_data.add_initial_position">
-          <span>Latitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lat"
-            placeholder="Latitude"
-            v-model="position_data.positions[0].lat"
-          />
-
-          <span>Longitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lon"
-            placeholder="Longitude"
-            v-model="position_data.positions[0].lon"
-          />
+          <position :edit="true" :position="position_data.positions[0]"></position>
         </div>
 
         <div v-for="field in template_data.fields" :key="field.name">
@@ -54,11 +37,7 @@
               type="text"
               class="icon"
             />
-            <span
-              class="preview-icon"
-              :class="'el-icon-' + form_data.properties[field.name]"
-              >&nbsp;</span
-            >
+            <span class="preview-icon" :class="'el-icon-' + form_data.properties[field.name]">&nbsp;</span>
           </div>
           <!-- iconwrapper end -->
 
@@ -92,8 +71,7 @@
               v-for="option in field.options"
               :key="option"
               :value="field.options[option]"
-              >{{ option }}</option
-            >
+            >{{ option }}</option>
           </select>
         </div>
         <input type="submit" value="Send" />
@@ -106,12 +84,17 @@
 import templates from './templates.js';
 import tags from './tags.js';
 import { serverBus } from '../../main';
+import Position from './Position.vue';
+
 export default {
   name: 'CreateItem',
   props: {
     properties: {
       default: '',
     },
+  },
+  components: {
+    Position,
   },
   data: function() {
     return {
@@ -200,6 +183,10 @@ export default {
     },
   },
   created: function() {
+    //add default value
+    this.position_data.positions[0].lon = 0;
+    this.position_data.positions[0].lat = 0;
+
     /*
     the properties object can either contain a template_name
     or a positioin which is passed from modal_data which 
