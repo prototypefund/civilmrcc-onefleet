@@ -124,17 +124,11 @@
       </div>
       <div v-if="type=='dms'">
         <label>Latitude:</label>
-        <span>{{ showPosition(position.lat, position.lon).lat }}</span>
+        <span>{{ showPosition(position.lat, position.lon).lat.d }}° {{ showPosition(position.lat, position.lon).lat.m }}' {{ showPosition(position.lat, position.lon).lat.s }}" {{ showPosition(position.lat, position.lon).lat.direction }}</span>
         <br />
         <label>Longitude:</label>
-        <span>{{ showPosition(position.lat, position.lon).lon }}</span>
+        <span>{{ showPosition(position.lat, position.lon).lon.d }}° {{ showPosition(position.lat, position.lon).lon.m }}' {{ showPosition(position.lat, position.lon).lon.s }}" {{ showPosition(position.lat, position.lon).lon.direction }}</span>
       </div>
-
-      <label>Latitude:</label>
-      <span>{{ showPosition(position.lat, position.lon).lat }}</span>
-      <br />
-      <label>Longitude:</label>
-      <span>{{ showPosition(position.lat, position.lon).lon }}</span>
 
       <div v-if="position.altitude">
         <label>Altitude:</label>
@@ -301,13 +295,13 @@ export default {
               d: d1,
               m: m1,
               s: s1,
-              nw: nw,
+              direction: nw,
             },
             lon: {
               d: d2,
               m: m2,
               s: s2,
-              ew: ew,
+              direction: ew,
             },
           };
       }
