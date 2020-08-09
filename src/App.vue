@@ -77,7 +77,7 @@ export default {
     modal: '',
     modal_data: '',
     show_air: false,
-    show_loadingscreen: false, // deactivated for debugging
+    show_loadingscreen: true,
     itemId: false,
     exportItemId: false,
     show_chat: false,
@@ -152,9 +152,9 @@ export default {
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
-
     let self = this;
     //set on change listener on positions because its usually the largest database
+
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',

@@ -439,7 +439,7 @@ class LocationService {
     this.getItems('VEHICLE', (err, res) => {
       console.log('got items');
       if (err) console.log(err);
-
+      let self = this;
       //loop through vehicles
       for (let i in res) {
         if (typeof res[i].doc != 'undefined') {
@@ -495,9 +495,91 @@ class LocationService {
                       course: -1,
                       source: 'iridium_mailservice',
                     });
+                    console.log({
+                      timestamp: new Date(mail.headers.date),
+                      latitude: lat,
+                      longitude: lon,
+                      altitude: alt,
+                      speed: -1,
+                      course: -1,
+                      source: 'iridium_mailservice',
+                    });
                   } else {
                     // TODO: alke + jula: Add else branch for DropPoint
                     console.log('not a position update, so a new case!');
+
+                    let lat = parseFloat(
+                      mail.text
+                        .substring(
+                          mail.text.indexOf('Lat+') + 4,
+                          mail.text.indexOf('Lon')
+                        )
+                        .trim()
+                    );
+
+                    let lon = parseFloat(
+                      mail.text
+                        .substring(
+                          mail.text.indexOf('Lon+') + 4,
+                          mail.text.indexOf('Alt')
+                        )
+                        .trim()
+                    );
+
+                    let alt = mail.text
+                      .substring(
+                        mail.text.indexOf('Alt') + 4,
+                        mail.text.indexOf('GPS')
+                      )
+                      .trim();
+
+                    let identifier = String(
+                      'DROPPOINT' +
+                        '_' +
+                        new Date(mail.headers.date).toISOString()
+                    );
+                    console.log('no found! create droppoint');
+                    let item = {
+                      //generate id like VEHICLE_SHIPSNAME
+                      _id: identifier,
+                      template: 'droppoint',
+                      identifier: identifier,
+                      properties: {
+                        created_by_vehicle: res[i].doc.identifier,
+                        name: res[i].doc.identifier,
+                        comment:
+                          'droppoint created by ' + res[i].doc.identifier,
+                      },
+                    };
+                    this.insertItem(item, function(err, result) {
+                      if (err) {
+                        if (err.name == 'conflict')
+                          console.log(
+                            'The id is already taken, please choose another one'
+                          );
+                        else
+                          console.log(
+                            err,
+                            'An unknown error occured while creating the item'
+                          );
+                      } else if (result.ok == true) {
+                        console.log(
+                          `droppoint ${item._id} created. add position...`
+                        );
+
+                        self.insertLocation(res[i].doc.identifier, {
+                          timestamp: new Date(mail.headers.date),
+                          latitude: lat,
+                          longitude: lon,
+                          altitude: alt,
+                          speed: -1,
+                          course: -1,
+                          source: 'iridium_mailservice',
+                        });
+                      } else {
+                        console.log(result);
+                      }
+                    });
                   }
                 } else {
                   console.log('Mail is not from gateway sender');
