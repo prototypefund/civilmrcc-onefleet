@@ -3,13 +3,18 @@
     <div v-if="edit">
       <label>Coodinate Type:</label>
       <span>
-        <input type="radio" v-model="type" value="decimal_degrees" id="decimal" />
+        <input
+          type="radio"
+          v-model="type"
+          value="decimal_degrees"
+          id="decimal"
+        />
         <label for="decimal">Decimal Degrees</label>
 
         <input type="radio" v-model="type" value="dms" id="dms" />
         <label for="decimal">DMS</label>
       </span>
-      <div v-if="type=='decimal_degrees'">
+      <div v-if="type == 'decimal_degrees'">
         <span>Latitude</span>
         <input
           type="number"
@@ -31,7 +36,7 @@
         />
       </div>
 
-      <div v-if="type=='dms'" class="dms">
+      <div v-if="type == 'dms'" class="dms">
         <span>Latitude</span>
         <input
           type="number"
@@ -98,15 +103,20 @@
       <h3>Last Position</h3>
       <label>
         {{ new Date(position.timestamp).toLocaleString() }} ({{
-        timeSince(new Date(position.timestamp))
+          timeSince(new Date(position.timestamp))
         }}
         ago)
       </label>
       <br />
 
-      <label>Coodinate Type: {{type}}</label>
+      <label>Coodinate Type: {{ type }}</label>
       <span>
-        <input type="radio" v-model="type" value="decimal_degrees" id="decimal" />
+        <input
+          type="radio"
+          v-model="type"
+          value="decimal_degrees"
+          id="decimal"
+        />
         <label for="decimal">Decimal Degrees</label>
 
         <input type="radio" v-model="type" value="dms" id="dms" />
@@ -115,19 +125,29 @@
 
       <br />
 
-      <div v-if="type=='decimal_degrees'">
+      <div v-if="type == 'decimal_degrees'">
         <label>Latitude:</label>
         <span>{{ showPosition(position.lat, position.lon).lat }}</span>
         <br />
         <label>Longitude:</label>
         <span>{{ showPosition(position.lat, position.lon).lon }}</span>
       </div>
-      <div v-if="type=='dms'">
+      <div v-if="type == 'dms'">
         <label>Latitude:</label>
-        <span>{{ showPosition(position.lat, position.lon).lat.d }}° {{ showPosition(position.lat, position.lon).lat.m }}' {{ showPosition(position.lat, position.lon).lat.s }}" {{ showPosition(position.lat, position.lon).lat.direction }}</span>
+        <span
+          >{{ showPosition(position.lat, position.lon).lat.d }}°
+          {{ showPosition(position.lat, position.lon).lat.m }}'
+          {{ showPosition(position.lat, position.lon).lat.s }}"
+          {{ showPosition(position.lat, position.lon).lat.direction }}</span
+        >
         <br />
         <label>Longitude:</label>
-        <span>{{ showPosition(position.lat, position.lon).lon.d }}° {{ showPosition(position.lat, position.lon).lon.m }}' {{ showPosition(position.lat, position.lon).lon.s }}" {{ showPosition(position.lat, position.lon).lon.direction }}</span>
+        <span
+          >{{ showPosition(position.lat, position.lon).lon.d }}°
+          {{ showPosition(position.lat, position.lon).lon.m }}'
+          {{ showPosition(position.lat, position.lon).lon.s }}"
+          {{ showPosition(position.lat, position.lon).lon.direction }}</span
+        >
       </div>
 
       <div v-if="position.altitude">
@@ -153,10 +173,10 @@
               <div v-if="vehicle.positions && vehicle.positions.length > 1">
                 <span>
                   {{
-                  getDistance(
-                  vehicle.positions[vehicle.positions.length - 1],
-                  position
-                  )
+                    getDistance(
+                      vehicle.positions[vehicle.positions.length - 1],
+                      position
+                    )
                   }}
                   NM
                 </span>
@@ -425,4 +445,3 @@ h3 {
   background: none;
 }
 </style>
-  
