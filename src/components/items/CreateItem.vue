@@ -76,16 +76,15 @@
             v-model="form_data.properties[field.name]"
           >
             <option
-              v-for="option in field.options"
+              v-for="(option_name, option) in field.options"
               :key="option"
-              :value="field.options[option]"
-              >{{ option }}</option
+              :value="option"
+              >{{ option_name }}</option
             >
           </select>
         </div>
         <input type="submit" value="Send" />
       </form>
-      <p>{{ form_data.template }}</p>
     </div>
   </div>
 </template>
