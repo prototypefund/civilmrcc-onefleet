@@ -13,6 +13,7 @@
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
+
     <TopNavigation :modus="modus"></TopNavigation>
 
     <LeftNavigation
@@ -30,12 +31,6 @@
       :base_items="base_items"
       :positions_per_item="positions_per_item"
     />
-    <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
-        toggle chat
-      </div>
-      chat
-    </div>
   </div>
 </template>
 
