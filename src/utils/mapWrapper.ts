@@ -1,11 +1,13 @@
 import * as L from 'leaflet';
 import 'leaflet-draw';
+import 'leaflet-mouse-position';
 import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
 import { MapItem } from '../types/map-item';
 import { DbItem } from '@/types/db-item';
 import { DbPosition } from '@/types/db-position';
+
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
@@ -285,6 +287,9 @@ class mapWrapper {
         },
       })
     );
+
+    //** Add mouse coordinates */
+    L.control.mousePosition().addTo(this.map);
 
     // Object created - bind popup to layer, add to feature group
     this.map.on(L.Draw.Event.CREATED, event => {

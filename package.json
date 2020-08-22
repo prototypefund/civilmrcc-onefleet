@@ -26,11 +26,13 @@
   },
   "dependencies": {
     "@datenpate/leaflet.polylinemeasure": "^1.0.0",
+    "@types/leaflet-mouse-position": "^1.2.0",
     "chart.js": "^2.9.3",
     "element-ui": "^2.13.2",
     "http-server": "^0.12.3",
     "leaflet": "^1.6.0",
     "leaflet-draw": "^1.0.4",
+    "leaflet-mouse-position": "^1.2.0",
     "moment": "^2.27.0",
     "pouchdb-authentication": "^1.1.3",
     "pouchdb-browser": "^7.2.1",
