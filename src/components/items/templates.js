@@ -334,6 +334,7 @@ export default {
             name: 'fleetmon_vessel_id',
             title: 'Fleetmon Vessel ID',
             type: 'number',
+            hidden: true,
           },
           {
             name: 'active',

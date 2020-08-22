@@ -30,58 +30,62 @@
         </div>
 
         <div v-for="field in template_data.fields" :key="field.name">
-          <span>{{ field.title }}</span>
+          <div v-if="!field.hidden">
+            <span>{{ field.title }}</span>
 
-          <!-- iconwrapper start -->
-          <div class="iconwrapper" v-if="field.type == 'icon'">
+            <!-- iconwrapper start -->
+            <div class="iconwrapper" v-if="field.type == 'icon'">
+              <input
+                v-model="form_data.properties[field.name]"
+                :name="field.name"
+                :placeholder="field.title"
+                type="text"
+                class="icon"
+              />
+              <span
+                class="preview-icon"
+                :class="'el-icon-' + form_data.properties[field.name]"
+                >&nbsp;</span
+              >
+            </div>
+            <!-- iconwrapper end -->
+
+            <!-- tags start -->
+            <tags-input
+              v-if="field.type == 'tag'"
+              element-id="tags"
+              v-model="form_data.properties[field.name]"
+              :existing-tags="
+                tags.getTagsForField(form_data.template, field.name)
+              "
+              :typeahead="true"
+              typeahead-style="dropdown"
+            ></tags-input>
+            <!-- tags end -->
+
             <input
+              v-if="field.type != 'select' && field.type != 'icon'"
               v-model="form_data.properties[field.name]"
               :name="field.name"
               :placeholder="field.title"
-              type="text"
-              class="icon"
+              :type="field.type"
+              :step="field.step"
             />
-            <span
-              class="preview-icon"
-              :class="'el-icon-' + form_data.properties[field.name]"
-              >&nbsp;</span
+
+            <select
+              v-if="field.type == 'select'"
+              class="select-css"
+              v-model="form_data.properties[field.name]"
             >
+              <option
+                v-for="(option_name, option) in field.options"
+                :key="option"
+                :value="option"
+              >
+                {{ option_name }}
+              </option>
+            </select>
           </div>
-          <!-- iconwrapper end -->
-
-          <!-- tags start -->
-          <tags-input
-            v-if="field.type == 'tag'"
-            element-id="tags"
-            v-model="form_data.properties[field.name]"
-            :existing-tags="
-              tags.getTagsForField(form_data.template, field.name)
-            "
-            :typeahead="true"
-            typeahead-style="dropdown"
-          ></tags-input>
-          <!-- tags end -->
-
-          <input
-            v-if="field.type != 'select' && field.type != 'icon'"
-            v-model="form_data.properties[field.name]"
-            :name="field.name"
-            :placeholder="field.title"
-            :type="field.type"
-            :step="field.step"
-          />
-          <select
-            v-if="field.type == 'select'"
-            class="select-css"
-            v-model="form_data.properties[field.name]"
-          >
-            <option
-              v-for="(option_name, option) in field.options"
-              :key="option"
-              :value="option"
-              >{{ option_name }}</option
-            >
-          </select>
         </div>
         <input type="submit" value="Send" />
       </form>
