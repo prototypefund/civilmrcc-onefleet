@@ -145,10 +145,46 @@ class mapWrapper {
     return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
   }
 
+  private _getDms(val: number, is_lat: boolean): string {
+    var valDeg, valMin, valSec, hemi;
+
+    if (is_lat) hemi = val >= 0 ? 'N' : 'S';
+    else hemi = val >= 0 ? 'E' : 'W';
+
+    val = Math.abs(val);
+    valDeg = Math.floor(val);
+    valMin = Math.floor((val - valDeg) * 60);
+    valSec = Math.round((val - valDeg - valMin / 60) * 3600 * 10) / 10;
+    return valDeg + 'º ' + valMin + "' " + valSec + '" ' + hemi;
+  }
+
   // Helper method to format LatLng object (x.xxxxxx, y.yyyyyy)
   private strLatLng(latlng): string {
+    let dd =
+      '' +
+      this._round(latlng.lat, 6) +
+      '˚, ' +
+      this._round(latlng.lng, 6) +
+      '˚';
+
+    let latDms = this._getDms(latlng.lat, true);
+    let lngDms = this._getDms(latlng.lng, false);
+    let dms = latDms + ', ' + lngDms;
+    return dd + ' | ' + dms;
+  }
+
+  private _createItemHTMLLink(latlng: { lat: number; lng: number }): string {
+    let latlng_list = [latlng.lng, latlng.lat];
     return (
-      '(' + this._round(latlng.lat, 6) + ', ' + this._round(latlng.lng, 6) + ')'
+      '<a href="#" onclick="createItem([' + latlng_list + ']);">Create Item</a>'
+    );
+  }
+
+  private _addToItemHTMLLink(latlng: { lat: number; lng: number }): string {
+    let latlng_list = [latlng.lng, latlng.lat];
+    return (
+      // '<a href="#" onclick="addToItem([' + latlng_list + ']);">Add to Item</a>'
+      ''
     );
   }
 
@@ -159,11 +195,13 @@ class mapWrapper {
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
       return (
-        '<a href="#" onclick="createItem([' +
-        layer.getLatLng().lng +
-        ',' +
-        layer.getLatLng().lat +
-        ']);">Create Item</a>'
+        '<span class="latlng">' +
+        this.strLatLng(layer.getLatLng()) +
+        '</span>' +
+        '<br/>' +
+        this._createItemHTMLLink(layer.getLatLng()) +
+        '<br/>' +
+        this._addToItemHTMLLink(layer.getLatLng())
       );
       // Circle - lat/long, radius
     } else if (layer instanceof L.Circle) {
