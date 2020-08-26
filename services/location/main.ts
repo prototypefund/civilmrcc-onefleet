@@ -249,14 +249,17 @@ class LocationService {
 
       request(url, { json: true }, (err, res, body) => {
         if (err && err.length > 0) {
-          console.log('error fetching position from fleetmon:', err);
+          console.log('error fetching fleetmon_vessel_id from fleetmon:', err);
           console.log('retry with ais api');
           config.fleetmon_api_key = false;
           this.getPositionFromAIS(doc, cb);
         }
         if ((body && body.vessels >= 1) || typeof body != 'string') {
           if (typeof body.errors != 'undefined') {
-            console.log('error fetching position from fleetmon:', err);
+            console.log(
+              'error fetching fleetmon_vessel_id from fleetmon:',
+              err
+            );
             console.log('retry with ais api');
             config.fleetmon_api_key = false;
             this.getPositionFromAIS(doc, cb);
@@ -271,7 +274,7 @@ class LocationService {
                 .then(
                   (i => {
                     return response => {
-                      console.log('item created');
+                      console.log('item fleetmon id added');
 
                       //call self again with updated vessel_id
                       this.getPositionFromAIS(doc, cb);
