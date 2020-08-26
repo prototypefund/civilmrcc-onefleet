@@ -8,7 +8,6 @@ import { MapItem } from '../types/map-item';
 import { DbItem } from '@/types/db-item';
 import { DbPosition } from '@/types/db-position';
 
-
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
  * It also provides some convenience methods for recurring map-related tasks.
