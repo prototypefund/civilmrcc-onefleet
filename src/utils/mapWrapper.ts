@@ -1,5 +1,6 @@
 import * as L from 'leaflet';
 import 'leaflet-draw';
+import 'leaflet-mouse-position';
 import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
@@ -323,6 +324,9 @@ class mapWrapper {
         },
       })
     );
+
+    //** Add mouse coordinates */
+    L.control.mousePosition().addTo(this.map);
 
     // Object created - bind popup to layer, add to feature group
     this.map.on(L.Draw.Event.CREATED, event => {
