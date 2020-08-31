@@ -1,5 +1,5 @@
 <template>
-  <div class="background" v-on:click.self="closeModal">
+  <div class="background" v-on:click.self="closeModal()">
     <div class="form-style-6">
       <h1>Add new {{ form_data.template }}</h1>
       <form @submit="createItem">
@@ -97,12 +97,18 @@ import templates from './templates.js';
 import tags from './tags.js';
 import { serverBus } from '../../main';
 import Position from './Position.vue';
+// import { DbItem } from '../../types/db-item';
 
 export default {
   name: 'CreateItem',
   props: {
-    properties: {
+    given_template: {
+      type: String,
       default: '',
+    },
+    given_positions: {
+      type: Array,
+      default: () => [],
     },
   },
   components: {
@@ -113,11 +119,11 @@ export default {
       template: '',
       vehicles: [],
       form_data: {
-        properties: this.prefillTemplate(),
-        template: this.givenTemplate,
+        type: Object, // type: DbItem,
+        default: null,
       },
       position_data: {
-        positions: [{}],
+        positions: [],
       },
       tags: tags,
     };
@@ -133,10 +139,11 @@ export default {
   },
 
   methods: {
-    prefillTemplate() {
+    prefillProperties() {
       let random_color =
         '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
-      if (this.givenTemplate == 'case') return { boat_color: random_color };
+      // TODO: introduce common "display_settings.marker_color" field to all templates
+      if (this.given_template == 'case') return { boat_color: random_color };
       else return { color: random_color };
     },
     createItem: function(e) {
@@ -147,8 +154,7 @@ export default {
       ).toUpperCase();
       if (
         this.template_data.add_initial_position == false ||
-        (this.position_data.positions[0].lat &&
-          this.position_data.positions[0].lon)
+        this.position_data.positions.length > 0
       ) {
         this.$db.createItem(this.form_data, function(err, result) {
           if (err) {
@@ -160,10 +166,7 @@ export default {
           } else if (result.ok == true) {
             alert('item created');
 
-            if (
-              self.position_data.positions[0].lat &&
-              self.position_data.positions[0].lon
-            ) {
+            if (self.position_data.positions.length > 0) {
               let position = {
                 _id: self.form_data.identifier + '_' + new Date().toISOString(),
                 lat: self.position_data.positions[0].lat,
@@ -191,27 +194,21 @@ export default {
     },
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
   },
   created: function() {
-    //add default value
-    this.position_data.positions[0].lon = 0;
-    this.position_data.positions[0].lat = 0;
+    // pre-fill form data:
+    this.form_data = {
+      properties: this.prefillProperties(),
+      template: this.given_template,
+    };
 
-    /*
-    the properties object can either contain a template_name
-    or a positioin which is passed from modal_data which 
-    is passed to the :properties inside the App.vue.
-    It would be better to pass it into a properties object like
-    :properties="{template:'vehicle', position:[13,37]}"
-    */
-    if (typeof this.properties === 'string') {
-      this.givenTemplate = this.properties;
-      this.form_data.template = this.properties;
-    } else if (Array.isArray(this.properties)) {
-      this.position_data.positions[0].lon = this.properties[0];
-      this.position_data.positions[0].lat = this.properties[1];
+    // pre-fill given position(s)
+    if (this.given_positions) {
+      this.position_data.positions = this.given_positions;
+    } else {
+      this.position_data.positions.push({ lat: 0, lon: 0 });
     }
   },
 };

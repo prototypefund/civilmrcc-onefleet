@@ -129,7 +129,7 @@ export default {
 
   methods: {
     clickItem: function() {
-      serverBus.$emit('itemId', this.base_item._id);
+      serverBus.$emit('show_item', this.base_item._id);
     },
     flyToItem: function() {
       if (this.latestPosition) {

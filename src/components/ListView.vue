@@ -14,10 +14,12 @@
           <thead>
             <th>id</th>
             <th>first seen</th>
-            <th v-for="field in category.fields">{{ field.name }}</th>
+            <th v-for="field in category.fields" :key="field.name">
+              {{ field.name }}
+            </th>
           </thead>
 
-          <tr v-for="item in category.category_base_items">
+          <tr v-for="item in category.category_base_items" :key="item._id">
             <td>{{ item._id }}</td>
             <td v-if="itemPositions(item) && itemPositions(item)[0]">
               {{ itemPositions(item)[0].timestamp }}

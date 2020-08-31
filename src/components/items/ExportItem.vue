@@ -57,6 +57,7 @@ export default {
   },
   watch: {
     exportItemId: function(newVal) {
+      if (!newVal) return;
       // watch it
       var self = this;
       //load doc
@@ -193,7 +194,6 @@ export default {
   bottom: 0;
   left: 0;
   background: rgba(0, 0, 0, 0.8);
-  z-index: 999;
 }
 
 .position_detail ul span {
@@ -227,6 +227,7 @@ export default {
 .form-style-6 input[type='url'],
 .form-style-6 textarea,
 .form-style-6 select {
+  transition: all 0.3s ease-in-out;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;

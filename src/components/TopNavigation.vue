@@ -3,7 +3,7 @@
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
       <ul class="nav-actions">
-        <li v-on:click="openModal('createItem')">
+        <li v-on:click="createItem()">
           <a>
             <i class="fas fa-plus-circle"></i>
             <span>Add</span>
@@ -24,10 +24,7 @@
           <span>Map</span>
         </a>
       </li>
-      <li
-        :class="{ active: modus == 'cases' }"
-        v-on:click="changeModus('cases')"
-      >
+      <li :class="{ active: modus == 'list' }" v-on:click="changeModus('list')">
         <a>
           <i class="fas fa-list-alt"></i>
           <span>List</span>
@@ -50,8 +47,8 @@
           </span>
         </span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item v-on:click="openModal('settings')">
-            <a v-on:click="openModal('settings')">Settings</a>
+          <el-dropdown-item v-on:click="openSettings()">
+            <a v-on:click="openSettings()">Settings</a>
           </el-dropdown-item>
           <el-dropdown-item v-on:click="logout()">
             <a v-on:click="logout()">Logout</a>
@@ -74,7 +71,7 @@ export default {
   props: {
     modus: {
       type: String,
-      default: 'cases',
+      default: 'list',
     },
   },
   data: function() {
@@ -86,19 +83,21 @@ export default {
     };
   },
   methods: {
-    changeModus: function(value) {
+    changeModus(value) {
       // Using the service bus
-      serverBus.$emit('app_modus', value);
+      serverBus.$emit('main_view_mode', value);
     },
-    openModal: function(value) {
-      // Using the service bus
-      serverBus.$emit('modal_modus', value);
+    createItem() {
+      serverBus.$emit('create_item');
     },
-    toggleAir: function() {
+    openSettings() {
+      serverBus.$emit('show_settings');
+    },
+    toggleAir() {
       this.$data.show_air = !this.$data.show_air;
       serverBus.$emit('show_air', this.$data.show_air);
     },
-    logout: function() {
+    logout() {
       localStorage.clear();
       window.location.reload();
     },
