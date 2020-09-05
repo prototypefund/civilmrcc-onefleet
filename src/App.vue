@@ -3,7 +3,7 @@
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
     <CreateItem
       v-if="modal == 'createItem'"
-      :givenTemplate="modal_data"
+      :properties="modal_data"
     ></CreateItem>
     <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
     <ExportItem
@@ -13,6 +13,7 @@
 
     <Login v-if="modal == 'login'"></Login>
     <Settings v-if="modal == 'settings'"></Settings>
+
     <TopNavigation :modus="modus"></TopNavigation>
 
     <LeftNavigation
@@ -30,12 +31,6 @@
       :base_items="base_items"
       :positions_per_item="positions_per_item"
     />
-    <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
-        toggle chat
-      </div>
-      chat
-    </div>
   </div>
 </template>
 
@@ -77,7 +72,7 @@ export default {
     modal: '',
     modal_data: '',
     show_air: false,
-    show_loadingscreen: false, // deactivated for debugging
+    show_loadingscreen: true,
     itemId: false,
     exportItemId: false,
     show_chat: false,
@@ -152,9 +147,9 @@ export default {
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
-
     let self = this;
     //set on change listener on positions because its usually the largest database
+
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',

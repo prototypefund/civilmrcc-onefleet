@@ -27,7 +27,7 @@ class LocationService {
       this.dbConfig
     );
   }
-  
+
   public initMail() {
     console.log('starting mail listener...');
     this.initDBs();
@@ -41,7 +41,7 @@ class LocationService {
       },
     });
   }
-  
+
   public insertLocation(identifier, Position) {
     if (
       typeof Position != 'undefined' &&
@@ -64,11 +64,11 @@ class LocationService {
 
       this.locationsDB
         .put(entry)
-        .then(function(response) {
+        .then(function (response) {
           console.log('location created');
           console.log(entry);
         })
-        .catch(function(err) {
+        .catch(function (err) {
           console.log(entry);
           console.log(err);
         });
@@ -81,10 +81,10 @@ class LocationService {
     var itemDB = this.itemDB;
     itemDB
       .put(obj)
-      .then(function(response) {
+      .then(function (response) {
         cb(null, response);
       })
-      .catch(function(err) {
+      .catch(function (err) {
         cb(err);
       });
   }
@@ -97,12 +97,12 @@ class LocationService {
         attachments: true,
         startkey: identifier,
       })
-      .then(function(result) {
+      .then(function (result) {
         if (result.error) callback(result.error);
         else callback(false, result.rows);
         // handle result
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.log('error while getting vehicles: ', err);
       });
   }
@@ -120,7 +120,7 @@ class LocationService {
               console.log(
                 'get position from AISs for vehicle ' + v.doc.properties.name
               );
-              this.getPositionFromAIS(v.doc, Position => {
+              this.getPositionFromAIS(v.doc, (Position) => {
                 console.log('got position from AIS:' + v.doc.identifier);
                 console.log(Position);
                 this.insertLocation(v.doc.identifier, Position);
@@ -244,8 +244,8 @@ class LocationService {
               this.itemDB
                 .put(doc)
                 .then(
-                  (i => {
-                    return response => {
+                  ((i) => {
+                    return (response) => {
                       console.log('item created');
 
                       //call self again with updated vessel_id
@@ -253,7 +253,7 @@ class LocationService {
                     };
                   })(i)
                 )
-                .catch(function(err) {
+                .catch(function (err) {
                   console.log(err);
                 });
             } else {
@@ -387,20 +387,20 @@ class LocationService {
     // stop listening
     //mailListener.stop();
 
-    mailListener.on('server:connected', function() {
+    mailListener.on('server:connected', function () {
       console.log('imapConnected');
     });
 
-    mailListener.on('server:disconnected', function() {
+    mailListener.on('server:disconnected', function () {
       console.log('imapDisconnected');
     });
 
-    mailListener.on('error', function(err) {
+    mailListener.on('error', function (err) {
       console.log('err:');
       console.log(err);
     });
 
-    mailListener.on('mail', function(mail, seqno, attributes) {
+    mailListener.on('mail', function (mail, seqno, attributes) {
       console.log('got mail!');
       listener_config.mail_callback(mail, seqno, attributes);
     });
@@ -485,9 +485,9 @@ class LocationService {
     });
   }
   /*
-    *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
-    *returns mail (e.g. joe.smith@somemail.com)
-    */
+   *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
+   *returns mail (e.g. joe.smith@somemail.com)
+   */
   public getEmailsFromString(StrObj) {
     var separateEmailsBy = ', ';
     var email = '<none>'; // if no match, use this
@@ -549,8 +549,8 @@ class LocationService {
       this.itemDB
         .put(item)
         .then(
-          (i => {
-            return response => {
+          ((i) => {
+            return (response) => {
               console.log('item created');
 
               let entry = {
@@ -566,18 +566,18 @@ class LocationService {
               };
               this.locationsDB
                 .put(entry)
-                .then(function(response) {
+                .then(function (response) {
                   console.log('location created');
                   console.log(entry);
                 })
-                .catch(function(err) {
+                .catch(function (err) {
                   console.log(entry);
                   console.log(err);
                 });
             };
           })(i)
         )
-        .catch(function(err) {
+        .catch(function (err) {
           console.log(err);
         });
       i++;
@@ -672,8 +672,8 @@ class LocationService {
   private insertPositions(vehiclesByMMSI, filename) {
     fs.createReadStream(path.resolve(__dirname, '', filename))
       .pipe(csv.parse({ headers: true }))
-      .on('error', error => console.error(error))
-      .on('data', row => {
+      .on('error', (error) => console.error(error))
+      .on('data', (row) => {
         let vehicle = vehiclesByMMSI[parseInt(row.mmsi)];
         let pos = {
           timestamp: new Date(row.timestamp),
@@ -701,8 +701,8 @@ class LocationService {
       })
       .on(
         'end',
-        rowCount2 =>
-          function() {
+        (rowCount2) =>
+          function () {
             console.log('fin.');
           }
       );
@@ -710,7 +710,7 @@ class LocationService {
 
   private importHistoricalData() {}
 
-  public deletePositionsOlderThan = async function(olderThanDate) {
+  public deletePositionsOlderThan = async function (olderThanDate) {
     console.log('delete positions older than ' + olderThanDate);
 
     const parsedDate = moment(olderThanDate, [
@@ -757,5 +757,5 @@ class LocationService {
 module.exports = {
   LocationService: LocationService,
   config: config,
-  pouchDB: pouchDB
+  pouchDB: pouchDB,
 };

@@ -23,84 +23,72 @@
         />
 
         <div id="position" v-if="template_data.add_initial_position">
-          <span>Latitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lat"
-            placeholder="Latitude"
-            v-model="position_data.positions[0].lat"
-          />
-
-          <span>Longitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lon"
-            placeholder="Longitude"
-            v-model="position_data.positions[0].lon"
-          />
+          <position
+            :edit="true"
+            :position="position_data.positions[0]"
+          ></position>
         </div>
 
         <div v-for="field in template_data.fields" :key="field.name">
-          <span>{{ field.title }}</span>
+          <div v-if="!field.hidden">
+            <span>{{ field.title }}</span>
 
-          <!-- iconwrapper start -->
-          <div class="iconwrapper" v-if="field.type == 'icon'">
+            <!-- iconwrapper start -->
+            <div class="iconwrapper" v-if="field.type == 'icon'">
+              <input
+                v-model="form_data.properties[field.name]"
+                :name="field.name"
+                :placeholder="field.title"
+                type="text"
+                class="icon"
+              />
+              <span
+                class="preview-icon"
+                :class="'el-icon-' + form_data.properties[field.name]"
+                >&nbsp;</span
+              >
+            </div>
+            <!-- iconwrapper end -->
+
+            <!-- tags start -->
+            <tags-input
+              v-if="field.type == 'tag'"
+              element-id="tags"
+              v-model="form_data.properties[field.name]"
+              :existing-tags="
+                tags.getTagsForField(form_data.template, field.name)
+              "
+              :typeahead="true"
+              typeahead-style="dropdown"
+            ></tags-input>
+            <!-- tags end -->
+
             <input
+              v-if="field.type != 'select' && field.type != 'icon'"
               v-model="form_data.properties[field.name]"
               :name="field.name"
               :placeholder="field.title"
-              type="text"
-              class="icon"
+              :type="field.type"
+              :step="field.step"
             />
-            <span
-              class="preview-icon"
-              :class="'el-icon-' + form_data.properties[field.name]"
-              >&nbsp;</span
+
+            <select
+              v-if="field.type == 'select'"
+              class="select-css"
+              v-model="form_data.properties[field.name]"
             >
+              <option
+                v-for="(option_name, option) in field.options"
+                :key="option"
+                :value="option"
+              >
+                {{ option_name }}
+              </option>
+            </select>
           </div>
-          <!-- iconwrapper end -->
-
-          <!-- tags start -->
-          <tags-input
-            v-if="field.type == 'tag'"
-            element-id="tags"
-            v-model="form_data.properties[field.name]"
-            :existing-tags="
-              tags.getTagsForField(form_data.template, field.name)
-            "
-            :typeahead="true"
-            typeahead-style="dropdown"
-          ></tags-input>
-          <!-- tags end -->
-
-          <input
-            v-if="field.type != 'select' && field.type != 'icon'"
-            v-model="form_data.properties[field.name]"
-            :name="field.name"
-            :placeholder="field.title"
-            :type="field.type"
-            :step="field.step"
-          />
-          <select
-            v-if="field.type == 'select'"
-            class="select-css"
-            v-model="form_data.properties[field.name]"
-          >
-            <option
-              v-for="option in field.options"
-              :key="option"
-              :value="field.options[option]"
-              >{{ option }}</option
-            >
-          </select>
         </div>
         <input type="submit" value="Send" />
       </form>
-      <p>
-        {{ form_data.template }}
-      </p>
     </div>
   </div>
 </template>
@@ -108,13 +96,17 @@
 import templates from './templates.js';
 import tags from './tags.js';
 import { serverBus } from '../../main';
+import Position from './Position.vue';
+
 export default {
   name: 'CreateItem',
   props: {
-    givenTemplate: {
-      type: String,
+    properties: {
       default: '',
     },
+  },
+  components: {
+    Position,
   },
   data: function() {
     return {
@@ -201,6 +193,26 @@ export default {
       // Using the service bus
       serverBus.$emit('modal_modus', '');
     },
+  },
+  created: function() {
+    //add default value
+    this.position_data.positions[0].lon = 0;
+    this.position_data.positions[0].lat = 0;
+
+    /*
+    the properties object can either contain a template_name
+    or a positioin which is passed from modal_data which 
+    is passed to the :properties inside the App.vue.
+    It would be better to pass it into a properties object like
+    :properties="{template:'vehicle', position:[13,37]}"
+    */
+    if (typeof this.properties === 'string') {
+      this.givenTemplate = this.properties;
+      this.form_data.template = this.properties;
+    } else if (Array.isArray(this.properties)) {
+      this.position_data.positions[0].lon = this.properties[0];
+      this.position_data.positions[0].lat = this.properties[1];
+    }
   },
 };
 </script>

@@ -1,5 +1,6 @@
 import * as L from 'leaflet';
 import 'leaflet-draw';
+import 'leaflet-mouse-position';
 import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
@@ -145,10 +146,46 @@ class mapWrapper {
     return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
   }
 
+  private _getDms(val: number, is_lat: boolean): string {
+    var valDeg, valMin, valSec, hemi;
+
+    if (is_lat) hemi = val >= 0 ? 'N' : 'S';
+    else hemi = val >= 0 ? 'E' : 'W';
+
+    val = Math.abs(val);
+    valDeg = Math.floor(val);
+    valMin = Math.floor((val - valDeg) * 60);
+    valSec = Math.round((val - valDeg - valMin / 60) * 3600 * 10) / 10;
+    return valDeg + 'º ' + valMin + "' " + valSec + '" ' + hemi;
+  }
+
   // Helper method to format LatLng object (x.xxxxxx, y.yyyyyy)
   private strLatLng(latlng): string {
+    let dd =
+      '' +
+      this._round(latlng.lat, 6) +
+      '˚, ' +
+      this._round(latlng.lng, 6) +
+      '˚';
+
+    let latDms = this._getDms(latlng.lat, true);
+    let lngDms = this._getDms(latlng.lng, false);
+    let dms = latDms + ', ' + lngDms;
+    return dd + ' | ' + dms;
+  }
+
+  private _createItemHTMLLink(latlng: { lat: number; lng: number }): string {
+    let latlng_list = [latlng.lng, latlng.lat];
     return (
-      '(' + this._round(latlng.lat, 6) + ', ' + this._round(latlng.lng, 6) + ')'
+      '<a href="#" onclick="createItem([' + latlng_list + ']);">Create Item</a>'
+    );
+  }
+
+  private _addToItemHTMLLink(latlng: { lat: number; lng: number }): string {
+    let latlng_list = [latlng.lng, latlng.lat];
+    return (
+      // '<a href="#" onclick="addToItem([' + latlng_list + ']);">Add to Item</a>'
+      ''
     );
   }
 
@@ -158,7 +195,15 @@ class mapWrapper {
     let latlngs, distance: number, area;
     // Marker - add lat/long
     if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-      return this.strLatLng(layer.getLatLng());
+      return (
+        '<span class="latlng">' +
+        this.strLatLng(layer.getLatLng()) +
+        '</span>' +
+        '<br/>' +
+        this._createItemHTMLLink(layer.getLatLng()) +
+        '<br/>' +
+        this._addToItemHTMLLink(layer.getLatLng())
+      );
       // Circle - lat/long, radius
     } else if (layer instanceof L.Circle) {
       var center = layer.getLatLng(),
@@ -279,6 +324,9 @@ class mapWrapper {
         },
       })
     );
+
+    //** Add mouse coordinates */
+    L.control.mousePosition().addTo(this.map);
 
     // Object created - bind popup to layer, add to feature group
     this.map.on(L.Draw.Event.CREATED, event => {
@@ -404,6 +452,7 @@ class mapWrapper {
       }
 
       // color should always be defined: see this._buildMapItemFromDbItem()
+
       let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
@@ -704,9 +753,9 @@ class mapWrapper {
         lineCaptions = this.generateLineCaption(item);
 
       this.loaded_items[item.id] = {
-        line: undefined as any,
-        marker: undefined as any,
-        lineCaptions: undefined as any,
+        line: {} as any,
+        marker: {} as any,
+        lineCaptions: {} as any,
       };
       if (marker) {
         this.loaded_items[item.id].marker = marker;
@@ -733,7 +782,7 @@ class mapWrapper {
    */
   public updateItemPosition(item: MapItem): false | undefined {
     // console.log('updateItemPosition');
-    // console.log(item);
+    // console.log(item)
     if (item.positions.length < 1) {
       return false;
     }

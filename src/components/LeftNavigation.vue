@@ -2,31 +2,65 @@
   <nav>
     <el-tabs v-model="selected_tab">
       <el-tab-pane
-        v-for="(category, category_title) in allCategories"
-        :label="category.plural"
-        :name="category.plural"
-        :key="category.plural"
+        v-for="(section, section_id) in allSections"
+        :label="section.title"
+        :name="section_id.toString()"
+        :key="section.title"
       >
         <div class="action_area">
           <div>
-            more
-            <br />soon
+            <el-dropdown :hide-on-click="false">
+              <span class="el-dropdown-link">
+                Filter ({{ section.hidden_items }} hidden)
+                <i class="el-icon-arrow-down el-icon--right"></i>
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                Filters:
+                <el-dropdown-item
+                  v-for="(filter, filter_id) in selectableFilters[section_id]"
+                  :key="section_id.toString() + '_' + filter_id"
+                  ><el-checkbox
+                    v-model="selectableFilters[section_id][filter_id].active"
+                  >
+                    {{ filter.name }}
+                  </el-checkbox>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+
+            <el-dropdown disabled>
+              <span class="el-dropdown-link">
+                Sort By (random)
+                <i class="el-icon-arrow-down el-icon--right"></i>
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                Sort by:
+                <el-dropdown-item>
+                  Sorting not yet implemented
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
           </div>
           <el-button
-            @click="createItemWithTemplate(category_title)"
+            @click="createItemWithTemplate(section.default_template)"
             type="danger"
             icon="fas fa-plus-circle"
           >
-            Add new {{ category_title }}
+            Add
           </el-button>
         </div>
         <div class="category_list">
-          <div v-if="category.category_base_items.length == 0">
-            loading {{ category.plural }}...
+          <div v-if="section.base_items.length == 0">
+            <div v-if="base_items.length == 0">
+              loading {{ section.title }}...
+            </div>
+            <div v-else>
+              No items. Please select fewer filters.
+            </div>
           </div>
           <ul>
             <NavbarItem
-              v-for="base_item in category.category_base_items"
+              v-for="base_item in section.base_items"
               :key="base_item._id"
               :base_item="base_item"
               :positions="itemPositions(base_item)"
@@ -53,31 +87,48 @@ export default {
   },
   data: function() {
     return {
-      selected_tab: 'Vehicles',
+      selected_tab: '1',
+      filters: [],
     };
   },
   computed: {
-    allCategories: function() {
-      let all_templates = templates.get('all');
-      let category_tabs = {};
+    allSections() {
+      let all_sections = templates.get_navbar_sections();
+      let section_tabs: {}[] = [];
 
-      // set up categories for the tabs bar so that they are shown even before items are loaded
-      for (let template_index in all_templates) {
-        category_tabs[template_index] = {
-          plural: all_templates[template_index].plural,
-          pouch_identifier: all_templates[template_index].pouch_identifier,
-          category_base_items: [],
-        };
-      }
+      // set up tabs for the tabs bar so that they are shown even before items are loaded
+      for (let s_id in all_sections) {
+        // two-stage filtering for computing hidden items per section:
+        let active_filters = this.filters[s_id].filter(f => f.active);
+        let section_filters = active_filters.filter(f => f.always_active);
 
-      // fill categories with items
-      for (let item_index in this.base_items) {
-        let base_item = this.base_items[item_index];
-        if (all_templates[base_item.template]) {
-          category_tabs[base_item.template].category_base_items.push(base_item);
-        }
+        // filter all items for this section:
+        let section_base_items = this.base_items.filter(base_item =>
+          section_filters.every(section_filter =>
+            this.matchesFilter(base_item, section_filter)
+          )
+        );
+
+        // filter additional items based on active filters:
+        let filtered_base_items = section_base_items.filter(base_item =>
+          active_filters.every(active_filter =>
+            this.matchesFilter(base_item, active_filter)
+          )
+        );
+
+        section_tabs.push({
+          title: all_sections[s_id].title,
+          default_template: all_sections[s_id].default_template,
+          base_items: filtered_base_items,
+          hidden_items: section_base_items.length - filtered_base_items.length,
+        });
       }
-      return category_tabs;
+      return section_tabs;
+    },
+    selectableFilters() {
+      return this.filters.map(section_filters =>
+        section_filters.filter(f => !(f.always_active || false))
+      );
     },
   },
 
@@ -93,10 +144,55 @@ export default {
     createItemWithTemplate(template_to_use) {
       serverBus.$emit('modal_modus', 'createItem', template_to_use);
     },
+
+    initFilters() {
+      /** Get filters and set up their active state */
+      let all_sections = templates.get_navbar_sections();
+      let filters = [];
+      for (let section_index in all_sections) {
+        filters[section_index] = all_sections[section_index].filters.map(
+          filter => {
+            filter.active =
+              filter.always_active || filter.initially_active ? true : false;
+            return filter;
+          }
+        );
+      }
+      this.filters = filters;
+    },
+
+    matchesFilter(base_item, filter) {
+      let item_value = filter.field
+        .split('.')
+        .reduce((o, i) => o[i] || {}, base_item);
+      return filter.values.some(filter_value =>
+        this.fitsFilterValue(item_value, filter_value)
+      );
+    },
+
+    fitsFilterValue(item_value: string, filter_value: string) {
+      switch (filter_value[0]) {
+        case '$':
+          return this.evaluateComparisonFunction(item_value, filter_value);
+        case '!':
+          return item_value != filter_value.substring(1);
+        default:
+          return item_value == filter_value;
+      }
+    },
+
+    evaluateComparisonFunction(item_value: string, filter_value: string) {
+      // TODO: use simple regex to implement comparison function. Or Mango-style Query?
+      console.log('evaluateComparisonFunction not implemented yet!');
+      return item_value || filter_value || true;
+    },
   },
+
   mounted: function() {},
 
-  created: function() {},
+  created: function() {
+    this.initFilters();
+  },
 };
 </script>
 
@@ -133,11 +229,21 @@ nav .categories .item_name {
 }
 
 .action_area div {
-  display: flex;
-  vertical-align: text-bottom;
+  display: block;
   font-style: italic;
   font-size: 0.75em;
   color: #aaa;
+}
+
+.filter_button {
+  padding: 2px 10px;
+  display: block;
+}
+
+.sort_button {
+  margin-top: 6px;
+  padding: 2px 10px;
+  display: block;
 }
 
 .category_list div {
@@ -179,5 +285,15 @@ nav .categories .item_name {
 
 .el-tag {
   font-family: var(--font-family-monospace);
+}
+
+.el-dropdown-link {
+  cursor: pointer;
+  color: #409eff;
+  font-size: 12px;
+  font-style: normal;
+}
+.el-icon-arrow-down {
+  font-size: 12px;
 }
 </style>
