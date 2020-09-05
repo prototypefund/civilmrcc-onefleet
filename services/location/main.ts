@@ -48,5 +48,5 @@ if (program.D) {
 module.exports = {
   LocationService: LocationService,
   config: config,
-  pouchDB: pouchDB,
+  pouchDB: pouchDB
 };

@@ -1,59 +1,55 @@
 describe('databases', () => {
-  beforeEach(() => {
-    jest.resetModules();
-  });
+    beforeEach(() => {
+        jest.resetModules()
+    });
 
-  test('Initialize databases [PRODUCTION]', () => {
-    const dbUser = 'foo';
-    const dbPassword = 'bar';
-    process.env.DB_USER = dbUser;
-    process.env.DB_PASSWORD = dbPassword;
-    process.env.DEVELOPMENT = '';
+    test('Initialize databases [PRODUCTION]', () => {
+        const dbUser = 'foo';
+        const dbPassword = 'bar';
+        process.env.DB_USER = dbUser;
+        process.env.DB_PASSWORD = dbPassword;
+        process.env.DEVELOPMENT = '';
 
-    const locsvc = require('../LocationService.ts');
+        const locsvc = require('../LocationService.ts');
 
-    const l = new locsvc.LocationService();
-    const expectedOpts = {
-      auth: {
-        password: dbPassword,
-        username: dbUser,
-      },
-    };
+        const l = new locsvc.LocationService();
+        const expectedOpts = {
+            "auth": {
+                "password": dbPassword, 
+                "username": dbUser
+            },
+        };
 
-    l.initDBs();
+        l.initDBs();
+        
+        expect(l.itemDB.__opts).toMatchObject(expectedOpts);
+        expect(l.locationsDB.__opts).toMatchObject(expectedOpts);
+    });
 
-    expect(l.itemDB.__opts).toMatchObject(expectedOpts);
-    expect(l.locationsDB.__opts).toMatchObject(expectedOpts);
-  });
+    test('Initialize databases [DEVELOPMENT]', () => {
+        process.env.DEVELOPMENT = 'true';
 
-  test('Initialize databases [DEVELOPMENT]', () => {
-    process.env.DEVELOPMENT = 'true';
+        const locsvc = require('../LocationService.ts');
 
-    const locsvc = require('../LocationService.ts');
+        const l = new locsvc.LocationService();
+        
+        l.initDBs();
 
-    const l = new locsvc.LocationService();
+        expect(l.itemDB.__opts).not.toHaveProperty('auth');
+        expect(l.locationsDB.__opts).not.toHaveProperty('auth');
+    });
 
-    l.initDBs();
+    test('Initialize databases with custom URL and prefix', () => {
+        process.env.DB_URL = 'http://example.com:1234';
+        process.env.DB_PREFIX = 'exotic-'
 
-    expect(l.itemDB.__opts).not.toHaveProperty('auth');
-    expect(l.locationsDB.__opts).not.toHaveProperty('auth');
-  });
+        const locsvc = require('../LocationService.ts');
 
-  test('Initialize databases with custom URL and prefix', () => {
-    process.env.DB_URL = 'http://example.com:1234';
-    process.env.DB_PREFIX = 'exotic-';
+        const l = new locsvc.LocationService();
 
-    const locsvc = require('../LocationService.ts');
+        l.initDBs();
 
-    const l = new locsvc.LocationService();
-
-    l.initDBs();
-
-    expect(l.itemDB.name).toBe(
-      `${process.env.DB_URL}/${process.env.DB_PREFIX}items`
-    );
-    expect(l.locationsDB.name).toBe(
-      `${process.env.DB_URL}/${process.env.DB_PREFIX}positions`
-    );
-  });
+        expect(l.itemDB.name).toBe(`${process.env.DB_URL}/${process.env.DB_PREFIX}items`);
+        expect(l.locationsDB.name).toBe(`${process.env.DB_URL}/${process.env.DB_PREFIX}positions`);
+    });
 });
