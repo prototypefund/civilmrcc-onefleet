@@ -27,7 +27,7 @@ class LocationService {
       this.dbConfig
     );
   }
-  
+
   public initMail() {
     console.log('starting mail listener...');
     this.initDBs();
@@ -41,7 +41,7 @@ class LocationService {
       },
     });
   }
-  
+
   public insertLocation(identifier, Position) {
     if (
       typeof Position != 'undefined' &&
@@ -485,9 +485,9 @@ class LocationService {
     });
   }
   /*
-    *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
-    *returns mail (e.g. joe.smith@somemail.com)
-    */
+   *@strObj string String containg a mail like "Joe Smith <joe.smith@somemail.com>"
+   *returns mail (e.g. joe.smith@somemail.com)
+   */
   public getEmailsFromString(StrObj) {
     var separateEmailsBy = ', ';
     var email = '<none>'; // if no match, use this
@@ -757,5 +757,5 @@ class LocationService {
 module.exports = {
   LocationService: LocationService,
   config: config,
-  pouchDB: pouchDB
+  pouchDB: pouchDB,
 };
