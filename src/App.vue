@@ -13,6 +13,8 @@
       v-show="modal == 'showItem'"
       :itemId="modal_data.given_item_id"
       :given_positions="modal_data.given_positions"
+      :mapped_base_items="mapped_base_items"
+      :positions_per_item="positions_per_item"
     ></ShowItem>
     <ExportItem
       v-show="exportItemId != false"
@@ -91,7 +93,14 @@ export default {
     base_positions: [],
     positions_per_item: {},
   }),
-  computed: {},
+  computed: {
+    mapped_base_items: function() {
+      return this.base_items.reduce((map, item) => {
+        map[item._id] = item;
+        return map;
+      }, {});
+    },
+  },
   watch: {
     base_items: function() {
       console.log('base_items new length:', this.base_items.length);

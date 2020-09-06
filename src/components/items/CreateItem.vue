@@ -167,13 +167,16 @@ export default {
             alert('item created');
 
             if (self.position_data.positions.length > 0) {
+              let time_isostring = new Date(
+                self.position_data.positions[0].timestamp || 'now'
+              ).toISOString();
               let position = {
                 _id: self.form_data.identifier + '_' + new Date().toISOString(),
                 lat: self.position_data.positions[0].lat,
                 lon: self.position_data.positions[0].lon,
                 item_identifier: self.form_data.identifier,
                 source: 'onefleet',
-                timestamp: new Date().toISOString(),
+                timestamp: time_isostring,
               };
               self.$db.createPosition(position, function(err, result) {
                 if (err) {
@@ -205,7 +208,7 @@ export default {
     };
 
     // pre-fill given position(s)
-    if (this.given_positions) {
+    if (this.given_positions && this.given_positions.length > 0) {
       this.position_data.positions = this.given_positions;
     } else {
       this.position_data.positions.push({ lat: 0, lon: 0 });

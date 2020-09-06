@@ -1,12 +1,9 @@
 <template>
   <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
     <div class="form-style-6" v-if="template_data && template_data.fields">
-      <h1>
-        Showing {{ historical_form_data.template }}
-        {{ form_data.properties.name }}
-      </h1>
+      <h1>Showing {{ itemTitleText }}</h1>
       <form @submit="storeItem">
-        <Position v-bind:position="last_position"></Position>
+        <Position v-if="last_position" :position="last_position"></Position>
         <span style="padding-top:20px">Identifier</span>
         <input
           type="text"
@@ -75,8 +72,9 @@
             </select>
           </div>
         </div>
-        <a v-on:click="showExportModal(itemId)">Export Locations</a>
-        <input type="submit" value="Save" />
+        <a @click="showExportModal(itemId)">Export Locations</a>
+        <input type="submit" :value="'Save' + savePositionText" />
+        <input type="button" value="Cancel" @click="closeModal()" />
       </form>
     </div>
   </div>
@@ -90,20 +88,18 @@ import { serverBus } from '../../main';
 
 export default {
   name: 'ShowItem',
+
   props: {
-    itemId: {
-      type: String,
-      default: '',
-    },
-    given_positions: {
-      type: Array,
-      default: () => [],
-    },
+    itemId: { type: String, default: '' },
+    given_positions: { type: Array, default: () => [] },
+    mapped_base_items: { type: Object, required: true },
+    positions_per_item: { type: Object, required: false },
   },
 
   components: {
     Position,
   },
+
   data: () => ({
     template: '',
     vehicles: [],
@@ -112,44 +108,66 @@ export default {
     form_data: { properties: {} },
     historical_form_data: {}, //will be used for change log comparison
     position_data: {
-      positions: [{}],
+      positions: [],
+    },
+    historical_position_data: {
+      positions: [],
     },
     tags: tags,
   }),
+
+  computed: {
+    itemTitleText() {
+      return (
+        this.historical_form_data.template +
+        ' ' +
+        (this.form_data.properties.name || this.form_data.identifier)
+      );
+    },
+    savePositionText() {
+      let len = this.given_positions.length;
+      if (len > 1) return ' (+' + len + ' new Positions)';
+      else if (len == 1) return ' (+1 new Position)';
+      else return '';
+    },
+  },
+
   watch: {
     itemId: function(newVal) {
       // watch it
-      const self = this;
+      let doc = this.mapped_base_items[newVal];
+
       //load doc
-      if (newVal) {
-        // newVal may change types from string to boolean. fixme.
-        this.$db.getItem(newVal, function(item) {
-          const doc = item.doc;
-          //load template for doc
-          self.loadTemplate(doc.template);
+      if (doc) {
+        // load template for doc
+        this.loadTemplate(doc.template);
 
-          //load doc into form_data and historical formdata for changelog
-          self.form_data = doc;
-          self.historical_form_data = JSON.parse(JSON.stringify(doc));
+        // load doc into form_data and historical formdata for changelog
+        this.historical_form_data = doc;
+        this.form_data = JSON.parse(JSON.stringify(doc));
 
-          //load last position
-          item.positions.forEach(function(v, i) {
-            //last position
-            if (i == item.positions.length - 1) {
-              self.last_position = v.doc;
-            }
-          });
-        });
+        // concatenate given positions with existing positions_per_item
+        // sort positions by timestamp string. Move positions without timestamp field to end of list.
+        let existing_positions = this.positions_per_item[doc.identifier] || [];
+        let mixed_positions = this.given_positions.concat(existing_positions);
+        let sorted_positions = mixed_positions.sort((a, b) =>
+          (a.timestamp || '').localeCompare(b.timestamp || '')
+        );
+
+        // get last position
+        this.last_position = sorted_positions[sorted_positions.length - 1];
       } else {
         // dialog was closed, so reset the fields:
         this.form_data = { properties: {} };
         this.template_data = {};
         this.last_position = {};
         this.historical_form_data = {};
-        this.position_data = { positions: [{}] };
+        this.position_data = { positions: [] };
+        this.historial_position_data = { positions: [] };
       }
     },
   },
+
   methods: {
     loadTemplate: function(template_name) {
       this.template_data = templates.get(template_name);
@@ -166,6 +184,7 @@ export default {
     },
     storeItem: function(e) {
       e.preventDefault();
+
       const changes: {
         old: string;
         new: string;
@@ -186,22 +205,92 @@ export default {
         //this.$db.addItemLog(this.itemId, changes[i]);
       }*/
 
-      var self = this;
-      this.$db.createItem(this.form_data, function(err, result) {
+      this.$db.createItem(this.form_data, (err, result) => {
         if (err) {
           if (err.name == 'conflict')
             alert('The id is already taken, please choose another one');
           else alert('An unknown error occured while creating the item');
-
-          console.error(err);
+          console.error('error while storing item:', err);
         } else {
-          if (result.ok == true) self.closeModal();
-          alert('The item has been updated');
+          if (result.ok == true) {
+            this.closeModal();
+            this.$message({
+              title: 'Success',
+              type: 'success',
+              duration: 5000,
+              message: 'The ' + this.itemTitleText + ' has been updated',
+            });
+
+            if (this.given_positions.length > 0) {
+              let item_identifier = this.form_data.identifier;
+              let errors: Array<Object> = [];
+
+              // store all given positions at once. Use iteration `i` as part of new `_id` field
+              this.given_positions.forEach((given_pos, i) => {
+                let db_position = {
+                  _id:
+                    item_identifier + '_' + new Date().toISOString() + '_' + i,
+                  lat: given_pos.lat,
+                  lon: given_pos.lon,
+                  item_identifier: item_identifier,
+                  source: given_pos.source || 'onefleet',
+                  timestamp: new Date(
+                    given_pos.timestamp || 'now'
+                  ).toISOString(),
+                };
+                this.$db.createPosition(db_position, (err, result) => {
+                  if (err) {
+                    console.error('could not store pos:', err, db_position);
+                    errors.push(db_position);
+                  } else {
+                    if (result.ok)
+                      console.log('position created:', db_position);
+                  }
+                });
+              });
+
+              // TODO use async-await here !!
+              let expected = this.given_positions.length;
+              let title = this.itemTitleText;
+              setTimeout(
+                () => this.reportPositionStorageErrors(errors, expected, title),
+                1000 // :(
+              );
+            }
+          }
         }
       });
     },
+
+    reportPositionStorageErrors(errors, expected, title): boolean {
+      // report any errors, or success
+      if (errors.length > 0) {
+        let count_string = errors.length + ' of ' + expected;
+        this.$message({
+          showClose: true,
+          type: 'error',
+          duration: 0,
+          message: 'Error! Could not store ' + count_string + ' position(s).',
+        });
+        return false;
+      } else {
+        this.$message({
+          title: 'Success',
+          type: 'success',
+          duration: 5000,
+          message:
+            expected >= 2
+              ? 'All ' + expected + ' new positions have been stored'
+              : 'The new position for ' + title + ' has been stored',
+        });
+        return true;
+      }
+    },
   },
-  mounted: () => {},
+
+  mounted() {},
+
+  created() {},
 };
 </script>
 

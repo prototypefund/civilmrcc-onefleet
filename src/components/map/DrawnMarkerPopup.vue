@@ -3,19 +3,31 @@
     <span class="latlng"> DD: {{ latestDD }} </span> <br />
     <span class="latlng"> DMS: {{ latestDMS }} </span> <br />
 
+    <el-date-picker
+      v-model="sighting_datetime"
+      type="datetime"
+      placeholder="Enter time of sighting"
+      size="small"
+    >
+    </el-date-picker>
+
     Save position into: <br />
 
-    <el-cascader
-      placeholder="Existing..."
-      :options="options"
-      :show-all-levels="false"
-      filterable
-      size="small"
-      :props="{ expandTrigger: 'hover' }"
-      @change="addToItem"
-    ></el-cascader>
     <el-dropdown @command="createNewItem">
       <el-button type="primary" plain size="small">
+        Existing... <i class="el-icon-arrow-down el-icon--right"></i>
+      </el-button>
+      <el-dropdown-menu slot="dropdown">
+        <el-cascader-panel
+          :options="item_options"
+          :props="{ expandTrigger: 'hover' }"
+          @change="addToItem"
+        ></el-cascader-panel>
+      </el-dropdown-menu>
+    </el-dropdown>
+
+    <el-dropdown @command="createNewItem">
+      <el-button type="primary" plain size="small" class="button-spacer">
         New... <i class="el-icon-arrow-down el-icon--right"></i>
       </el-button>
       <el-dropdown-menu slot="dropdown">
@@ -49,18 +61,23 @@ export default {
 
   data() {
     return {
+      sighting_datetime: null,
       options: [
         {
           value: 'case',
           label: 'Cases',
           children: [
             {
-              value: 'case_1',
-              label: 'Case 1',
+              value: 'CASE_TEST1',
+              label: 'Case TEST1',
             },
             {
-              value: 'CASE_AP_0',
-              label: 'Case AP 0',
+              value: 'CASE_TEST2',
+              label: 'Case TEST2',
+            },
+            {
+              value: 'CASE_TEST3',
+              label: 'Case TEST3',
             },
           ],
         },
@@ -113,18 +130,33 @@ export default {
     template_options() {
       return Object.keys(templates.get('all'));
     },
+    item_options() {
+      let item_options = this.options;
+      for (let i = 0; i < 30; i++)
+        item_options[2].children.push({
+          value: 'plus_' + i,
+          label: 'Other Item ' + i,
+        });
+      return item_options;
+    },
+    enriched_positions() {
+      let positions = [this.popup_data.position];
+      return positions.map(pos => {
+        pos.timestamp = this.sighting_datetime;
+        return pos;
+      });
+    },
   },
 
   watch: {},
 
   methods: {
     addToItem(item_ids: String[]) {
-      console.log('mapArea.addToItem', item_ids);
-      serverBus.$emit('show_item', item_ids[1], [this.popup_data.position]);
+      serverBus.$emit('show_item', item_ids[1], this.enriched_positions);
     },
 
     createNewItem(template_type: String) {
-      serverBus.$emit('create_item', template_type, [this.popup_data.position]);
+      serverBus.$emit('create_item', template_type, this.enriched_positions);
     },
 
     capitalizeFirstLetter(string) {
@@ -145,6 +177,10 @@ export default {
   white-space: nowrap;
 }
 
+.el-date-editor {
+  width: 210px;
+}
+
 .el-dropdown {
   /* margin-right: 8px; */
   font: 12px/1.5 'Helvetica Neue', Arial, Helvetica, sans-serif;
@@ -155,8 +191,11 @@ export default {
   text-decoration: underline dashed;
 }
 
-.el-cascader {
-  width: 110px;
-  margin-right: 10px;
+.el-button {
+  width: 100px;
+}
+
+.button-spacer {
+  margin-left: 11px;
 }
 </style>
