@@ -24,6 +24,7 @@ class mapWrapper {
   } = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
+  public markerGroup = L.layerGroup();
 
   /**
    * Initialises the map backend component.
@@ -941,6 +942,31 @@ class mapWrapper {
       let map_item = this._buildMapItemFromDbItem(base_item, item_positions);
       this.updateItemPosition(map_item);
     } else this.hideItem(base_item._id);
+  }
+
+  /**
+   * Creates a marker at specific coordinates.
+   */
+  public addMarkerByCoordinates(lat: number, lon: number, show: number): void {
+    this.map.addLayer(this.markerGroup);
+    let coords = new L.LatLng(lat, lon);
+    var marker = new L.Marker(coords);
+    marker.addTo(this.markerGroup);
+    var marker_id = this.markerGroup.getLayerId(marker);
+
+    let div = document.createElement('div');
+    let content = document.createTextNode(
+      'Lat: ' + lat + ', Lon: ' + lon + ' '
+    );
+    //div.innerText = "Lat: " + lat + ", Lon: " + lon +"<br></br>";
+    let btn = document.createElement('button');
+    div.appendChild(content);
+    div.appendChild(btn);
+    btn.innerText = 'Delete';
+    btn.onclick = () => {
+      this.markerGroup.removeLayer(marker_id);
+    };
+    marker.bindPopup(div).openPopup();
   }
 
   /**

@@ -34,6 +34,32 @@
         :popup_data="popup_data"
       ></ItemTrackPopup>
     </div>
+
+    <div>
+      <button
+        class="btn"
+        title="Create new marker from location"
+        v-on:click="show_add_marker_box = !show_add_marker_box"
+      >
+        <i class="el-icon-location-outline" text-align="center;"></i>
+      </button>
+      <div id="addmarker" v-if="show_add_marker_box">
+        <button
+          id="close"
+          v-on:click="
+            show_add_marker_box = false;
+            setCoordsToDefault();
+          "
+        >
+          X
+        </button>
+        <Position
+          :edit="true"
+          :position="position_data.positions[0]"
+        ></Position>
+        <button id="addMarker" v-on:click="addmarker">Add Marker</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -53,6 +79,7 @@ import DrawnMarkerPopup from './map/DrawnMarkerPopup.vue';
 import DrawnTrackPopup from './map/DrawnTrackPopup.vue';
 import ItemMarkerPopup from './map/ItemMarkerPopup.vue';
 import ItemTrackPopup from './map/ItemTrackPopup.vue';
+import Position from './items/Position.vue';
 
 import { serverBus } from '../main';
 
@@ -64,6 +91,7 @@ export default {
     DrawnTrackPopup,
     ItemMarkerPopup,
     ItemTrackPopup,
+    Position,
   },
   props: {
     filtered_base_items: { type: Array, required: true },
@@ -75,6 +103,10 @@ export default {
       map_initialized: false,
       popup_modal: '',
       popup_data: {},
+      show_add_marker_box: false,
+      position_data: {
+        positions: [{}],
+      },
     };
   },
   computed: {},
@@ -84,6 +116,17 @@ export default {
   methods: {
     showingPopup(ref: String): boolean {
       return this.popup_modal == ref;
+    },
+
+    addmarker() {
+      let lat = this.position_data.positions[0].lat;
+      let lon = this.position_data.positions[0].lon;
+      this.$map.addMarkerByCoordinates(lat, lon, 1);
+    },
+
+    setCoordsToDefault() {
+      this.position_data.positions[0].lon = 0;
+      this.position_data.positions[0].lat = 0;
     },
   },
 
@@ -117,7 +160,11 @@ export default {
       });
     });
   },
-  created: function() {},
+
+  created: function() {
+    this.position_data.positions[0].lon = 0;
+    this.position_data.positions[0].lat = 0;
+  },
 };
 </script>
 
@@ -181,5 +228,37 @@ export default {
 
 .item_track_style {
   width: 200px;
+}
+
+/* Custom button styling */
+.btn {
+  background-color: whitesmoke;
+  border: none;
+  text-align: center;
+  width: 25px;
+  height: 25px;
+  color: black;
+  cursor: pointer;
+  z-index: 999;
+  position: absolute;
+  top: 450px;
+  left: 10px;
+  border-radius: 3.5px;
+  box-shadow: 1px 1px 1px 1px lightslategrey;
+}
+
+/* Custom button darker background on mouse-over */
+.btn:hover {
+  background-color: rgba(245, 245, 245, 0.863);
+}
+
+#addmarker {
+  position: absolute;
+  top: 450px;
+  left: 50px;
+  width: 500px;
+  height: 100px;
+  z-index: 999;
+  background: #fff;
 }
 </style>
