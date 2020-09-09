@@ -1,7 +1,10 @@
 <template>
   <div class="background" v-show="itemId != false" v-on:click.self="closeModal">
     <div class="form-style-6" v-if="template_data && template_data.fields">
-      <h1>Show {{ historical_form_data.template }}</h1>
+      <h1>
+        Showing {{ historical_form_data.template }}
+        {{ form_data.properties.name }}
+      </h1>
       <form @submit="storeItem">
         <Position v-bind:position="last_position"></Position>
         <span style="padding-top:20px">Identifier</span>
@@ -87,7 +90,17 @@ import { serverBus } from '../../main';
 
 export default {
   name: 'ShowItem',
-  props: ['itemId'],
+  props: {
+    itemId: {
+      type: String,
+      default: '',
+    },
+    given_positions: {
+      type: Array,
+      default: () => [],
+    },
+  },
+
   components: {
     Position,
   },
@@ -144,11 +157,11 @@ export default {
     },
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('itemId', false);
+      serverBus.$emit('close_modal');
     },
     showExportModal: function(id) {
-      serverBus.$emit('itemId', false);
-      // Using the service bus
+      // close this modal and open exports
+      serverBus.$emit('close_modal');
       serverBus.$emit('exportItemId', id);
     },
     storeItem: function(e) {
@@ -191,3 +204,13 @@ export default {
   mounted: () => {},
 };
 </script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+form a {
+  cursor: pointer;
+}
+form a:hover {
+  text-decoration: underline;
+}
+</style>

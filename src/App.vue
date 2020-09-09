@@ -1,33 +1,38 @@
 <template>
   <div id="app">
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
+    <Login v-if="modal == 'login'"></Login>
+    <Settings v-if="modal == 'settings'"></Settings>
+
     <CreateItem
       v-if="modal == 'createItem'"
-      :properties="modal_data"
+      :given_template="modal_data.given_template_type"
+      :given_positions="modal_data.given_positions"
     ></CreateItem>
-    <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
+    <ShowItem
+      v-show="modal == 'showItem'"
+      :itemId="modal_data.given_item_id"
+      :given_positions="modal_data.given_positions"
+    ></ShowItem>
     <ExportItem
       v-show="exportItemId != false"
       :exportItemId="exportItemId"
     ></ExportItem>
 
-    <Login v-if="modal == 'login'"></Login>
-    <Settings v-if="modal == 'settings'"></Settings>
-
-    <TopNavigation :modus="modus"></TopNavigation>
+    <TopNavigation :modus="main_view_mode"></TopNavigation>
 
     <LeftNavigation
-      v-show="modus == 'map'"
+      v-show="main_view_mode == 'map'"
       :base_items="base_items"
       :positions_per_item="positions_per_item"
     />
     <Air v-if="show_air"></Air>
     <div id="mainWindow">
-      <MapArea v-show="modus == 'map'" />
+      <MapArea v-show="main_view_mode == 'map'" />
     </div>
     <ListView
       class="wide"
-      v-show="modus == 'cases'"
+      v-show="main_view_mode == 'list'"
       :base_items="base_items"
       :positions_per_item="positions_per_item"
     />
@@ -35,19 +40,24 @@
 </template>
 
 <script lang="ts">
+// vue-components: main window areas
 import TopNavigation from './components/TopNavigation.vue';
+import LeftNavigation from './components/LeftNavigation.vue';
+import MapArea from './components/MapArea.vue';
+import ListView from './components/ListView.vue';
+
+// vue-components: item-specific modals
 import CreateItem from './components/items/CreateItem.vue';
 import ShowItem from './components/items/ShowItem.vue';
 import ExportItem from './components/items/ExportItem.vue';
 
-import LeftNavigation from './components/LeftNavigation.vue';
+// vue-components: other modals & popups
 import Air from './components/Air.vue';
-import MapArea from './components/MapArea.vue';
-import ListView from './components/ListView.vue';
 import Login from './components/Login.vue';
 import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
 
+// other imports
 import { serverBus } from './main';
 // import { DbItem } from '@/types/db-item';
 // import { DbPosition } from '@/types/db-position';
@@ -55,36 +65,33 @@ import { serverBus } from './main';
 export default {
   name: 'app',
   components: {
+    // main window areas:
     TopNavigation,
     LeftNavigation,
-    Air,
     MapArea,
+    ListView,
+    // item-specific modals:
     CreateItem,
     ShowItem,
     ExportItem,
-    ListView,
+    // other modals & popups:
+    Air,
     Login,
     Settings,
     Loadingscreen,
   },
   data: () => ({
-    modus: 'map',
+    main_view_mode: 'map',
     modal: '',
-    modal_data: '',
+    modal_data: {},
     show_air: false,
     show_loadingscreen: true,
-    itemId: false,
     exportItemId: false,
-    show_chat: false,
     base_items: [],
     base_positions: [],
     positions_per_item: {},
   }),
-  computed: {
-    chatWindowClass: function() {
-      return this.show_chat ? 'show_chat' : 'hide_chat';
-    },
-  },
+  computed: {},
   watch: {
     base_items: function() {
       console.log('base_items new length:', this.base_items.length);
@@ -94,22 +101,19 @@ export default {
     },
   },
   methods: {
-    showItemDetails: () => {
-      this.itemid = 3;
-    },
-    loadItems: function() {
+    loadItems() {
       this.$db.getBaseItems().then(result => {
         this.base_items = result.rows.map(item => item.doc);
       });
     },
-    loadPositions: function() {
+    loadPositions() {
       this.$db.getBasePositions().then(result => {
         let base_positions = result.rows.map(position => position.doc);
         this.positions_per_item = this.assignPositions(base_positions);
         this.base_positions = base_positions;
       });
     },
-    assignPositions: function(base_positions) {
+    assignPositions(base_positions) {
       // todo: move this to db-wrapper
       let positions_per_item = {};
       for (let i in base_positions) {
@@ -120,7 +124,7 @@ export default {
       }
       return positions_per_item;
     },
-    getPositionsForItem: function(base_item) {
+    getPositionsForItem(base_item) {
       // todo: move this to db-wrapper
       let positions = this.positions_per_item[base_item._id];
       if (!positions) positions = this.positions_per_item[base_item.identifier];
@@ -129,24 +133,64 @@ export default {
   },
 
   created: function() {
-    serverBus.$on('app_modus', app_modus => {
-      this.$data.modus = app_modus;
+    serverBus.$on('show_login_screen', () => {
+      this.show_loadingscreen = false;
+      this.modal_data = {};
+      this.modal = 'login';
     });
 
-    serverBus.$on('modal_modus', (modal_modus, modal_data) => {
-      this.$data.modal = modal_modus;
-      if (modal_modus == 'login') this.$data.show_loadingscreen = false;
-      this.$data.modal_data = modal_data;
+    serverBus.$on('main_view_mode', app_modus => {
+      this.main_view_mode = app_modus;
     });
+    serverBus.$on('create_item', (template_type, latlngs) => {
+      this.modal_data = {
+        given_template_type: template_type,
+        given_positions: latlngs,
+      };
+      this.modal = 'createItem';
+    });
+    // deprecated! Please use the specific signal directly.
+    // serverBus.$on('modal_modus', (modal_modus, modal_data) => {
+    //   this.$data.modal = modal_modus;
+    //   if (modal_modus == 'login') this.$data.show_loadingscreen = false;
+    //   this.$data.modal_data = modal_data;
+    // });
     serverBus.$on('show_air', show_air => {
       this.$data.show_air = show_air;
     });
-    serverBus.$on('itemId', itemId => {
-      this.$data.itemId = itemId;
+    serverBus.$on('show_settings', () => {
+      this.modal_data = {};
+      this.modal = 'settings';
     });
+    serverBus.$on('itemId', itemId => {
+      // deprecated. use the 'show_item' signal directly!
+      serverBus.$emit('show_item', itemId);
+    });
+    serverBus.$on(
+      'show_item',
+      (item_id: String, latlngs: { lat: number; lon: number }[]) => {
+        if (item_id) {
+          this.modal_data = {
+            given_item_id: item_id,
+            given_positions: latlngs,
+          };
+          // this.itemId = item_id;
+          this.modal = 'showItem';
+        } else {
+          // this.itemId = false;
+          this.modal = '';
+          this.modal_data = {};
+        }
+      }
+    );
     serverBus.$on('exportItemId', itemId => {
       this.$data.exportItemId = itemId;
     });
+    serverBus.$on('close_modal', () => {
+      this.modal = '';
+      this.modal_data = {};
+    });
+
     let self = this;
     //set on change listener on positions because its usually the largest database
 
@@ -309,6 +353,7 @@ ul {
 .form-style-6 input[type='datetime-local'],
 .form-style-6 textarea,
 .form-style-6 select {
+  transition: all 0.3s ease-in-out;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;

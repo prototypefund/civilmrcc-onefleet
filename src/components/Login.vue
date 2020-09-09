@@ -50,7 +50,7 @@ export default {
   methods: {
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
     login: function() {
       localStorage.username = this.username;

@@ -41,13 +41,6 @@
               </el-dropdown-menu>
             </el-dropdown>
           </div>
-          <el-button
-            @click="createItemWithTemplate(section.default_template)"
-            type="danger"
-            icon="fas fa-plus-circle"
-          >
-            Add
-          </el-button>
         </div>
         <div class="category_list">
           <div v-if="section.base_items.length == 0">
@@ -93,7 +86,7 @@ export default {
   },
   computed: {
     allSections() {
-      let all_sections = templates.get_navbar_sections();
+      let all_sections = templates.get_filter_groups();
       let section_tabs: {}[] = [];
 
       // set up tabs for the tabs bar so that they are shown even before items are loaded
@@ -116,12 +109,13 @@ export default {
           )
         );
 
-        section_tabs.push({
-          title: all_sections[s_id].title,
-          default_template: all_sections[s_id].default_template,
-          base_items: filtered_base_items,
-          hidden_items: section_base_items.length - filtered_base_items.length,
-        });
+        if (all_sections[s_id].selectable_in_sidebar)
+          section_tabs.push({
+            title: all_sections[s_id].title,
+            base_items: filtered_base_items,
+            hidden_items:
+              section_base_items.length - filtered_base_items.length,
+          });
       }
       return section_tabs;
     },
@@ -142,12 +136,12 @@ export default {
     },
 
     createItemWithTemplate(template_to_use) {
-      serverBus.$emit('modal_modus', 'createItem', template_to_use);
+      serverBus.$emit('create_item', template_to_use);
     },
 
     initFilters() {
       /** Get filters and set up their active state */
-      let all_sections = templates.get_navbar_sections();
+      let all_sections = templates.get_filter_groups();
       let filters = [];
       for (let section_index in all_sections) {
         filters[section_index] = all_sections[section_index].filters.map(
@@ -250,7 +244,6 @@ nav .categories .item_name {
   padding: 0.5em 1em;
   display: flex;
   vertical-align: top;
-  align: center;
   font-style: italic;
   font-size: 0.75em;
   color: #aaa;

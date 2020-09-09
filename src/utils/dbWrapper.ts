@@ -202,7 +202,7 @@ export class DbWrapper extends PouchWrapper {
 
         for (let i in replay_items) {
           this.getItem(replay_items[i].id, loadeditem => {
-            let templatedItem = options.map.loadTemplatedItem(loadeditem);
+            let templatedItem = options.map.prepareTemplatedItem(loadeditem);
             console.log(templatedItem);
             options.map.updateItemPosition(templatedItem);
           });

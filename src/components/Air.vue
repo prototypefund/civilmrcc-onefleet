@@ -4,7 +4,7 @@
       <div
         v-if="typeof properties.vehicles !== 'undefined' && properties.vehicles"
       >
-        <li v-for="vehicle in properties.vehicles">
+        <li v-for="vehicle in properties.vehicles" :key="vehicle._id">
           <div v-if="vehicle.doc.properties.air == 'true'">
             <h2>
               <i data-v-19f9f8c9 class="fas fa-plane"></i>
@@ -51,7 +51,7 @@ export default {
   methods: {
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
   },
   created: function() {

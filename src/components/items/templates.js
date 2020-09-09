@@ -1,28 +1,44 @@
 export default {
-  get_navbar_sections: function() {
-    /** Defines which types of items should be shown in which section/tab of the UI's navigation bar */
+  get_filter_groups: function() {
+    /** Defines which types of items should be shown in which navigation bar tab and/or map layer in the UI */
     return [
       {
         title: 'Cases',
-        default_template: 'case',
+        selectable_in_sidebar: true,
+        selectable_on_map: true,
+        initially_selected_on_map: true,
         filters: [
           {
-            name: 'Section Template',
+            name: 'Filtergroup Template',
             field: 'template',
             values: ['case'],
             always_active: true,
           },
           {
-            name: 'Status: Unattended/Confirmed/Critical',
+            name: 'Status: Open',
             field: 'properties.status',
-            values: ['unattended', 'confirmed', 'critical'],
+            values: [
+              'open_confirmed',
+              'open_attended',
+              'open_lost',
+              'attended', // deprecated, but some cases might still use this status
+              'unattended', // deprecated, but some cases might still use this status
+              'critical', // deprecated, but some cases might still use this status
+            ],
             initially_active: true,
           },
           {
-            name: 'Status: Closed/Attended',
+            name: 'Status: Closed',
             field: 'properties.status',
-            values: ['closed', 'attended'],
+            values: [
+              'closed_rescued',
+              'closed_intercepted',
+              'closed_shipwrecked',
+              'closed_arrived',
+              'closed', // deprecated, but some cases might still use this status
+            ],
           },
+          // Not yet implemented:
           // {
           //   name: 'First Seen in last 7 days',
           //   field: 'properties.first_seen',
@@ -38,16 +54,19 @@ export default {
       },
       {
         title: 'Civil Fleet',
-        default_template: 'vehicle',
+        selectable_in_sidebar: true,
+        selectable_on_map: true,
+        initially_selected_in_sidebar: true,
+        initially_selected_on_map: true,
         filters: [
           {
-            name: 'Section Templates',
+            name: 'Filtergroup Templates',
             field: 'template',
             values: ['vehicle', 'aircraft'],
             always_active: true,
           },
           {
-            name: 'Section Categories',
+            name: 'Filtergroup Categories',
             field: 'properties.category',
             values: ['civilfleet'],
             always_active: true,
@@ -73,6 +92,7 @@ export default {
             field: 'properties.air',
             values: ['false'],
           },
+          // Not yet implemented:
           // {
           //   name: 'Last Position < 5 days ago',
           //   field: 'position.timestamp',
@@ -83,16 +103,17 @@ export default {
       },
       {
         title: 'Other',
-        default_template: 'landmark',
+        selectable_in_sidebar: true,
+        selectable_on_map: false,
         filters: [
           {
-            name: 'Section Templates',
+            name: 'Filtergroup Templates',
             field: 'template',
             values: ['landmark', 'vehicle', 'aircraft'],
             always_active: true,
           },
           {
-            name: 'Section Categories',
+            name: 'Filtergroup Categories',
             field: 'properties.category',
             values: ['!civilfleet'],
             always_active: true,
@@ -136,6 +157,26 @@ export default {
         ],
         sortings: [],
       },
+      {
+        title: 'SAR Zones',
+        selectable_in_sidebar: false,
+        selectable_on_map: true,
+        initially_selected_on_map: true,
+        filters: [
+          {
+            name: 'Filtergroup Templates',
+            field: 'template',
+            values: ['sarzone'],
+            always_active: true,
+          },
+          {
+            name: 'Only Central Med',
+            field: 'properties.category',
+            values: ['centralmed'],
+          },
+        ],
+        sortings: [],
+      },
     ];
   },
 
@@ -152,11 +193,13 @@ export default {
             title: 'Status',
             type: 'select',
             options: {
-              closed: 'closed',
-              attended: 'attended',
-              possible_target: 'possible_target',
-              confirmed: 'confirmed',
-              critical: 'critical',
+              open_confirmed: 'Open (Confirmed Visually)',
+              open_attended: 'Open (Attended)',
+              open_lost: 'Open (Lost Contact)',
+              closed_rescued: 'Closed (Rescued)',
+              closed_intercepted: 'Closed (Intercepted)',
+              closed_shipwrecked: 'Closed (Shipwrecked)',
+              closed_arrived: 'Closed (Arrived)',
             },
           },
           {
