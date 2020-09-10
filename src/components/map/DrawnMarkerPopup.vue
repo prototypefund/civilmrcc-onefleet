@@ -58,67 +58,12 @@ export default {
         position: null,
       }),
     },
+    filtered_base_items: { type: Array, required: true },
   },
 
   data() {
     return {
       sighting_datetime: null,
-      options: [
-        {
-          value: 'case',
-          label: 'Cases',
-          children: [
-            {
-              value: 'CASE_TEST1',
-              label: 'Case TEST1',
-            },
-            {
-              value: 'CASE_TEST2',
-              label: 'Case TEST2',
-            },
-            {
-              value: 'CASE_TEST3',
-              label: 'Case TEST3',
-            },
-          ],
-        },
-        {
-          value: 'civilfleet',
-          label: 'Civil Fleet',
-          children: [
-            {
-              value: 'ship_1',
-              label: 'Ship 1',
-            },
-            {
-              value: 'ship_2',
-              label: 'Ship 2',
-            },
-            {
-              value: 'aircraft_1',
-              label: 'Aircraft 1',
-            },
-          ],
-        },
-        {
-          value: 'other',
-          label: 'Other',
-          children: [
-            {
-              value: 'axure',
-              label: 'Axure Components',
-            },
-            {
-              value: 'sketch',
-              label: 'Sketch Templates',
-            },
-            {
-              value: 'docs',
-              label: 'Design Documentation',
-            },
-          ],
-        },
-      ],
     };
   },
   computed: {
@@ -132,13 +77,15 @@ export default {
       return Object.keys(templates.get('all'));
     },
     item_options() {
-      let item_options = this.options;
-      for (let i = 0; i < 30; i++)
-        item_options[2].children.push({
-          value: 'plus_' + i,
-          label: 'Other Item ' + i,
-        });
-      return item_options;
+      let name_function = this.itemName;
+      return this.filtered_base_items.map(section => ({
+        value: section.title,
+        label: section.title,
+        children: section.base_items.map(base_item => ({
+          value: base_item._id,
+          label: name_function(base_item),
+        })),
+      }));
     },
     enriched_positions() {
       let positions = [this.popup_data.position];
@@ -152,6 +99,11 @@ export default {
   watch: {},
 
   methods: {
+    itemName(base_item) {
+      if (base_item.properties.name) return base_item.properties.name;
+      else return base_item.template + ' ' + base_item.identifier;
+    },
+
     addToItem(item_ids: String[]) {
       if (item_ids.length > 0) {
         serverBus.$emit('show_item', item_ids[1], this.enriched_positions);

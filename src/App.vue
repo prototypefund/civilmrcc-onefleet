@@ -32,7 +32,11 @@
     />
     <Air v-if="show_air"></Air>
     <div id="mainWindow">
-      <MapArea v-show="main_view_mode == 'map'" />
+      <MapArea
+        v-show="main_view_mode == 'map'"
+        :filtered_base_items="allFilteredItems"
+        :positions_per_item="positions_per_item"
+      />
     </div>
     <ListView
       class="wide"

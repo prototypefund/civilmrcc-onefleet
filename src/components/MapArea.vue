@@ -12,6 +12,7 @@
       <DrawnMarkerPopup
         v-if="showingPopup('drawn_marker_popup')"
         :popup_data="popup_data"
+        :filtered_base_items="filtered_base_items"
       ></DrawnMarkerPopup>
     </div>
     <div ref="drawn_track_popup" class="drawn_track_style">
@@ -64,7 +65,10 @@ export default {
     ItemMarkerPopup,
     ItemTrackPopup,
   },
-  props: {},
+  props: {
+    filtered_base_items: { type: Array, required: true },
+    positions_per_item: { type: Object, required: false },
+  },
 
   data() {
     return {
