@@ -19,6 +19,7 @@
       </el-button>
       <el-dropdown-menu slot="dropdown">
         <el-cascader-panel
+          ref="existing_items_cascader"
           :options="item_options"
           :props="{ expandTrigger: 'hover' }"
           @change="addToItem"
@@ -152,7 +153,10 @@ export default {
 
   methods: {
     addToItem(item_ids: String[]) {
-      serverBus.$emit('show_item', item_ids[1], this.enriched_positions);
+      if (item_ids.length > 0) {
+        serverBus.$emit('show_item', item_ids[1], this.enriched_positions);
+        this.$refs.existing_items_cascader.clearCheckedNodes();
+      }
     },
 
     createNewItem(template_type: String) {
