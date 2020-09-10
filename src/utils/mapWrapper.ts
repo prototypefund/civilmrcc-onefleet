@@ -382,6 +382,7 @@ class mapWrapper {
           showArea: true,
         },
         circle: false,
+        circlemarker: false,
       },
     });
     this.map.addControl(drawing_toolbar);
