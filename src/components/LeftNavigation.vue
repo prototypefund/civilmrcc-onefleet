@@ -2,7 +2,7 @@
   <nav>
     <el-tabs v-model="selected_tab">
       <el-tab-pane
-        v-for="(section, section_id) in allSections"
+        v-for="(section, section_id) in filtered_base_items"
         :label="section.title"
         :name="section_id.toString()"
         :key="section.title"
@@ -67,7 +67,6 @@
 
 <script lang="ts">
 import NavbarItem from './items/NavbarItem.vue';
-import templates from './items/templates.js';
 import { serverBus } from '../main';
 export default {
   name: 'LeftNavigation',
@@ -75,50 +74,17 @@ export default {
     NavbarItem,
   },
   props: {
+    filters: { type: Array, required: true },
     base_items: { type: Array, required: true },
+    filtered_base_items: { type: Array, required: true },
     positions_per_item: { type: Object, required: false },
   },
   data: function() {
     return {
       selected_tab: '1',
-      filters: [],
     };
   },
   computed: {
-    allSections() {
-      let all_sections = templates.get_filter_groups();
-      let section_tabs: {}[] = [];
-
-      // set up tabs for the tabs bar so that they are shown even before items are loaded
-      for (let s_id in all_sections) {
-        // two-stage filtering for computing hidden items per section:
-        let active_filters = this.filters[s_id].filter(f => f.active);
-        let section_filters = active_filters.filter(f => f.always_active);
-
-        // filter all items for this section:
-        let section_base_items = this.base_items.filter(base_item =>
-          section_filters.every(section_filter =>
-            this.matchesFilter(base_item, section_filter)
-          )
-        );
-
-        // filter additional items based on active filters:
-        let filtered_base_items = section_base_items.filter(base_item =>
-          active_filters.every(active_filter =>
-            this.matchesFilter(base_item, active_filter)
-          )
-        );
-
-        if (all_sections[s_id].selectable_in_sidebar)
-          section_tabs.push({
-            title: all_sections[s_id].title,
-            base_items: filtered_base_items,
-            hidden_items:
-              section_base_items.length - filtered_base_items.length,
-          });
-      }
-      return section_tabs;
-    },
     selectableFilters() {
       return this.filters.map(section_filters =>
         section_filters.filter(f => !(f.always_active || false))
@@ -138,55 +104,11 @@ export default {
     createItemWithTemplate(template_to_use) {
       serverBus.$emit('create_item', template_to_use);
     },
-
-    initFilters() {
-      /** Get filters and set up their active state */
-      let all_sections = templates.get_filter_groups();
-      let filters = [];
-      for (let section_index in all_sections) {
-        filters[section_index] = all_sections[section_index].filters.map(
-          filter => {
-            filter.active =
-              filter.always_active || filter.initially_active ? true : false;
-            return filter;
-          }
-        );
-      }
-      this.filters = filters;
-    },
-
-    matchesFilter(base_item, filter) {
-      let item_value = filter.field
-        .split('.')
-        .reduce((o, i) => o[i] || {}, base_item);
-      return filter.values.some(filter_value =>
-        this.fitsFilterValue(item_value, filter_value)
-      );
-    },
-
-    fitsFilterValue(item_value: string, filter_value: string) {
-      switch (filter_value[0]) {
-        case '$':
-          return this.evaluateComparisonFunction(item_value, filter_value);
-        case '!':
-          return item_value != filter_value.substring(1);
-        default:
-          return item_value == filter_value;
-      }
-    },
-
-    evaluateComparisonFunction(item_value: string, filter_value: string) {
-      // TODO: use simple regex to implement comparison function. Or Mango-style Query?
-      console.log('evaluateComparisonFunction not implemented yet!');
-      return item_value || filter_value || true;
-    },
   },
 
   mounted: function() {},
 
-  created: function() {
-    this.initFilters();
-  },
+  created: function() {},
 };
 </script>
 

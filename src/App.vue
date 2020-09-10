@@ -25,7 +25,9 @@
 
     <LeftNavigation
       v-show="main_view_mode == 'map'"
+      :filters="filters"
       :base_items="base_items"
+      :filtered_base_items="allFilteredItems"
       :positions_per_item="positions_per_item"
     />
     <Air v-if="show_air"></Air>
@@ -60,6 +62,7 @@ import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
 
 // other imports
+import templates from './components/items/templates.js';
 import { serverBus } from './main';
 // import { DbItem } from '@/types/db-item';
 // import { DbPosition } from '@/types/db-position';
@@ -87,18 +90,64 @@ export default {
     modal: '',
     modal_data: {},
     show_air: false,
-    show_loadingscreen: true,
+    show_loadingscreen: false, // deactivated for debugging
     exportItemId: false,
     base_items: [],
     base_positions: [],
     positions_per_item: {},
+    filters: [],
   }),
   computed: {
+    /**
+     * This computed value just returns an indexed version of the base_items.
+     * The index is the item's id field.
+     */
     mapped_base_items: function() {
       return this.base_items.reduce((map, item) => {
         map[item._id] = item;
         return map;
       }, {});
+    },
+
+    /**
+     * This computed value always contains an array of filtered item sections.
+     * It is used by the LeftNavigationBar to display all items by tab section,
+     * and by the MapArea to display the visible items in one layer per filter section.
+     * Some map Popup components also use this to display available items in popups.
+     */
+    allFilteredItems() {
+      let all_filter_groups = templates.get_filter_groups();
+      let filtered_item_groups: {}[] = [];
+
+      // set up tabs for the tabs bar so that they are shown even before items are loaded
+      for (let s_id in all_filter_groups) {
+        // two-stage filtering for computing hidden items per section:
+        let active_filters = this.filters[s_id].filter(f => f.active);
+        let section_filters = active_filters.filter(f => f.always_active);
+
+        // filter all items for this section:
+        let section_base_items = this.base_items.filter(base_item =>
+          section_filters.every(section_filter =>
+            this.matchesFilter(base_item, section_filter)
+          )
+        );
+
+        // filter additional items based on active filters:
+        let filtered_base_items = section_base_items.filter(base_item =>
+          active_filters.every(active_filter =>
+            this.matchesFilter(base_item, active_filter)
+          )
+        );
+
+        if (all_filter_groups[s_id].selectable_in_sidebar)
+          filtered_item_groups.push({
+            title: all_filter_groups[s_id].title,
+            base_items: filtered_base_items,
+            hidden_items:
+              section_base_items.length - filtered_base_items.length,
+          });
+      }
+      return filtered_item_groups;
     },
   },
   watch: {
@@ -139,6 +188,47 @@ export default {
       if (!positions) positions = this.positions_per_item[base_item.identifier];
       return positions;
     },
+
+    /** Start of Item Filter functions */
+    initFilters() {
+      /** Get filters and set up their active state */
+      let all_filter_groups = templates.get_filter_groups();
+      let filters = [];
+      for (let section_index in all_filter_groups) {
+        filters[section_index] = all_filter_groups[section_index].filters.map(
+          filter => {
+            filter.active =
+              filter.always_active || filter.initially_active ? true : false;
+            return filter;
+          }
+        );
+      }
+      this.filters = filters;
+    },
+    matchesFilter(base_item, filter) {
+      let item_value = filter.field
+        .split('.')
+        .reduce((o, i) => o[i] || {}, base_item);
+      return filter.values.some(filter_value =>
+        this.fitsFilterValue(item_value, filter_value)
+      );
+    },
+    fitsFilterValue(item_value: string, filter_value: string) {
+      switch (filter_value[0]) {
+        case '$':
+          return this.evaluateComparisonFunction(item_value, filter_value);
+        case '!':
+          return item_value != filter_value.substring(1);
+        default:
+          return item_value == filter_value;
+      }
+    },
+    evaluateComparisonFunction(item_value: string, filter_value: string) {
+      // TODO: use simple regex to implement comparison function. Or Mango-style Query?
+      console.log('evaluateComparisonFunction not implemented yet!');
+      return item_value || filter_value || true;
+    },
+    /** End of Item Filter functions */
   },
 
   created: function() {
@@ -222,6 +312,7 @@ export default {
 
     this.loadItems();
     this.loadPositions();
+    this.initFilters();
   },
 };
 </script>
