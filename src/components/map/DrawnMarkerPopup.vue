@@ -90,7 +90,8 @@ export default {
     enriched_positions() {
       let positions = [this.popup_data.position];
       return positions.map(pos => {
-        pos.timestamp = this.sighting_datetime;
+        // use entered timestamp, or now if not entered:
+        pos.timestamp = this.sighting_datetime || new Date();
         return pos;
       });
     },

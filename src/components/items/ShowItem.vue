@@ -234,8 +234,9 @@ export default {
                   lon: given_pos.lon,
                   item_identifier: item_identifier,
                   source: given_pos.source || 'onefleet',
-                  timestamp: new Date(
-                    given_pos.timestamp || 'now'
+                  timestamp: (given_pos.timestamp
+                    ? new Date(given_pos.timestamp)
+                    : new Date()
                   ).toISOString(),
                 };
                 this.$db.createPosition(db_position, (err, result) => {
