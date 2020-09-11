@@ -73,8 +73,10 @@
           </div>
         </div>
         <a @click="showExportModal(itemId)">Export Locations</a>
-        <input type="submit" :value="'Save' + savePositionText" />
-        <input type="button" value="Cancel" @click="closeModal()" />
+        <div class="save_cancel_buttons">
+          <input type="submit" :value="'Save' + savePositionText" />
+          <input type="button" value="Cancel" @click="closeModal()" />
+        </div>
       </form>
     </div>
   </div>
