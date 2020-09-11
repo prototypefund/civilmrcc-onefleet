@@ -188,6 +188,7 @@ export default {
       e.preventDefault();
 
       const changes: {
+        index: string;
         old: string;
         new: string;
       }[] = [];
@@ -198,14 +199,16 @@ export default {
           this.form_data.properties[i]
         ) {
           changes.push({
+            index: i,
             old: this.historical_form_data.properties[i],
             new: this.form_data.properties[i],
           });
         }
       }
-      /*for (let i in changes) {
-        //this.$db.addItemLog(this.itemId, changes[i]);
-      }*/
+
+      for (let i in changes) {
+        this.$db.addItemLog(this.itemId, changes[i]);
+      }
 
       this.$db.createItem(this.form_data, (err, result) => {
         if (err) {

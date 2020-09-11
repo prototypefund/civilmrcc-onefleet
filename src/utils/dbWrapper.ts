@@ -48,6 +48,19 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
+  public addItemLog(item_id: string, change: any) {
+    var logDB = this.getDB('logs');
+    let log_entry = {
+      _id: item_id + '_' + new Date().toISOString(),
+      user: localStorage.username,
+      change: change,
+    };
+    logDB
+      .put(log_entry)
+      .then(response => {})
+      .catch(err => {});
+  }
+
   public createItem(obj: DbItem, cb: Function) {
     var itemDB = this.getDB('items');
     itemDB
@@ -158,6 +171,12 @@ export class DbWrapper extends PouchWrapper {
   }
   public getVehicles(cb: Function) {
     this.getItemsByTemplate('VEHICLE', cb);
+  }
+  public getLog() {
+    return this.getDB('logs').allDocs({
+      include_docs: true,
+      attachments: true,
+    });
   }
   public appendItemsToMap(map) {
     this.getItems((err, result) => {

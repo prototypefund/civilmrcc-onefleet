@@ -31,6 +31,7 @@
       :positions_per_item="positions_per_item"
     />
     <Air v-if="show_air"></Air>
+    <Log v-if="show_log"></Log>
     <div id="mainWindow">
       <MapArea
         v-show="main_view_mode == 'map'"
@@ -51,8 +52,6 @@
 // vue-components: main window areas
 import TopNavigation from './components/TopNavigation.vue';
 import LeftNavigation from './components/LeftNavigation.vue';
-import MapArea from './components/MapArea.vue';
-import ListView from './components/ListView.vue';
 
 // vue-components: item-specific modals
 import CreateItem from './components/items/CreateItem.vue';
@@ -61,6 +60,9 @@ import ExportItem from './components/items/ExportItem.vue';
 
 // vue-components: other modals & popups
 import Air from './components/Air.vue';
+import Log from './components/Log.vue';
+import MapArea from './components/MapArea.vue';
+import ListView from './components/ListView.vue';
 import Login from './components/Login.vue';
 import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
@@ -77,6 +79,8 @@ export default {
     // main window areas:
     TopNavigation,
     LeftNavigation,
+    Air,
+    Log,
     MapArea,
     ListView,
     // item-specific modals:
@@ -84,7 +88,6 @@ export default {
     ShowItem,
     ExportItem,
     // other modals & popups:
-    Air,
     Login,
     Settings,
     Loadingscreen,
@@ -94,7 +97,9 @@ export default {
     modal: '',
     modal_data: {},
     show_air: false,
-    show_loadingscreen: false, // deactivated for debugging
+    show_log: false,
+    show_loadingscreen: true,
+    itemId: false,
     exportItemId: false,
     base_items: [],
     base_positions: [],
@@ -261,9 +266,8 @@ export default {
     serverBus.$on('show_air', show_air => {
       this.$data.show_air = show_air;
     });
-    serverBus.$on('show_settings', () => {
-      this.modal_data = {};
-      this.modal = 'settings';
+    serverBus.$on('show_log', show_log => {
+      this.$data.show_log = show_log;
     });
     serverBus.$on('itemId', itemId => {
       // deprecated. use the 'show_item' signal directly!

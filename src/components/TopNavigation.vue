@@ -38,6 +38,12 @@
           <span>Air</span>
         </a>
       </li>
+      <li v-on:click="toggleLog()">
+        <a>
+          <i class="fas fa-list"></i>
+          <span>Log</span>
+        </a>
+      </li>
       <el-dropdown>
         <span class="el-dropdown-link">
           <i class="fas fa-user"></i>
@@ -77,6 +83,7 @@ export default {
   data: function() {
     return {
       show_air: false,
+      show_log: false,
       show_timeControl: false,
       username: '',
       password: '',
@@ -97,7 +104,11 @@ export default {
       this.$data.show_air = !this.$data.show_air;
       serverBus.$emit('show_air', this.$data.show_air);
     },
-    logout() {
+    toggleLog: function() {
+      this.$data.show_log = !this.$data.show_log;
+      serverBus.$emit('show_log', this.$data.show_log);
+    },
+    logout: function() {
       localStorage.clear();
       window.location.reload();
     },
