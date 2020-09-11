@@ -146,7 +146,19 @@ class mapWrapper {
     this.map.addControl(this._createSarZoneToggleControl());
 
     //** Add mouse coordinates */
-    L.control.mousePosition().addTo(this.map);
+    L.control
+      .mousePosition({
+        position: 'bottomright',
+        emptyString: '',
+        formatter: (lng: number, lat: number) => {
+          return (
+            this.asDMS({ lat: lat, lon: lng }) +
+            ' | ' +
+            this.asDD({ lat: lat, lon: lng })
+          );
+        },
+      })
+      .addTo(this.map);
 
     this.map.on('move', () => {
       storage.set('mapzoom', (this.map as any)._zoom);

@@ -87,7 +87,10 @@
             </select>
           </div>
         </div>
-        <input type="submit" value="Send" />
+        <div class="save_cancel_buttons">
+          <input type="submit" value="Save" />
+          <input type="button" value="Cancel" @click="closeModal()" />
+        </div>
       </form>
     </div>
   </div>
@@ -147,6 +150,14 @@ export default {
       else return { color: random_color };
     },
     createItem: function(e) {
+      e.preventDefault();
+
+      // we must never create an item without a proper identifier:
+      if (!this.form_data.identifier || this.form_data.identifier.length <= 2) {
+        alert('please enter a valid Identifier');
+        return;
+      }
+
       var self = this;
 
       this.form_data._id = String(
@@ -192,8 +203,6 @@ export default {
       } else {
         alert('please enter a valid position');
       }
-
-      e.preventDefault();
     },
     closeModal: function() {
       // Using the service bus

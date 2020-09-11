@@ -563,6 +563,13 @@ ul {
   padding: 11px;
 }
 
+.save_cancel_buttons input {
+  width: 49% !important;
+}
+.save_cancel_buttons input[type='submit'] {
+  margin-right: 2%;
+}
+
 .tags-input-wrapper-default,
 .tags-input-wrapper-default.active {
   padding: 0;
