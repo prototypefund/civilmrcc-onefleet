@@ -58,7 +58,7 @@ The frontend is built on Vue.js. To start it you have to run:
 
 ```
 npm i
-npm serve
+npm run serve
 ```
 
 After that you can open the frontend at http://localhost:8080/
