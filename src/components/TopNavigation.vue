@@ -18,13 +18,19 @@
       </ul>
     </div>
     <ul id="nav-views">
-      <li :class="{ active: modus == 'map' }" v-on:click="changeModus('map')">
+      <li
+        :class="{ active: main_view == 'map' }"
+        v-on:click="changeModus('map')"
+      >
         <a>
           <i class="fas fa-map-marked"></i>
           <span>Map</span>
         </a>
       </li>
-      <li :class="{ active: modus == 'list' }" v-on:click="changeModus('list')">
+      <li
+        :class="{ active: main_view == 'list' }"
+        v-on:click="changeModus('list')"
+      >
         <a>
           <i class="fas fa-list-alt"></i>
           <span>List</span>
@@ -32,13 +38,13 @@
       </li>
     </ul>
     <ul id="nav-right">
-      <li v-on:click="toggleAir()">
+      <li :class="{ active: showing_air }" v-on:click="toggleAir()">
         <a>
           <i class="fas fa-plane"></i>
           <span>Air</span>
         </a>
       </li>
-      <li v-on:click="toggleLog()">
+      <li :class="{ active: showing_log }" v-on:click="toggleLog()">
         <a>
           <i class="fas fa-list"></i>
           <span>Log</span>
@@ -75,15 +81,12 @@ export default {
     TimeControl,
   },
   props: {
-    modus: {
-      type: String,
-      default: 'list',
-    },
+    main_view: { type: String, default: 'list' },
+    showing_air: { type: Boolean, default: false },
+    showing_log: { type: Boolean, default: false },
   },
   data: function() {
     return {
-      show_air: false,
-      show_log: false,
       show_timeControl: false,
       username: '',
       password: '',
@@ -92,7 +95,7 @@ export default {
   methods: {
     changeModus(value) {
       // Using the service bus
-      serverBus.$emit('main_view_mode', value);
+      serverBus.$emit('main_view', value);
     },
     createItem() {
       serverBus.$emit('create_item');
@@ -101,14 +104,14 @@ export default {
       serverBus.$emit('show_settings');
     },
     toggleAir() {
-      this.$data.show_air = !this.$data.show_air;
-      serverBus.$emit('show_air', this.$data.show_air);
+      if (!this.showing_air) serverBus.$emit('show_air');
+      else serverBus.$emit('close_modal');
     },
-    toggleLog: function() {
-      this.$data.show_log = !this.$data.show_log;
-      serverBus.$emit('show_log', this.$data.show_log);
+    toggleLog() {
+      if (!this.showing_log) serverBus.$emit('show_log');
+      else serverBus.$emit('close_modal');
     },
-    logout: function() {
+    logout() {
       localStorage.clear();
       window.location.reload();
     },

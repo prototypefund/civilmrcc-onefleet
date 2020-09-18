@@ -44,10 +44,10 @@ export default {
   methods: {
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
-    clickItem: function(itemId) {
-      serverBus.$emit('itemId', itemId);
+    showItemDetails: function(itemId) {
+      serverBus.$emit('show_item', itemId);
     },
   },
   created: function() {
@@ -70,6 +70,7 @@ export default {
   width: 23vw;
   z-index: 9999;
   font-size: 10px;
+  background: rgb(55, 60, 68, 0.2);
 }
 
 .log .timestamp {
@@ -85,6 +86,7 @@ export default {
   background: #fff;
   padding: 13px;
   margin-bottom: 10px;
+  border-radius: 10px;
 }
 
 .log ul li header {
