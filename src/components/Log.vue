@@ -24,6 +24,9 @@
           <span class="new" v-if="entry.doc.change.new">
             {{ entry.doc.change.new }}
           </span>
+          <span class="comment" v-if="entry.doc.comment&&entry.doc.comment.length>0">
+            {{ entry.doc.comment }}
+          </span>
         </div>
       </li>
     </ul>

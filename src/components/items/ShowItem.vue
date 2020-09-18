@@ -76,6 +76,11 @@
         <div class="save_cancel_buttons">
           <input type="submit" :value="'Save' + savePositionText" />
           <input type="button" value="Cancel" @click="closeModal()" />
+          <input type="checkbox" id="commentCheck" value="true" style="width:auto!important;" v-model="showCommentBox"/>
+          <label for="commentCheck">Comment change</label>
+        </div>
+        <div v-if="showCommentBox">
+          <textarea placeholder="comment" v-model="comment"></textarea>
         </div>
       </form>
     </div>
@@ -115,6 +120,8 @@ export default {
     historical_position_data: {
       positions: [],
     },
+    showCommentBox:false,
+    comment:'',
     tags: tags,
   }),
 
@@ -207,9 +214,9 @@ export default {
       }
 
       for (let i in changes) {
-        this.$db.addItemLog(this.itemId, changes[i]);
+        this.$db.addItemLog(this.itemId, changes[i],this.comment);
       }
-
+      this.comment = '';
       this.$db.createItem(this.form_data, (err, result) => {
         if (err) {
           if (err.name == 'conflict')

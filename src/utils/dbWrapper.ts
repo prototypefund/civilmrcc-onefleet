@@ -48,12 +48,13 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
-  public addItemLog(item_id: string, change: any) {
+  public addItemLog(item_id: string, change: any, comment: string) {
     var logDB = this.getDB('logs');
     let log_entry = {
       _id: item_id + '_' + new Date().toISOString(),
       user: localStorage.username,
       change: change,
+      comment:comment
     };
     logDB
       .put(log_entry)
