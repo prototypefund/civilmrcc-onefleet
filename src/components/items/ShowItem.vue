@@ -76,11 +76,22 @@
         <div class="save_cancel_buttons">
           <input type="submit" :value="'Save' + savePositionText" />
           <input type="button" value="Cancel" @click="closeModal()" />
-          <input type="checkbox" id="commentCheck" value="true" style="width:auto!important;" v-model="showCommentBox"/>
-          <label for="commentCheck">Comment change</label>
+          <br />
+          <input
+            type="checkbox"
+            id="commentCheck"
+            value="true"
+            style="width:auto!important;"
+            v-model="showCommentBox"
+          />
+          <label for="commentCheck"><small>comment change</small></label>
         </div>
         <div v-if="showCommentBox">
-          <textarea placeholder="comment" v-model="comment"></textarea>
+          <textarea
+            placeholder="comment"
+            v-model="comment"
+            id="comment"
+          ></textarea>
         </div>
       </form>
     </div>
@@ -120,8 +131,8 @@ export default {
     historical_position_data: {
       positions: [],
     },
-    showCommentBox:false,
-    comment:'',
+    showCommentBox: false,
+    comment: '',
     tags: tags,
   }),
 
@@ -214,7 +225,7 @@ export default {
       }
 
       for (let i in changes) {
-        this.$db.addItemLog(this.itemId, changes[i],this.comment);
+        this.$db.addItemLog(this.itemId, changes[i], this.comment);
       }
       this.comment = '';
       this.$db.createItem(this.form_data, (err, result) => {
@@ -314,5 +325,12 @@ form a {
 }
 form a:hover {
   text-decoration: underline;
+}
+small {
+  font-size: 10px;
+}
+
+#comment {
+  width: 80px;
 }
 </style>

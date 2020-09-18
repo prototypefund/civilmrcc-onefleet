@@ -54,7 +54,7 @@ export class DbWrapper extends PouchWrapper {
       _id: item_id + '_' + new Date().toISOString(),
       user: localStorage.username,
       change: change,
-      comment:comment
+      comment: comment,
     };
     logDB
       .put(log_entry)
