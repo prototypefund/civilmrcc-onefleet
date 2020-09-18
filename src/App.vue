@@ -21,27 +21,31 @@
       :exportItemId="exportItemId"
     ></ExportItem>
 
-    <TopNavigation :modus="main_view_mode"></TopNavigation>
+    <TopNavigation
+      :main_view="main_view"
+      :showing_air="modal == 'showAir'"
+      :showing_log="modal == 'showLog'"
+    ></TopNavigation>
+    <Air v-if="modal == 'showAir'"></Air>
+    <Log v-if="modal == 'showLog'"></Log>
 
     <LeftNavigation
-      v-show="main_view_mode == 'map'"
+      v-show="main_view == 'map'"
       :filters="filters"
       :base_items="base_items"
       :filtered_base_items="allFilteredItems"
       :positions_per_item="positions_per_item"
     />
-    <Air v-if="show_air"></Air>
-    <Log v-if="show_log"></Log>
     <div id="mainWindow">
       <MapArea
-        v-show="main_view_mode == 'map'"
+        v-show="main_view == 'map'"
         :filtered_base_items="allFilteredItems"
         :positions_per_item="positions_per_item"
       />
     </div>
     <ListView
       class="wide"
-      v-show="main_view_mode == 'list'"
+      v-show="main_view == 'list'"
       :base_items="base_items"
       :positions_per_item="positions_per_item"
     />
@@ -52,6 +56,8 @@
 // vue-components: main window areas
 import TopNavigation from './components/TopNavigation.vue';
 import LeftNavigation from './components/LeftNavigation.vue';
+import MapArea from './components/MapArea.vue';
+import ListView from './components/ListView.vue';
 
 // vue-components: item-specific modals
 import CreateItem from './components/items/CreateItem.vue';
@@ -61,8 +67,6 @@ import ExportItem from './components/items/ExportItem.vue';
 // vue-components: other modals & popups
 import Air from './components/Air.vue';
 import Log from './components/Log.vue';
-import MapArea from './components/MapArea.vue';
-import ListView from './components/ListView.vue';
 import Login from './components/Login.vue';
 import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
@@ -79,8 +83,6 @@ export default {
     // main window areas:
     TopNavigation,
     LeftNavigation,
-    Air,
-    Log,
     MapArea,
     ListView,
     // item-specific modals:
@@ -88,18 +90,17 @@ export default {
     ShowItem,
     ExportItem,
     // other modals & popups:
+    Air,
+    Log,
     Login,
     Settings,
     Loadingscreen,
   },
   data: () => ({
-    main_view_mode: 'map',
+    main_view: 'map',
     modal: '',
     modal_data: {},
-    show_air: false,
-    show_log: false,
     show_loadingscreen: true,
-    itemId: false,
     exportItemId: false,
     base_items: [],
     base_positions: [],
@@ -247,8 +248,8 @@ export default {
       this.modal = 'login';
     });
 
-    serverBus.$on('main_view_mode', app_modus => {
-      this.main_view_mode = app_modus;
+    serverBus.$on('main_view', app_modus => {
+      this.main_view = app_modus;
     });
     serverBus.$on('create_item', (template_type, latlngs) => {
       this.modal_data = {
@@ -263,11 +264,15 @@ export default {
     //   if (modal_modus == 'login') this.$data.show_loadingscreen = false;
     //   this.$data.modal_data = modal_data;
     // });
-    serverBus.$on('show_air', show_air => {
-      this.$data.show_air = show_air;
+    serverBus.$on('show_air', () => {
+      this.modal = 'showAir';
     });
-    serverBus.$on('show_log', show_log => {
-      this.$data.show_log = show_log;
+    serverBus.$on('show_log', () => {
+      this.modal = 'showLog';
+    });
+    serverBus.$on('show_settings', () => {
+      this.modal_data = {};
+      this.modal = 'settings';
     });
     serverBus.$on('itemId', itemId => {
       // deprecated. use the 'show_item' signal directly!
@@ -275,11 +280,11 @@ export default {
     });
     serverBus.$on(
       'show_item',
-      (item_id: String, latlngs: { lat: number; lon: number }[]) => {
+      (item_id: String, positions: { lat: number; lon: number }[]) => {
         if (item_id) {
           this.modal_data = {
             given_item_id: item_id,
-            given_positions: latlngs,
+            given_positions: positions,
           };
           // this.itemId = item_id;
           this.modal = 'showItem';
@@ -290,7 +295,7 @@ export default {
         }
       }
     );
-    serverBus.$on('exportItemId', itemId => {
+    serverBus.$on('exportItemId', (itemId: String) => {
       this.$data.exportItemId = itemId;
     });
     serverBus.$on('close_modal', () => {
