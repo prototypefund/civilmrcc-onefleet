@@ -247,7 +247,6 @@ export default {
       this.modal = 'login';
     });
 
-    
     serverBus.$on('main_view_mode', app_modus => {
       this.main_view_mode = app_modus;
     });
