@@ -247,8 +247,13 @@ export default {
       this.modal = 'login';
     });
 
+    
     serverBus.$on('main_view_mode', app_modus => {
       this.main_view_mode = app_modus;
+    });
+    serverBus.$on('show_settings', app_modus => {
+      console.log('ettings');
+      this.modal = 'settings';
     });
     serverBus.$on('create_item', (template_type, latlngs) => {
       this.modal_data = {
