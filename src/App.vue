@@ -251,6 +251,10 @@ export default {
     serverBus.$on('main_view', app_modus => {
       this.main_view = app_modus;
     });
+    serverBus.$on('show_settings', () => {
+      console.log('ettings');
+      this.modal = 'settings';
+    });
     serverBus.$on('create_item', (template_type, latlngs) => {
       this.modal_data = {
         given_template_type: template_type,
