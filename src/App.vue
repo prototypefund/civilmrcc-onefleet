@@ -251,7 +251,7 @@ export default {
     serverBus.$on('main_view_mode', app_modus => {
       this.main_view_mode = app_modus;
     });
-    serverBus.$on('show_settings', app_modus => {
+    serverBus.$on('show_settings', () => {
       console.log('ettings');
       this.modal = 'settings';
     });
