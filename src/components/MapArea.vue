@@ -38,15 +38,12 @@
 </template>
 
 <script lang="ts">
-// // NOTE: Vue linter incorrectly thinks that "DbItem" is unused
-// // eslint-disable-next-line
-// import { DbItem } from '@/types/db-item';
-// // NOTE: Vue linter incorrectly thinks that "DbPosition" is unused
-// // eslint-disable-next-line
-// import { DbPosition } from '@/types/db-position';
-// // NOTE: Vue linter incorrectly thinks that "MapItem" is unused
-// // eslint-disable-next-line
-// import { MapItem } from '@/types/map-item';
+// NOTE: Vue linter incorrectly thinks that "DbItem" is unused
+// eslint-disable-next-line
+import { DbItem } from '@/types/db-item';
+// NOTE: Vue linter incorrectly thinks that "DbPosition" is unused
+// eslint-disable-next-line
+import { DbPosition } from '@/types/db-position';
 
 import DrawnAreaPopup from './map/DrawnAreaPopup.vue';
 import DrawnMarkerPopup from './map/DrawnMarkerPopup.vue';
@@ -77,7 +74,23 @@ export default {
       popup_data: {},
     };
   },
-  computed: {},
+  computed: {
+    /**
+     * Provide a shown_items object for use by the current implementation of the Replay feature.
+     * This will likely become obsolete as the Replay feature is updated, so don't forget to remove this then.
+     */
+    shown_items() {
+      let shown_items = {};
+      for (const section_id in this.filtered_base_items) {
+        const section = this.filtered_base_items[section_id];
+        for (const i in section.base_items) {
+          const base_item = section.base_items[i];
+          shown_items[base_item._id] = true;
+        }
+      }
+      return shown_items;
+    },
+  },
 
   watch: {},
 
@@ -98,7 +111,7 @@ export default {
 
     serverBus.$on(
       'update_item_on_map',
-      (base_item, item_positions, show_item) => {
+      (base_item: DbItem, item_positions: DbPosition[], show_item: boolean) => {
         this.$map.updateItemOnMap(base_item, item_positions, show_item);
       }
     );
