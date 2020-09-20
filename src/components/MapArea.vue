@@ -1,16 +1,31 @@
 <template>
   <div>
     <div id="mapArea"></div>
-    <button class="btn" title="Create new marker from location" v-on:click="show_add_marker_box = !show_add_marker_box"><i class='el-icon-location-outline' text-align=center;></i></button>
+    <button
+      class="btn"
+      title="Create new marker from location"
+      v-on:click="show_add_marker_box = !show_add_marker_box"
+    >
+      <i class="el-icon-location-outline" text-align="center;"></i>
+    </button>
     <div id="addmarker" v-if="show_add_marker_box">
-    <button id="close" v-on:click="show_add_marker_box = false; setCoordsToDefault()">X</button>
-    <div class="form-style-6">
-         <Position 
-        :edit="true" 
-         :position="position_data.positions[0]"
-         ></Position>
-         <button id="addMarker" v-on:click="addmarker">Add Marker</button>
-         </div>
+      <button
+        id="close"
+        class="close"
+        v-on:click="
+          show_add_marker_box = false;
+          setCoordsToDefault();
+        "
+      >
+        X
+      </button>
+      <div class="form-style-6">
+        <Position
+          :edit="true"
+          :position="position_data.positions[0]"
+        ></Position>
+        <button id="addMarker" v-on:click="addmarker">Add Marker</button>
+      </div>
     </div>
     <div ref="drawn_area_popup" class="drawn_area_style">
       <DrawnAreaPopup
@@ -43,32 +58,6 @@
         v-if="showingPopup('item_track_popup')"
         :popup_data="popup_data"
       ></ItemTrackPopup>
-    </div>
-
-    <div>
-      <button
-        class="btn"
-        title="Create new marker from location"
-        v-on:click="show_add_marker_box = !show_add_marker_box"
-      >
-        <i class="el-icon-location-outline" text-align="center;"></i>
-      </button>
-      <div id="addmarker" v-if="show_add_marker_box">
-        <button
-          id="close"
-          v-on:click="
-            show_add_marker_box = false;
-            setCoordsToDefault();
-          "
-        >
-          X
-        </button>
-        <Position
-          :edit="true"
-          :position="position_data.positions[0]"
-        ></Position>
-        <button id="addMarker" v-on:click="addmarker">Add Marker</button>
-      </div>
     </div>
   </div>
 </template>
@@ -246,13 +235,29 @@ export default {
   text-align: center;
   width: 26px;
   height: 26px;
-  cursor: pointer; 
+  cursor: pointer;
   z-index: 999;
   position: absolute;
   top: 257px;
   left: 10px;
   border-radius: 4px;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+  pointer-events: auto;
+  outline: 0;
+}
+
+.close {
+  background-color: white;
+  border: none;
+  text-align: center;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  z-index: 999;
+  margin-top: 2px;
+  margin-right: 2px;
+  border-radius: 4px;
+  float: right;
   pointer-events: auto;
   outline: 0;
 }
@@ -262,15 +267,17 @@ export default {
   background-color: rgba(245, 245, 245, 0.863);
 }
 
-#addmarker{
-  position:absolute;
+#addmarker {
+  background-color: whitesmoke;
+  position: absolute;
   border-bottom: 1px solid #ccc;
-  top:257px;
-  left:50px;
-  width:500px;
-  height:100px;
+  top: 257px;
+  left: 50px;
+  width: 400px;
+  height: 350px;
   z-index: 999;
-  background:#FFF;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 </style>
