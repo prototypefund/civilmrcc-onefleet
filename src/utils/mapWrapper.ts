@@ -952,7 +952,6 @@ class mapWrapper {
     let coords = new L.LatLng(lat, lon);
     var marker = new L.Marker(coords);
     var marker_id = this.drawnAreasAndMarkers.getLayerId(marker);
-    console.log(this.drawnAreasAndMarkers);
     var layer = marker;
     var content = this._getDrawnShapePopupContent(layer);
     if (content !== null) {
