@@ -24,6 +24,8 @@ class mapWrapper {
   } = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
+  // public markerGroup = L.layerGroup();
+  public drawnAreasAndMarkers = new L.FeatureGroup();
 
   /**
    * Initialises the map backend component.
@@ -372,13 +374,13 @@ class mapWrapper {
    */
   private _initShapeDrawing(): void {
     /* Add a layer for drawing shapes in. These can then be added to items as positions, areas, etc */
-    let drawnItems = new L.FeatureGroup();
-    this.map.addLayer(drawnItems);
+    //let drawnAreasAndMarkers = new L.FeatureGroup();
+    this.map.addLayer(this.drawnAreasAndMarkers);
 
     //** Add the standard Map actions. */
     let drawing_toolbar = new L.Control.Draw({
       edit: {
-        featureGroup: drawnItems,
+        featureGroup: this.drawnAreasAndMarkers,
         poly: {
           allowIntersection: true,
         },
@@ -406,7 +408,7 @@ class mapWrapper {
       if (content !== null) {
         layer.bindPopup(content);
       }
-      drawnItems.addLayer(layer);
+      this.drawnAreasAndMarkers.addLayer(layer);
     });
 
     // Object(s) edited - update popups
@@ -941,6 +943,21 @@ class mapWrapper {
       let map_item = this._buildMapItemFromDbItem(base_item, item_positions);
       this.updateItemPosition(map_item);
     } else this.hideItem(base_item._id);
+  }
+
+  /**
+   * Creates a marker at specific coordinates.
+   */
+  public addMarkerByCoordinates(lat: number, lon: number, show: number): void {
+    let coords = new L.LatLng(lat, lon);
+    var marker = new L.Marker(coords);
+    var marker_id = this.drawnAreasAndMarkers.getLayerId(marker);
+    var layer = marker;
+    var content = this._getDrawnShapePopupContent(layer);
+    if (content !== null) {
+      layer.bindPopup(content);
+    }
+    this.drawnAreasAndMarkers.addLayer(layer);
   }
 
   /**

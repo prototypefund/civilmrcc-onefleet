@@ -1,7 +1,32 @@
 <template>
   <div>
     <div id="mapArea"></div>
-
+    <button
+      class="btn"
+      title="Create new marker from location"
+      v-on:click="show_add_marker_box = !show_add_marker_box"
+    >
+      <i class="el-icon-location-outline" text-align="center;"></i>
+    </button>
+    <div id="addmarker" v-if="show_add_marker_box">
+      <button
+        id="close"
+        class="close"
+        v-on:click="
+          show_add_marker_box = false;
+          setCoordsToDefault();
+        "
+      >
+        X
+      </button>
+      <div class="form-style-6">
+        <Position
+          :edit="true"
+          :position="position_data.positions[0]"
+        ></Position>
+        <button id="addMarker" v-on:click="addmarker">Add Marker</button>
+      </div>
+    </div>
     <div ref="drawn_area_popup" class="drawn_area_style">
       <DrawnAreaPopup
         v-if="showingPopup('drawn_area_popup')"
@@ -50,6 +75,7 @@ import DrawnMarkerPopup from './map/DrawnMarkerPopup.vue';
 import DrawnTrackPopup from './map/DrawnTrackPopup.vue';
 import ItemMarkerPopup from './map/ItemMarkerPopup.vue';
 import ItemTrackPopup from './map/ItemTrackPopup.vue';
+import Position from './items/Position.vue';
 
 import { serverBus } from '../main';
 
@@ -61,6 +87,7 @@ export default {
     DrawnTrackPopup,
     ItemMarkerPopup,
     ItemTrackPopup,
+    Position,
   },
   props: {
     filtered_base_items: { type: Array, required: true },
@@ -72,6 +99,10 @@ export default {
       map_initialized: false,
       popup_modal: '',
       popup_data: {},
+      show_add_marker_box: false,
+      position_data: {
+        positions: [{}],
+      },
     };
   },
   computed: {
@@ -97,6 +128,17 @@ export default {
   methods: {
     showingPopup(ref: String): boolean {
       return this.popup_modal == ref;
+    },
+
+    addmarker() {
+      let lat = this.position_data.positions[0].lat;
+      let lon = this.position_data.positions[0].lon;
+      this.$map.addMarkerByCoordinates(lat, lon, 1);
+    },
+
+    setCoordsToDefault() {
+      this.position_data.positions[0].lon = 0;
+      this.position_data.positions[0].lat = 0;
     },
   },
 
@@ -130,7 +172,11 @@ export default {
       });
     });
   },
-  created: function() {},
+
+  created: function() {
+    this.position_data.positions[0].lon = 0;
+    this.position_data.positions[0].lat = 0;
+  },
 };
 </script>
 
@@ -194,5 +240,57 @@ export default {
 
 .item_track_style {
   width: 200px;
+}
+/* Custom button styling */
+.btn {
+  background-color: whitesmoke;
+  border: none;
+  text-align: center;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  z-index: 999;
+  position: absolute;
+  top: 257px;
+  left: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+  pointer-events: auto;
+  outline: 0;
+}
+
+.close {
+  background-color: white;
+  border: none;
+  text-align: center;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  z-index: 999;
+  margin-top: 2px;
+  margin-right: 2px;
+  border-radius: 4px;
+  float: right;
+  pointer-events: auto;
+  outline: 0;
+}
+
+/* Custom button darker background on mouse-over */
+.btn:hover {
+  background-color: rgba(245, 245, 245, 0.863);
+}
+
+#addmarker {
+  background-color: whitesmoke;
+  position: absolute;
+  border-bottom: 1px solid #ccc;
+  top: 257px;
+  left: 50px;
+  width: 400px;
+  height: 350px;
+  z-index: 999;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 </style>

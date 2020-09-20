@@ -511,6 +511,7 @@ ul {
 }
 
 .form-style-6 input[type='submit'],
+.form-style-6 button,
 .form-style-6 input[type='button'] {
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -523,6 +524,7 @@ ul {
   border-right-style: none;
   border-left-style: none;
   color: #fff;
+  cursor: pointer;
 }
 .form-style-6 input[type='submit']:hover,
 .form-style-6 input[type='button']:hover {
