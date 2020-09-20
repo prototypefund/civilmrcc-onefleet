@@ -26,17 +26,25 @@
 </template>
 
 <script lang="ts">
+// NOTE: Vue linter incorrectly thinks that "DbItem" is unused
+// eslint-disable-next-line
+import { DbItem } from '@/types/db-item';
+// NOTE: Vue linter incorrectly thinks that "DbPosition" is unused
+// eslint-disable-next-line
+import { DbPosition } from '@/types/db-position';
+
 import { serverBus } from '../../main';
+
 export default {
   name: 'NavbarItem',
 
   props: {
     base_item: {
-      type: Object,
+      type: Object, // DbItem
       required: true,
     },
     positions: {
-      type: Array,
+      type: Array, // DbPosition[]
       required: false,
     },
   },
@@ -52,13 +60,15 @@ export default {
     itemShowing: function() {
       if (this.itemShowing != this.itemActive && !this.showByUserPreference)
         this.showByUserPreference = true;
-      this.updateItemOnMap();
+      this.sendItemUpdateToMap();
     },
     base_item: function() {
       if (!this.showByUserPreference) this.itemShowing = this.itemActive;
     },
     positions: function() {
       if (!this.showByUserPreference) this.itemShowing = this.itemActive;
+      // temporary solution until the MapArea directly uses filtered_base_items and positions_per_item itself:
+      this.sendItemUpdateToMap(); // TODO remove as soon as MapArea+mapWrapper can handle this themselves
     },
   },
 
@@ -136,7 +146,7 @@ export default {
         serverBus.$emit('fly_to_position', this.latestPosition);
       }
     },
-    updateItemOnMap() {
+    sendItemUpdateToMap() {
       serverBus.$emit(
         'update_item_on_map',
         this.base_item,
