@@ -949,6 +949,7 @@ class mapWrapper {
    * Creates a marker at specific coordinates.
    */
   public addMarkerByCoordinates(lat: number, lon: number, show: number): void {
+    this.flyTo([lat,lon]);
     let coords = new L.LatLng(lat, lon);
     var marker = new L.Marker(coords);
     var marker_id = this.drawnAreasAndMarkers.getLayerId(marker);
