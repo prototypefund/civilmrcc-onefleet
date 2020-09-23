@@ -2,6 +2,15 @@
   <nav>
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
+      <div class="container">
+        <el-tooltip
+          content="last sync with server: xx minutes ago"
+          placement="bottom"
+          effect="light"
+        >
+          <div class="circle green" alt="vfds" tooltip="vfds"></div>
+        </el-tooltip>
+      </div>
       <ul class="nav-actions">
         <li v-on:click="createItem()">
           <a>
@@ -197,6 +206,43 @@ nav li:hover a {
 }
 .el-dropdown-link span {
   display: block;
+}
+
+.circle {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 100%;
+  position: relative;
+  top: 9px;
+  left: -5px;
+  height: 10px;
+  width: 10px;
+}
+
+.circle::after {
+  border-right: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 100%;
+  content: ' ';
+  position: absolute;
+  top: 1px;
+  left: -1px;
+  width: 7.5px;
+  height: 7.5px;
+  cursor: help;
+}
+
+.circle.red {
+  background-color: #c0392b;
+  box-shadow: 0 0 20px 5px #c0392b;
+}
+
+.circle.yellow {
+  background-color: #f1c40f;
+  box-shadow: 0 0 10px 2.5px #f1c40f;
+}
+
+.circle.green {
+  background-color: #2ecc71;
+  box-shadow: 0 0 10px 2.5px #2ecc71;
 }
 </style>
 <style>
