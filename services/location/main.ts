@@ -147,8 +147,8 @@ class LocationService {
               );
               this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
-                console.log(Position);
-                this.insertLocation(v.doc.identifier, Position);
+                if (Position != null)
+                  this.insertLocation(v.doc.identifier, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
@@ -320,7 +320,6 @@ class LocationService {
         } else {
         }
         if (body.error != null) return console.log('err', body.error);
-        console.log(body);
         if (body[0]) {
           let result = {
             mmsi: body[0][0],
@@ -364,11 +363,34 @@ class LocationService {
 
     if (!doc.properties.MMSI) return console.log('no mmsi!');
 
-    this.getPostionFromMarinetraffic(doc, function (err, result) {
-      if (err == null) {
-        cb(result)
-      } if (err) {
-        //fallbackCallback();
+
+    let self = this;
+    this.getPostionFromFleetmon(doc, function (fm_err, fm_result) {
+
+      console.log('got position from fleetmon');
+      if (fm_err == null) {
+
+        self.getPostionFromMarinetraffic(doc, function (mt_err, mt_result) {
+          console.log('got position from mt');
+          if (mt_err == null) {
+
+
+            if (
+              new Date(mt_result.timestamp).getTime() >
+              new Date(fm_result.timestamp).getTime()
+            ) {
+              console.log('mt new, use mt');
+              return cb(null, mt_result);
+            }
+            console.log('fm new, use fm');
+            return cb(null, fm_result);
+
+          } if (mt_err) {
+            fallbackCallback();
+          }
+        });
+      } if (fm_err) {
+        fallbackCallback();
       }
     });
 
