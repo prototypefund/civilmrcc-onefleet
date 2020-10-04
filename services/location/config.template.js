@@ -9,6 +9,7 @@ module.exports = {
     process.env.MARINE_TRAFFIC_EXPORTVESSEL_API_KEY,
   marine_traffic_exportvesseltrack_api_key:
     process.env.MARINE_TRAFFIC_EXPORTVESSELTRACK_API_KEY,
+  vesselfinder_api_key: process.env.VESSELFINDER_API_KEY,
   /*mailservice.js*/
   imap_username: process.env.IMAP_USERNAME,
   imap_password: process.env.IMAP_PASSWORD,
