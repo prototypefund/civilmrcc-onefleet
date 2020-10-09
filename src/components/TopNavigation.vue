@@ -2,13 +2,13 @@
   <nav>
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
-      <div class="container">
+      <div id="status-light">
         <el-tooltip
-          content="last sync with server: xx minutes ago"
+          content="Last sync with server: xx minutes ago \n cdfs"
           placement="bottom"
           effect="light"
         >
-          <div class="circle green" alt="vfds" tooltip="vfds"></div>
+          <div class="circle yellow" alt="vfds" tooltip="vfds"></div>
         </el-tooltip>
       </div>
       <ul class="nav-actions">
@@ -61,8 +61,8 @@
       </li>
       <el-dropdown>
         <span class="el-dropdown-link">
-          <i class="fas fa-user"></i>
-          <span>
+          <span style="white-space:nowrap">
+            <i class="fas fa-user"></i>
             {{ username }}
             <i class="el-icon-arrow-down el-icon--left"></i>
           </span>
@@ -153,6 +153,13 @@ nav #brand {
   padding: 0 1em;
 }
 
+nav #status-light {
+  display: flex;
+  align-items: center;
+  color: var(--white);
+  cursor: pointer;
+}
+
 nav li {
   float: left;
   cursor: pointer;
@@ -208,14 +215,16 @@ nav li:hover a {
   display: block;
 }
 
+/* See https://morioh.com/p/651129a1cb72 for "traffic light" css effect */
 .circle {
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 100%;
   position: relative;
-  top: 9px;
-  left: -5px;
+  top: 1px;
+  left: 0px;
   height: 10px;
   width: 10px;
+  margin-right: 10px;
 }
 
 .circle::after {
@@ -227,12 +236,11 @@ nav li:hover a {
   left: -1px;
   width: 7.5px;
   height: 7.5px;
-  cursor: help;
 }
 
 .circle.red {
   background-color: #c0392b;
-  box-shadow: 0 0 20px 5px #c0392b;
+  box-shadow: 0 0 10px 2.5px #c0392b;
 }
 
 .circle.yellow {
