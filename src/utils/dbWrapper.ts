@@ -37,6 +37,28 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
+  public getPositionsForItemPromise(
+    identifier: string,
+    count_limit: number = 9999
+  ) {
+    return this.getDB('positions')
+      .allDocs({
+        include_docs: true,
+        attachments: true,
+        startkey: identifier,
+        endkey: identifier + '\uffff',
+        limit: Math.min(9999, count_limit), // fetch at most the XX most recent positions per item
+        skip: 0,
+        descending: false,
+      })
+      .then(result => {
+        return result.rows.map(position => position.doc);
+      })
+      .catch(err => {
+        this.fetchError(err);
+      });
+  }
+
   public createPosition(obj: DbPosition, cb: Function) {
     this.getDB('positions', false, 'remote')
       .put(obj)
@@ -102,16 +124,6 @@ export class DbWrapper extends PouchWrapper {
     return this.getDB('items').allDocs({
       include_docs: true,
       attachments: true,
-    });
-  }
-
-  public getBasePositions() {
-    return this.getDB('positions').allDocs({
-      include_docs: true,
-      attachments: true,
-      limit: 10000,
-      skip: 0,
-      descending: false,
     });
   }
 

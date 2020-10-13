@@ -103,7 +103,6 @@ export default {
     show_loadingscreen: true,
     exportItemId: false,
     base_items: [],
-    base_positions: [],
     positions_per_item: {},
     filters: [],
   }),
@@ -163,9 +162,7 @@ export default {
   watch: {
     base_items: function() {
       console.log('base_items new length:', this.base_items.length);
-    },
-    base_positions: function() {
-      console.log('base_positions new length: ', this.base_positions.length);
+      this.loadPositionsForItems();
     },
   },
   methods: {
@@ -174,29 +171,36 @@ export default {
         this.base_items = result.rows.map(item => item.doc);
       });
     },
-    loadPositions() {
-      this.$db.getBasePositions().then(result => {
-        let base_positions = result.rows.map(position => position.doc);
-        this.positions_per_item = this.assignPositions(base_positions);
-        this.base_positions = base_positions;
-      });
-    },
-    assignPositions(base_positions) {
-      // todo: move this to db-wrapper
+    loadPositionsForItems() {
       let positions_per_item = {};
-      for (let i in base_positions) {
-        let pos = base_positions[i];
-        if (!positions_per_item[pos.item_identifier])
-          positions_per_item[pos.item_identifier] = [];
-        positions_per_item[pos.item_identifier].push(pos);
+      console.log('before firing off promises');
+
+      // let promises: Array<any> = this.base_items.map(base_item =>
+      //   this.$db
+      //     .getPositionsForItemPromise(base_item.identifier)
+      //     .then(db_positions => {
+      //       positions_per_item[base_item.identifier] = db_positions;
+      //     })
+      // );
+
+      let promises: Array<any> = [];
+      for (const i in this.base_items) {
+        const base_item = this.base_items[i];
+        if (base_item.identifier) {
+          let promise = this.$db
+            .getPositionsForItemPromise(base_item.identifier)
+            .then(db_positions => {
+              positions_per_item[base_item.identifier] = db_positions;
+            });
+          promises.push(promise);
+        }
       }
-      return positions_per_item;
-    },
-    getPositionsForItem(base_item) {
-      // todo: move this to db-wrapper
-      let positions = this.positions_per_item[base_item._id];
-      if (!positions) positions = this.positions_per_item[base_item.identifier];
-      return positions;
+
+      console.log('after firing off promises');
+
+      Promise.all(promises).then(() => {
+        this.positions_per_item = positions_per_item;
+      });
     },
 
     /** Start of Item Filter functions */
@@ -323,12 +327,12 @@ export default {
       self.loadItems();
     });
     this.$db.setOnChange('positions', 'base_positions_change', function() {
-      //reload base_positions if change is detected
-      self.loadPositions();
+      //reload positions if change is detected
+      self.loadPositionsForItems();
     });
 
     this.loadItems();
-    this.loadPositions();
+    // this.loadPositionsForItems();
     this.initFilters();
   },
 };
