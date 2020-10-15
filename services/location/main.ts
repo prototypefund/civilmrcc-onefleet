@@ -147,8 +147,8 @@ class LocationService {
               );
               this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
-                console.log(Position);
-                this.insertLocation(v.doc.identifier, Position);
+                if (Position != null)
+                  this.insertLocation(v.doc.identifier, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
@@ -211,35 +211,8 @@ class LocationService {
     console.log('implement me!');
   }
 
-  public getPositionFromAIS(doc, cb) {
-    let fallbackCallback = () => {
-      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
-      request(
-        `${config.aisUrl}/getLastPosition/${mmsi}`,
-        { json: true },
-        (err, res, body) => {
-          if (err) {
-            return console.log(err);
-          } else {
-          }
-          if (body.error != null) return console.log(body.error);
-
-          cb(body.data);
-        }
-      );
-    };
-
-    console.log(doc);
-    if (!doc.properties.MMSI) return console.log('no mmsi!');
-
+  public getPostionFromFleetmon(doc, cb) {
     let mmsi = parseInt(doc.properties.MMSI);
-    console.log('mmsi');
-    console.log(
-      mmsi,
-      config.fleetmon_api_key,
-      doc.properties.fleetmon_vessel_id
-    );
-
     if (config.fleetmon_api_key && !doc.properties.fleetmon_vessel_id) {
       let url =
         'https://apiv2.fleetmon.com/vesselsearch/?mmsi_number=' +
@@ -262,7 +235,7 @@ class LocationService {
             );
             console.log('retry with ais api');
             config.fleetmon_api_key = false;
-            this.getPositionFromAIS(doc, cb);
+            cb('retry with ais api');
           } else {
             let i = 0;
             console.log(body);
@@ -277,7 +250,7 @@ class LocationService {
                       console.log('item fleetmon id added');
 
                       //call self again with updated vessel_id
-                      this.getPositionFromAIS(doc, cb);
+                      this.getPostionFromFleetmon(doc, cb);
                     };
                   })(i)
                 )
@@ -285,9 +258,8 @@ class LocationService {
                   console.log(err);
                 });
             } else {
-              console.log('error fetching position from fleetmon:', body);
+              cb('error fetching position from fleetmon');
               config.fleetmon_api_key = false;
-              fallbackCallback();
             }
           }
         }
@@ -304,10 +276,7 @@ class LocationService {
       if (config.fleetmon_api_key) {
         request(url, { json: true }, (err, res, body) => {
           if (err && err.length > 0) {
-            console.log('error fetching position from fleetmon:', err);
-            console.log('retry with ais api');
-            config.fleetmon_api_key = false;
-            this.getPositionFromAIS(doc, cb);
+            cb('error fetching position from fleetmon:' + err);
           }
 
           let entry = {
@@ -327,17 +296,96 @@ class LocationService {
               console.log('error fetching position from fleetmon:', err);
               console.log('retry with ais api');
               config.fleetmon_api_key = false;
-              this.getPositionFromAIS(doc, cb);
+              cb('error fetching position from fleetmon');
             } else {
-              cb(this.parsePositionFromFleetmonApi(entry));
+              cb(null, this.parsePositionFromFleetmonApi(entry));
             }
           }
         });
       }
     } else {
-      console.log('no api key');
-      fallbackCallback();
+      cb('no api key');
     }
+  }
+  public getPostionFromMarinetraffic(doc, cb) {
+    let mmsi = parseInt(doc.properties.MMSI);
+    request(
+      `https://services.marinetraffic.com/api/exportvessel/v:5/${config.marine_traffic_exportvessel_api_key}/timespan:2880/mmsi:${mmsi}/protocol:json`,
+      { json: true },
+      (err, res, body) => {
+        if (err) {
+          return console.log(err);
+        } else {
+        }
+        if (body.error != null) return console.log('err', body.error);
+        if (body[0]) {
+          let result = {
+            mmsi: body[0][0],
+            latitude: body[0][1],
+            longitude: body[0][2],
+            speed: body[0][3],
+            heading: body[0][4],
+            course: body[0][5],
+            status: body[0][6],
+            timestamp: body[0][7],
+            source: 'marinetraffic',
+          };
+          cb(null, result);
+        } else {
+          cb('no result');
+        }
+      }
+    );
+  }
+  public getPositionFromAIS(doc, cb) {
+    if (!doc.properties.MMSI) return console.log('no mmsi!');
+
+    let mmsi = parseInt(doc.properties.MMSI);
+
+    let fallbackCallback = () => {
+      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+      request(
+        `${config.aisUrl}/getLastPosition/${mmsi}`,
+        { json: true },
+        (err, res, body) => {
+          if (err) {
+            return console.log(err);
+          } else {
+          }
+          if (body.error != null) return console.log(body.error);
+          cb(body.data);
+        }
+      );
+    };
+
+    if (!doc.properties.MMSI) return console.log('no mmsi!');
+
+    let self = this;
+    this.getPostionFromFleetmon(doc, function(fm_err, fm_result) {
+      console.log('got position from fleetmon');
+      if (fm_err == null) {
+        self.getPostionFromMarinetraffic(doc, function(mt_err, mt_result) {
+          console.log('got position from mt');
+          if (mt_err == null) {
+            if (
+              new Date(mt_result.timestamp).getTime() >
+              new Date(fm_result.timestamp).getTime()
+            ) {
+              console.log('mt new, use mt');
+              return cb(null, mt_result);
+            }
+            console.log('fm new, use fm');
+            return cb(null, fm_result);
+          }
+          if (mt_err) {
+            fallbackCallback();
+          }
+        });
+      }
+      if (fm_err) {
+        fallbackCallback();
+      }
+    });
   }
   public getPositionFromAISOld(mmsi, cb) {
     let url =
