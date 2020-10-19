@@ -106,24 +106,10 @@ class LocationService {
     this.dbConfig = this.getConfig();
 
     console.log();
-
-    const sw3 = {
-      _id: 'SW3',
-      properties: {
-        name: 'Sea-Watch 3',
-        tracking_type: 'AIS',
-        MMSI: '244140096',
-      },
-    };
-    const sw3Position = {
-      _id: 'SW3_2020-06-10T12:11:18.000Z',
-      item_identifier: 'SW3',
-      source: 'fleetmon',
-      altitude: null,
-      timestamp: '2020-06-10T12:11:18.000Z',
-      lat: 33.450787,
-      lon: 12.798547,
-    };
+    const fs = require('fs');
+    var seed = JSON.parse(fs.readFileSync('../../data/seed.json', 'utf8'));
+    const sw3 = seed.sw3;
+    const sw3Position = seed.sw3Position;
 
     const itemsdb = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
