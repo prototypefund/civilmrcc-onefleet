@@ -1,4 +1,7 @@
 const pouchDB = require('pouchdb');
+const PouchDBAuthentication = require('pouchdb-authentication');
+pouchDB.plugin(PouchDBAuthentication);
+
 const request = require('request');
 
 const moment = require('moment');
@@ -33,8 +36,8 @@ class LocationService {
   itemDB: any;
   locationsDB: any;
 
-  public initDBs() {
-    this.dbConfig = process.env.DEVELOPMENT
+  private getConfig() {
+    return process.env.DEVELOPMENT
       ? {}
       : {
           auth: {
@@ -42,17 +45,108 @@ class LocationService {
             password: config.dbPassword,
           },
         };
+  }
+  public initDBs() {
+    this.dbConfig = this.getConfig();
+
+    this.dbConfig.skip_setup = true;
+
     console.log(this.dbConfig);
     this.itemDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
       this.dbConfig
     );
+
     this.locationsDB = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}positions`,
       this.dbConfig
     );
+
+    this.itemDB
+      .info()
+      .then(res => {
+        if (res.error) {
+          console.log('error!');
+          console.log(res.error);
+
+          if (res.error === 'unauthorized') {
+            //one reason for an unauthorized might be
+            //that its a fresh installation, than the
+            //auth part of the config is deleted to
+            //test if db exist
+            delete this.dbConfig.auth;
+            this.itemDB = new pouchDB(
+              `${config.dbUrl}/${config.dbPrefix}items`,
+              this.dbConfig
+            );
+
+            this.itemDB
+              .info()
+              .then(res => {
+                console.log(res);
+                if (res.error && res.error === 'not_found') {
+                  console.log('no db file found reseed db');
+                  this.seedDB();
+                }
+              })
+              .catch(res => {
+                console.log(res);
+              });
+          } else if (res.error == 'not_found') {
+            this.seedDB();
+          }
+        }
+      })
+      .catch(res => {
+        console.log('error getting db info:', res);
+      });
   }
 
+  public seedDB(createAdmin = true) {
+    this.dbConfig = this.getConfig();
+
+    console.log();
+    const fs = require('fs');
+    var seed = JSON.parse(fs.readFileSync('../../data/seed.json', 'utf8'));
+    const sw3 = seed.sw3;
+    const sw3Position = seed.sw3Position;
+
+    const itemsdb = new pouchDB(
+      `${config.dbUrl}/${config.dbPrefix}items`,
+      this.dbConfig
+    );
+    const positionsdb = new pouchDB(
+      `${config.dbUrl}/${config.dbPrefix}positions`,
+      this.dbConfig
+    );
+
+    if (createAdmin)
+      itemsdb.signUpAdmin('admin', 'admin', function(err, response) {
+        console.log(err, response);
+      });
+
+    itemsdb
+      .put(sw3)
+      .then(console.log.bind(console))
+      .catch(console.log.bind(console));
+    itemsdb
+      .get('VEHICLE_SW3')
+      .then(item => {
+        console.log('Created initial item: ', item);
+      })
+      .catch(console.log.bind(console));
+
+    positionsdb
+      .put(sw3Position)
+      .then(console.log.bind(console))
+      .catch(console.log.bind(console));
+    positionsdb
+      .get('SW3_2020-06-10T12:11:18.000Z')
+      .then(position => {
+        console.log('Created initial poisition: ', position);
+      })
+      .catch(console.log.bind(console));
+  }
   public initMail() {
     console.log('starting mail listener...');
     this.initDBs();
