@@ -74,6 +74,7 @@ import Loadingscreen from './components/Loadingscreen.vue';
 // other imports
 import templates from './components/items/templates.js';
 import { serverBus } from './main';
+import storage from './utils/storageWrapper';
 // import { DbItem } from '@/types/db-item';
 // import { DbPosition } from '@/types/db-position';
 
@@ -105,6 +106,10 @@ export default {
     base_items: [],
     positions_per_item: {},
     filters: [],
+    initial_replication_done: false,
+    tracks_oldest_date_iso: new Date('2019-01-01').toISOString(),
+    tracks_newest_date_iso: new Date().toISOString(), // now
+    tracks_length_limit: 99, // may be overwritten by local storage below
   }),
   computed: {
     /**
@@ -160,9 +165,21 @@ export default {
     },
   },
   watch: {
+    initial_replication_done: function() {
+      this.loadItems();
+    },
     base_items: function() {
-      console.log('base_items new length:', this.base_items.length);
-      this.loadPositionsForItems();
+      // only load positions after initial replication has really finished, or we'll not see all requested positions
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_oldest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_newest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_length_limit: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
     },
   },
   methods: {
@@ -173,34 +190,33 @@ export default {
     },
     loadPositionsForItems() {
       let positions_per_item = {};
-      console.log('before firing off promises');
 
-      // let promises: Array<any> = this.base_items.map(base_item =>
-      //   this.$db
-      //     .getPositionsForItemPromise(base_item.identifier)
-      //     .then(db_positions => {
-      //       positions_per_item[base_item.identifier] = db_positions;
-      //     })
-      // );
-
-      let promises: Array<any> = [];
-      for (const i in this.base_items) {
-        const base_item = this.base_items[i];
-        if (base_item.identifier) {
-          let promise = this.$db
-            .getPositionsForItemPromise(base_item.identifier)
-            .then(db_positions => {
-              positions_per_item[base_item.identifier] = db_positions;
-            });
-          promises.push(promise);
-        }
-      }
-
-      console.log('after firing off promises');
+      let promises: Array<any> = this.base_items.map(base_item =>
+        base_item.identifier
+          ? this.$db
+              .getPositionsForItemPromise(
+                base_item.identifier,
+                this.tracks_length_limit,
+                this.tracks_newest_date_iso,
+                this.tracks_oldest_date_iso
+              )
+              .then(db_positions => {
+                positions_per_item[base_item.identifier] = db_positions;
+              })
+          : null
+      );
 
       Promise.all(promises).then(() => {
         this.positions_per_item = positions_per_item;
       });
+    },
+    initTrackSettings() {
+      this.tracks_oldest_date_iso =
+        storage.get('settings_track_startdate') || this.tracks_oldest_date_iso;
+      this.tracks_newest_date_iso =
+        storage.get('settings_track_enddate') || this.tracks_newest_date_iso;
+      this.tracks_length_limit =
+        storage.get('settings_map_track_length') || this.tracks_length_limit;
     },
 
     /** Start of Item Filter functions */
@@ -246,6 +262,8 @@ export default {
   },
 
   created: function() {
+    this.initTrackSettings();
+
     serverBus.$on('show_login_screen', () => {
       this.show_loadingscreen = false;
       this.modal_data = {};
@@ -311,28 +329,24 @@ export default {
       this.modal_data = {};
     });
 
-    let self = this;
     //set on change listener on positions because its usually the largest database
-
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',
-      function() {
-        //reload vehicles if change is detected
-        self.show_loadingscreen = false;
+      () => {
+        this.show_loadingscreen = false;
+        this.initial_replication_done = true;
       }
     );
-    this.$db.setOnChange('items', 'base_items_change', function() {
+    this.$db.setOnChange('items', 'base_items_change', () => {
       //reload base_items if change is detected
-      self.loadItems();
+      this.loadItems();
     });
-    this.$db.setOnChange('positions', 'base_positions_change', function() {
+    this.$db.setOnChange('positions', 'base_positions_change', () => {
       //reload positions if change is detected
-      self.loadPositionsForItems();
+      this.loadPositionsForItems();
     });
 
-    this.loadItems();
-    // this.loadPositionsForItems();
     this.initFilters();
   },
 };
