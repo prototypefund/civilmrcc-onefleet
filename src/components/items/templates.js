@@ -192,14 +192,13 @@ export default {
             name: 'status',
             title: 'Status',
             type: 'select',
-            options: {
               open_confirmed: 'Open (Confirmed Visually)',
-              open_attended: 'Open (Attended)',
               open_lost: 'Open (Lost Contact)',
-              closed_rescued: 'Closed (Rescued)',
-              closed_intercepted: 'Closed (Intercepted)',
-              closed_shipwrecked: 'Closed (Shipwrecked)',
-              closed_arrived: 'Closed (Arrived)',
+              open_unknown: 'Open (unknown)',
+              approaching: 'Approaching',
+              attending: 'Attending',
+              disembarked: 'Disembarked from DV',
+              closed: 'Closed',
             },
           },
           {
@@ -209,7 +208,8 @@ export default {
             options: {
               wood: 'wood',
               rubber: 'rubber',
-              other: 'other',
+              fiberglass: 'fiberglass',
+              unknown: 'unknown',
             },
           },
           {
