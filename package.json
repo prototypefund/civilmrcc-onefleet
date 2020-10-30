@@ -27,7 +27,7 @@
   "dependencies": {
     "@datenpate/leaflet.polylinemeasure": "^1.0.0",
     "@types/leaflet-mouse-position": "^1.2.0",
-    "chart.js": "^2.9.3",
+    "chart.js": "^2.9.4",
     "element-ui": "^2.13.2",
     "http-server": "^0.12.3",
     "leaflet": "^1.6.0",
