@@ -74,6 +74,7 @@ import Loadingscreen from './components/Loadingscreen.vue';
 // other imports
 import templates from './components/items/templates.js';
 import { serverBus } from './main';
+import storage from './utils/storageWrapper';
 // import { DbItem } from '@/types/db-item';
 // import { DbPosition } from '@/types/db-position';
 
@@ -103,9 +104,12 @@ export default {
     show_loadingscreen: true,
     exportItemId: false,
     base_items: [],
-    base_positions: [],
     positions_per_item: {},
     filters: [],
+    initial_replication_done: false,
+    tracks_oldest_date_iso: new Date('2019-01-01').toISOString(),
+    tracks_newest_date_iso: new Date().toISOString(), // now
+    tracks_length_limit: 99, // may be overwritten by local storage below
   }),
   computed: {
     /**
@@ -161,11 +165,21 @@ export default {
     },
   },
   watch: {
-    base_items: function() {
-      console.log('base_items new length:', this.base_items.length);
+    initial_replication_done: function() {
+      this.loadItems();
     },
-    base_positions: function() {
-      console.log('base_positions new length: ', this.base_positions.length);
+    base_items: function() {
+      // only load positions after initial replication has really finished, or we'll not see all requested positions
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_oldest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_newest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_length_limit: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
     },
   },
   methods: {
@@ -174,29 +188,35 @@ export default {
         this.base_items = result.rows.map(item => item.doc);
       });
     },
-    loadPositions() {
-      this.$db.getBasePositions().then(result => {
-        let base_positions = result.rows.map(position => position.doc);
-        this.positions_per_item = this.assignPositions(base_positions);
-        this.base_positions = base_positions;
+    loadPositionsForItems() {
+      let positions_per_item = {};
+
+      let promises: Array<any> = this.base_items.map(base_item =>
+        base_item.identifier
+          ? this.$db
+              .getPositionsForItemPromise(
+                base_item.identifier,
+                this.tracks_length_limit,
+                this.tracks_newest_date_iso,
+                this.tracks_oldest_date_iso
+              )
+              .then(db_positions => {
+                positions_per_item[base_item.identifier] = db_positions;
+              })
+          : null
+      );
+
+      Promise.all(promises).then(() => {
+        this.positions_per_item = positions_per_item;
       });
     },
-    assignPositions(base_positions) {
-      // todo: move this to db-wrapper
-      let positions_per_item = {};
-      for (let i in base_positions) {
-        let pos = base_positions[i];
-        if (!positions_per_item[pos.item_identifier])
-          positions_per_item[pos.item_identifier] = [];
-        positions_per_item[pos.item_identifier].push(pos);
-      }
-      return positions_per_item;
-    },
-    getPositionsForItem(base_item) {
-      // todo: move this to db-wrapper
-      let positions = this.positions_per_item[base_item._id];
-      if (!positions) positions = this.positions_per_item[base_item.identifier];
-      return positions;
+    initTrackSettings() {
+      this.tracks_oldest_date_iso =
+        storage.get('settings_track_startdate') || this.tracks_oldest_date_iso;
+      this.tracks_newest_date_iso =
+        storage.get('settings_track_enddate') || this.tracks_newest_date_iso;
+      this.tracks_length_limit =
+        storage.get('settings_map_track_length') || this.tracks_length_limit;
     },
 
     /** Start of Item Filter functions */
@@ -242,6 +262,8 @@ export default {
   },
 
   created: function() {
+    this.initTrackSettings();
+
     serverBus.$on('show_login_screen', () => {
       this.show_loadingscreen = false;
       this.modal_data = {};
@@ -307,28 +329,24 @@ export default {
       this.modal_data = {};
     });
 
-    let self = this;
     //set on change listener on positions because its usually the largest database
-
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',
-      function() {
-        //reload vehicles if change is detected
-        self.show_loadingscreen = false;
+      () => {
+        this.show_loadingscreen = false;
+        this.initial_replication_done = true;
       }
     );
-    this.$db.setOnChange('items', 'base_items_change', function() {
+    this.$db.setOnChange('items', 'base_items_change', () => {
       //reload base_items if change is detected
-      self.loadItems();
+      this.loadItems();
     });
-    this.$db.setOnChange('positions', 'base_positions_change', function() {
-      //reload base_positions if change is detected
-      self.loadPositions();
+    this.$db.setOnChange('positions', 'base_positions_change', () => {
+      //reload positions if change is detected
+      this.loadPositionsForItems();
     });
 
-    this.loadItems();
-    this.loadPositions();
     this.initFilters();
   },
 };

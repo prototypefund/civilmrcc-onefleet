@@ -112,9 +112,9 @@ export default {
       return false;
     },
     latestPosition() {
-      // we assume that positions are already sorted by timestamp during the DB-fetch
-      if ((this.positions || []).length > 0)
-        return this.positions[this.positions.length - 1];
+      // We assume that positions are already sorted by timestamp during the DB-fetch,
+      //  and that position zero is the newest position:
+      if ((this.positions || []).length > 0) return this.positions[0];
       else return null;
     },
     positionAgeText() {

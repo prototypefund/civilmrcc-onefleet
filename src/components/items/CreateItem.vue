@@ -179,10 +179,10 @@ export default {
 
             if (self.position_data.positions.length > 0) {
               let time_isostring = new Date(
-                self.position_data.positions[0].timestamp || 'now'
+                self.position_data.positions[0].timestamp || ''
               ).toISOString();
               let position = {
-                _id: self.form_data.identifier + '_' + new Date().toISOString(),
+                _id: self.form_data.identifier + '_' + time_isostring,
                 lat: self.position_data.positions[0].lat,
                 lon: self.position_data.positions[0].lon,
                 item_identifier: self.form_data.identifier,

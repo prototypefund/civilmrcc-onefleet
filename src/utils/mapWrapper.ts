@@ -924,7 +924,7 @@ class mapWrapper {
       },
       positions:
         item_positions != undefined
-          ? item_positions.map(item => ({ doc: item }))
+          ? item_positions.map(item => ({ doc: item })).reverse() // the old implementation assumes that the newest position is at the back of the array
           : [],
     };
   }

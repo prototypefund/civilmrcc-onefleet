@@ -250,17 +250,17 @@ export default {
 
               // store all given positions at once. Use iteration `i` as part of new `_id` field
               this.given_positions.forEach((given_pos, i) => {
+                let time_isostring = new Date(
+                  given_pos.timestamp || ''
+                ).toISOString();
+
                 let db_position = {
-                  _id:
-                    item_identifier + '_' + new Date().toISOString() + '_' + i,
+                  _id: item_identifier + '_' + time_isostring + '_' + i,
                   lat: given_pos.lat,
                   lon: given_pos.lon,
                   item_identifier: item_identifier,
                   source: given_pos.source || 'onefleet',
-                  timestamp: (given_pos.timestamp
-                    ? new Date(given_pos.timestamp)
-                    : new Date()
-                  ).toISOString(),
+                  timestamp: time_isostring,
                 };
                 this.$db.createPosition(db_position, (err, result) => {
                   if (err) {
