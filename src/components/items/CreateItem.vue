@@ -178,8 +178,10 @@ export default {
             alert('item created');
 
             if (self.position_data.positions.length > 0) {
-              let time_isostring = new Date(
-                self.position_data.positions[0].timestamp || ''
+              let any_timestamp = self.position_data.positions[0].timestamp;
+              let time_isostring = (any_timestamp
+                ? new Date(any_timestamp)
+                : new Date()
               ).toISOString();
               let position = {
                 _id: self.form_data.identifier + '_' + time_isostring,

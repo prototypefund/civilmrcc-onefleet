@@ -250,8 +250,9 @@ export default {
 
               // store all given positions at once. Use iteration `i` as part of new `_id` field
               this.given_positions.forEach((given_pos, i) => {
-                let time_isostring = new Date(
-                  given_pos.timestamp || ''
+                let time_isostring = (given_pos.timestamp
+                  ? new Date(given_pos.timestamp)
+                  : new Date()
                 ).toISOString();
 
                 let db_position = {
