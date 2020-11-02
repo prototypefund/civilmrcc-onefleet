@@ -238,7 +238,6 @@ export default {
             title: 'People On Board',
             type: 'number',
             step: 1,
-            default: 0,
           },
           {
             name: 'pob_women',
