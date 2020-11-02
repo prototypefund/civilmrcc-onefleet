@@ -316,6 +316,7 @@ export default {
               no_involvement: 'No involvement',
               unknown: 'unknown',
             },
+          }, 
           {
             name: 'authorities_alerted',
             title: 'authorities alerted: who & when',
