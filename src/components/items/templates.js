@@ -532,7 +532,7 @@ export default {
             title: 'comment',
             type: 'text',
           },
-        ],
+        },
       },
     };
     if (name == 'all') return templates;
