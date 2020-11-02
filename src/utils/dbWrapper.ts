@@ -37,6 +37,42 @@ export class DbWrapper extends PouchWrapper {
       });
   }
 
+  /**
+   * Get positions for a given item identifier, and sort from newest to oldest (!).
+   * The first returned position (array index 0) is the newest position.
+   * The last returned position (last index in array) is the oldest position.
+   *
+   * @param identifier The identifier of the vessel that these positions are for.
+   * @param count_limit Return at most this many positions. Cut away older positions if necessary.
+   * @param {string} newest_date_iso The ISO string of the newest date
+   * @param {string} oldest_date_iso The ISO string of the oldest date
+   * @returns
+   * @memberof DbWrapper
+   */
+  public getPositionsForItemPromise(
+    identifier: string,
+    count_limit: number = 9999,
+    newest_date_iso: string,
+    oldest_date_iso: string
+  ) {
+    return this.getDB('positions')
+      .allDocs({
+        include_docs: true,
+        attachments: true,
+        startkey: identifier + '_' + newest_date_iso + '\ufff0', // start with the newest date, so that the newest position is always returned
+        endkey: identifier + '_' + oldest_date_iso + '\ufff0', // end with oldest date, which is ok to cut of if limit is reached
+        limit: Math.min(9999, count_limit), // fetch at most the XX most recent positions per item
+        skip: 0,
+        descending: true, // return latest positions first, so that the limit only cuts off older positions
+      })
+      .then(result => {
+        return result.rows.map(position => position.doc);
+      })
+      .catch(err => {
+        this.fetchError(err);
+      });
+  }
+
   public createPosition(obj: DbPosition, cb: Function) {
     this.getDB('positions', false, 'remote')
       .put(obj)
@@ -46,6 +82,20 @@ export class DbWrapper extends PouchWrapper {
       .catch(err => {
         cb(err);
       });
+  }
+
+  public addItemLog(item_id: string, change: any, comment: string) {
+    var logDB = this.getDB('logs');
+    let log_entry = {
+      _id: item_id + '_' + new Date().toISOString(),
+      user: localStorage.username,
+      change: change,
+      comment: comment,
+    };
+    logDB
+      .put(log_entry)
+      .then(response => {})
+      .catch(err => {});
   }
 
   public createItem(obj: DbItem, cb: Function) {
@@ -82,6 +132,13 @@ export class DbWrapper extends PouchWrapper {
       .catch(err => {
         console.error(err);
       });
+  }
+
+  public getBaseItems() {
+    return this.getDB('items').allDocs({
+      include_docs: true,
+      attachments: true,
+    });
   }
 
   public getItems(cb: Function) {
@@ -142,6 +199,12 @@ export class DbWrapper extends PouchWrapper {
   public getVehicles(cb: Function) {
     this.getItemsByTemplate('VEHICLE', cb);
   }
+  public getLog() {
+    return this.getDB('logs').allDocs({
+      include_docs: true,
+      attachments: true,
+    });
+  }
   public appendItemsToMap(map) {
     this.getItems((err, result) => {
       for (var i in result.rows) {
@@ -185,7 +248,7 @@ export class DbWrapper extends PouchWrapper {
 
         for (let i in replay_items) {
           this.getItem(replay_items[i].id, loadeditem => {
-            let templatedItem = options.map.loadTemplatedItem(loadeditem);
+            let templatedItem = options.map.prepareTemplatedItem(loadeditem);
             console.log(templatedItem);
             options.map.updateItemPosition(templatedItem);
           });

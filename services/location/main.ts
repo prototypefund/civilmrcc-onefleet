@@ -105,25 +105,10 @@ class LocationService {
   public seedDB(createAdmin = true) {
     this.dbConfig = this.getConfig();
 
-    console.log();
-
-    const sw3 = {
-      _id: 'SW3',
-      properties: {
-        name: 'Sea-Watch 3',
-        tracking_type: 'AIS',
-        MMSI: '244140096',
-      },
-    };
-    const sw3Position = {
-      _id: 'SW3_2020-06-10T12:11:18.000Z',
-      item_identifier: 'SW3',
-      source: 'fleetmon',
-      altitude: null,
-      timestamp: '2020-06-10T12:11:18.000Z',
-      lat: 33.450787,
-      lon: 12.798547,
-    };
+    const fs = require('fs');
+    var seed = JSON.parse(fs.readFileSync('../../data/seed.json', 'utf8'));
+    const sw3 = seed.sw3;
+    const sw3Position = seed.sw3Position;
 
     const itemsdb = new pouchDB(
       `${config.dbUrl}/${config.dbPrefix}items`,
@@ -255,8 +240,8 @@ class LocationService {
               );
               this.getPositionFromAIS(v.doc, Position => {
                 console.log('got position from AIS:' + v.doc.identifier);
-                console.log(Position);
-                this.insertLocation(v.doc.identifier, Position);
+                if (Position != null)
+                  this.insertLocation(v.doc.identifier, Position);
               });
               console.log(v.doc.properties.get_historical_data_since);
               if (false && v.doc.properties.get_historical_data_since > 0) {
@@ -319,35 +304,8 @@ class LocationService {
     console.log('implement me!');
   }
 
-  public getPositionFromAIS(doc, cb) {
-    let fallbackCallback = () => {
-      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
-      request(
-        `${config.aisUrl}/getLastPosition/${mmsi}`,
-        { json: true },
-        (err, res, body) => {
-          if (err) {
-            return console.log(err);
-          } else {
-          }
-          if (body.error != null) return console.log(body.error);
-
-          cb(body.data);
-        }
-      );
-    };
-
-    console.log(doc);
-    if (!doc.properties.MMSI) return console.log('no mmsi!');
-
+  public getPostionFromFleetmon(doc, cb) {
     let mmsi = parseInt(doc.properties.MMSI);
-    console.log('mmsi');
-    console.log(
-      mmsi,
-      config.fleetmon_api_key,
-      doc.properties.fleetmon_vessel_id
-    );
-
     if (config.fleetmon_api_key && !doc.properties.fleetmon_vessel_id) {
       let url =
         'https://apiv2.fleetmon.com/vesselsearch/?mmsi_number=' +
@@ -357,17 +315,20 @@ class LocationService {
 
       request(url, { json: true }, (err, res, body) => {
         if (err && err.length > 0) {
-          console.log('error fetching position from fleetmon:', err);
+          console.log('error fetching fleetmon_vessel_id from fleetmon:', err);
           console.log('retry with ais api');
           config.fleetmon_api_key = false;
           this.getPositionFromAIS(doc, cb);
         }
         if ((body && body.vessels >= 1) || typeof body != 'string') {
           if (typeof body.errors != 'undefined') {
-            console.log('error fetching position from fleetmon:', err);
+            console.log(
+              'error fetching fleetmon_vessel_id from fleetmon:',
+              err
+            );
             console.log('retry with ais api');
             config.fleetmon_api_key = false;
-            this.getPositionFromAIS(doc, cb);
+            cb('retry with ais api');
           } else {
             let i = 0;
             console.log(body);
@@ -379,10 +340,10 @@ class LocationService {
                 .then(
                   (i => {
                     return response => {
-                      console.log('item created');
+                      console.log('item fleetmon id added');
 
                       //call self again with updated vessel_id
-                      this.getPositionFromAIS(doc, cb);
+                      this.getPostionFromFleetmon(doc, cb);
                     };
                   })(i)
                 )
@@ -390,9 +351,8 @@ class LocationService {
                   console.log(err);
                 });
             } else {
-              console.log('error fetching position from fleetmon:', body);
+              cb('error fetching position from fleetmon');
               config.fleetmon_api_key = false;
-              fallbackCallback();
             }
           }
         }
@@ -409,10 +369,7 @@ class LocationService {
       if (config.fleetmon_api_key) {
         request(url, { json: true }, (err, res, body) => {
           if (err && err.length > 0) {
-            console.log('error fetching position from fleetmon:', err);
-            console.log('retry with ais api');
-            config.fleetmon_api_key = false;
-            this.getPositionFromAIS(doc, cb);
+            cb('error fetching position from fleetmon:' + err);
           }
 
           let entry = {
@@ -432,17 +389,96 @@ class LocationService {
               console.log('error fetching position from fleetmon:', err);
               console.log('retry with ais api');
               config.fleetmon_api_key = false;
-              this.getPositionFromAIS(doc, cb);
+              cb('error fetching position from fleetmon');
             } else {
-              cb(this.parsePositionFromFleetmonApi(entry));
+              cb(null, this.parsePositionFromFleetmonApi(entry));
             }
           }
         });
       }
     } else {
-      console.log('no api key');
-      fallbackCallback();
+      cb('no api key');
     }
+  }
+  public getPostionFromMarinetraffic(doc, cb) {
+    let mmsi = parseInt(doc.properties.MMSI);
+    request(
+      `https://services.marinetraffic.com/api/exportvessel/v:5/${config.marine_traffic_exportvessel_api_key}/timespan:2880/mmsi:${mmsi}/protocol:json`,
+      { json: true },
+      (err, res, body) => {
+        if (err) {
+          return console.log(err);
+        } else {
+        }
+        if (body.error != null) return console.log('err', body.error);
+        if (body[0]) {
+          let result = {
+            mmsi: body[0][0],
+            latitude: body[0][1],
+            longitude: body[0][2],
+            speed: body[0][3],
+            heading: body[0][4],
+            course: body[0][5],
+            status: body[0][6],
+            timestamp: body[0][7],
+            source: 'marinetraffic',
+          };
+          cb(null, result);
+        } else {
+          cb('no result');
+        }
+      }
+    );
+  }
+  public getPositionFromAIS(doc, cb) {
+    if (!doc.properties.MMSI) return console.log('no mmsi!');
+
+    let mmsi = parseInt(doc.properties.MMSI);
+
+    let fallbackCallback = () => {
+      console.log(`requesting ${config.aisUrl}/getLastPosition/${mmsi}`);
+      request(
+        `${config.aisUrl}/getLastPosition/${mmsi}`,
+        { json: true },
+        (err, res, body) => {
+          if (err) {
+            return console.log(err);
+          } else {
+          }
+          if (body.error != null) return console.log(body.error);
+          cb(body.data);
+        }
+      );
+    };
+
+    if (!doc.properties.MMSI) return console.log('no mmsi!');
+
+    let self = this;
+    this.getPostionFromFleetmon(doc, function(fm_err, fm_result) {
+      console.log('got position from fleetmon');
+      if (fm_err == null) {
+        self.getPostionFromMarinetraffic(doc, function(mt_err, mt_result) {
+          console.log('got position from mt');
+          if (mt_err == null) {
+            if (
+              new Date(mt_result.timestamp).getTime() >
+              new Date(fm_result.timestamp).getTime()
+            ) {
+              console.log('mt new, use mt');
+              return cb(null, mt_result);
+            }
+            console.log('fm new, use fm');
+            return cb(null, fm_result);
+          }
+          if (mt_err) {
+            fallbackCallback();
+          }
+        });
+      }
+      if (fm_err) {
+        fallbackCallback();
+      }
+    });
   }
   public getPositionFromAISOld(mmsi, cb) {
     let url =
@@ -547,7 +583,7 @@ class LocationService {
     this.getItems('VEHICLE', (err, res) => {
       console.log('got items');
       if (err) console.log(err);
-
+      let self = this;
       //loop through vehicles
       for (let i in res) {
         if (typeof res[i].doc != 'undefined') {
@@ -603,9 +639,91 @@ class LocationService {
                       course: -1,
                       source: 'iridium_mailservice',
                     });
+                    console.log({
+                      timestamp: new Date(mail.headers.date),
+                      latitude: lat,
+                      longitude: lon,
+                      altitude: alt,
+                      speed: -1,
+                      course: -1,
+                      source: 'iridium_mailservice',
+                    });
                   } else {
                     // TODO: alke + jula: Add else branch for DropPoint
                     console.log('not a position update, so a new case!');
+
+                    let lat = parseFloat(
+                      mail.text
+                        .substring(
+                          mail.text.indexOf('Lat+') + 4,
+                          mail.text.indexOf('Lon')
+                        )
+                        .trim()
+                    );
+
+                    let lon = parseFloat(
+                      mail.text
+                        .substring(
+                          mail.text.indexOf('Lon+') + 4,
+                          mail.text.indexOf('Alt')
+                        )
+                        .trim()
+                    );
+
+                    let alt = mail.text
+                      .substring(
+                        mail.text.indexOf('Alt') + 4,
+                        mail.text.indexOf('GPS')
+                      )
+                      .trim();
+
+                    let identifier = String(
+                      'DROPPOINT' +
+                        '_' +
+                        new Date(mail.headers.date).toISOString()
+                    );
+                    console.log('no found! create droppoint');
+                    let item = {
+                      //generate id like VEHICLE_SHIPSNAME
+                      _id: identifier,
+                      template: 'droppoint',
+                      identifier: identifier,
+                      properties: {
+                        created_by_vehicle: res[i].doc.identifier,
+                        name: res[i].doc.identifier,
+                        comment:
+                          'droppoint created by ' + res[i].doc.identifier,
+                      },
+                    };
+                    this.insertItem(item, function(err, result) {
+                      if (err) {
+                        if (err.name == 'conflict')
+                          console.log(
+                            'The id is already taken, please choose another one'
+                          );
+                        else
+                          console.log(
+                            err,
+                            'An unknown error occured while creating the item'
+                          );
+                      } else if (result.ok == true) {
+                        console.log(
+                          `droppoint ${item._id} created. add position...`
+                        );
+
+                        self.insertLocation(res[i].doc.identifier, {
+                          timestamp: new Date(mail.headers.date),
+                          latitude: lat,
+                          longitude: lon,
+                          altitude: alt,
+                          speed: -1,
+                          course: -1,
+                          source: 'iridium_mailservice',
+                        });
+                      } else {
+                        console.log(result);
+                      }
+                    });
                   }
                 } else {
                   console.log('Mail is not from gateway sender');

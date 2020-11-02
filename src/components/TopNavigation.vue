@@ -3,7 +3,7 @@
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
       <ul class="nav-actions">
-        <li v-on:click="openModal('createItem')">
+        <li v-on:click="createItem()">
           <a>
             <i class="fas fa-plus-circle"></i>
             <span>Add</span>
@@ -18,13 +18,19 @@
       </ul>
     </div>
     <ul id="nav-views">
-      <li class="active" v-on:click="changeModus('map')">
+      <li
+        :class="{ active: main_view == 'map' }"
+        v-on:click="changeModus('map')"
+      >
         <a>
           <i class="fas fa-map-marked"></i>
           <span>Map</span>
         </a>
       </li>
-      <li v-on:click="changeModus('cases')">
+      <li
+        :class="{ active: main_view == 'list' }"
+        v-on:click="changeModus('list')"
+      >
         <a>
           <i class="fas fa-list-alt"></i>
           <span>List</span>
@@ -32,10 +38,16 @@
       </li>
     </ul>
     <ul id="nav-right">
-      <li v-on:click="toggleAir()">
+      <li :class="{ active: showing_air }" v-on:click="toggleAir()">
         <a>
           <i class="fas fa-plane"></i>
           <span>Air</span>
+        </a>
+      </li>
+      <li :class="{ active: showing_log }" v-on:click="toggleLog()">
+        <a>
+          <i class="fas fa-list"></i>
+          <span>Log</span>
         </a>
       </li>
       <el-dropdown>
@@ -47,8 +59,8 @@
           </span>
         </span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item v-on:click="openModal('settings')">
-            <a v-on:click="openModal('settings')">Settings</a>
+          <el-dropdown-item v-on:click="openSettings()">
+            <a v-on:click="openSettings()">Settings</a>
           </el-dropdown-item>
           <el-dropdown-item v-on:click="logout()">
             <a v-on:click="logout()">Logout</a>
@@ -68,28 +80,38 @@ export default {
   components: {
     TimeControl,
   },
+  props: {
+    main_view: { type: String, default: 'list' },
+    showing_air: { type: Boolean, default: false },
+    showing_log: { type: Boolean, default: false },
+  },
   data: function() {
     return {
-      show_air: false,
       show_timeControl: false,
       username: '',
       password: '',
     };
   },
   methods: {
-    changeModus: function(value) {
+    changeModus(value) {
       // Using the service bus
-      serverBus.$emit('app_modus', value);
+      serverBus.$emit('main_view', value);
     },
-    openModal: function(value) {
-      // Using the service bus
-      serverBus.$emit('modal_modus', value);
+    createItem() {
+      serverBus.$emit('create_item');
     },
-    toggleAir: function() {
-      this.$data.show_air = !this.$data.show_air;
-      serverBus.$emit('show_air', this.$data.show_air);
+    openSettings() {
+      serverBus.$emit('show_settings');
     },
-    logout: function() {
+    toggleAir() {
+      if (!this.showing_air) serverBus.$emit('show_air');
+      else serverBus.$emit('close_modal');
+    },
+    toggleLog() {
+      if (!this.showing_log) serverBus.$emit('show_log');
+      else serverBus.$emit('close_modal');
+    },
+    logout() {
       localStorage.clear();
       window.location.reload();
     },

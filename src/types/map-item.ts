@@ -1,13 +1,14 @@
+import { DbPosition } from './db-position';
+import { DbItem } from './db-item';
+
 export interface MapItem {
   id: string;
   doc: {
     template: string;
     identifier: string;
-    base_template: string;
     properties: {
       icon: string;
       color: string;
-      boat_color: string;
       name: string;
     };
   };

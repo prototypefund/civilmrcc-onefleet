@@ -1,116 +1,353 @@
 <template>
   <div id="app">
     <Loadingscreen v-if="show_loadingscreen"></Loadingscreen>
+    <Login v-if="modal == 'login'"></Login>
+    <Settings v-if="modal == 'settings'"></Settings>
+
     <CreateItem
       v-if="modal == 'createItem'"
-      :givenTemplate="modal_data"
+      :given_template="modal_data.given_template_type"
+      :given_positions="modal_data.given_positions"
     ></CreateItem>
-    <ShowItem v-show="itemId != false" :itemId="itemId"></ShowItem>
+    <ShowItem
+      v-show="modal == 'showItem'"
+      :itemId="modal_data.given_item_id"
+      :given_positions="modal_data.given_positions"
+      :mapped_base_items="mapped_base_items"
+      :positions_per_item="positions_per_item"
+    ></ShowItem>
     <ExportItem
       v-show="exportItemId != false"
       :exportItemId="exportItemId"
     ></ExportItem>
 
-    <Login v-if="modal == 'login'"></Login>
-    <Settings v-if="modal == 'settings'"></Settings>
-    <TopNavigation></TopNavigation>
+    <TopNavigation
+      :main_view="main_view"
+      :showing_air="modal == 'showAir'"
+      :showing_log="modal == 'showLog'"
+    ></TopNavigation>
+    <Air v-if="modal == 'showAir'"></Air>
+    <Log v-if="modal == 'showLog'"></Log>
 
-    <LeftNavigation></LeftNavigation>
-    <Air v-if="show_air"></Air>
+    <LeftNavigation
+      v-show="main_view == 'map'"
+      :filters="filters"
+      :base_items="base_items"
+      :filtered_base_items="allFilteredItems"
+      :positions_per_item="positions_per_item"
+    />
     <div id="mainWindow">
-      <MapArea v-show="modus == 'map'"></MapArea>
-      <ListView v-show="modus == 'cases'"></ListView>
+      <MapArea
+        v-show="main_view == 'map'"
+        :filtered_base_items="allFilteredItems"
+        :positions_per_item="positions_per_item"
+      />
     </div>
-    <div id="chat" v-bind:class="chatWindowClass">
-      <div style="margin-left:-15px;" @click="show_chat = !show_chat">
-        toggle chat
-      </div>
-      chat
-    </div>
+    <ListView
+      class="wide"
+      v-show="main_view == 'list'"
+      :base_items="base_items"
+      :positions_per_item="positions_per_item"
+    />
   </div>
 </template>
 
 <script lang="ts">
+// vue-components: main window areas
 import TopNavigation from './components/TopNavigation.vue';
+import LeftNavigation from './components/LeftNavigation.vue';
+import MapArea from './components/MapArea.vue';
+import ListView from './components/ListView.vue';
+
+// vue-components: item-specific modals
 import CreateItem from './components/items/CreateItem.vue';
 import ShowItem from './components/items/ShowItem.vue';
 import ExportItem from './components/items/ExportItem.vue';
 
-import LeftNavigation from './components/LeftNavigation.vue';
+// vue-components: other modals & popups
 import Air from './components/Air.vue';
-import MapArea from './components/MapArea.vue';
-import ListView from './components/ListView.vue';
+import Log from './components/Log.vue';
 import Login from './components/Login.vue';
 import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
 
+// other imports
+import templates from './components/items/templates.js';
 import { serverBus } from './main';
+import storage from './utils/storageWrapper';
+// import { DbItem } from '@/types/db-item';
+// import { DbPosition } from '@/types/db-position';
 
 export default {
   name: 'app',
   components: {
+    // main window areas:
     TopNavigation,
     LeftNavigation,
-    Air,
     MapArea,
+    ListView,
+    // item-specific modals:
     CreateItem,
     ShowItem,
     ExportItem,
-    ListView,
+    // other modals & popups:
+    Air,
+    Log,
     Login,
     Settings,
     Loadingscreen,
   },
   data: () => ({
-    modus: 'map',
+    main_view: 'map',
     modal: '',
-    modal_data: '',
-    show_air: false,
+    modal_data: {},
     show_loadingscreen: true,
-    itemId: false,
     exportItemId: false,
-    show_chat: false,
+    base_items: [],
+    positions_per_item: {},
+    filters: [],
+    initial_replication_done: false,
+    tracks_oldest_date_iso: new Date('2019-01-01').toISOString(),
+    tracks_newest_date_iso: new Date().toISOString(), // now
+    tracks_length_limit: 99, // may be overwritten by local storage below
   }),
   computed: {
-    chatWindowClass: function() {
-      return this.show_chat ? 'show_chat' : 'hide_chat';
+    /**
+     * This computed value just returns an indexed version of the base_items.
+     * The index is the item's id field.
+     */
+    mapped_base_items: function() {
+      return this.base_items.reduce((map, item) => {
+        map[item._id] = item;
+        return map;
+      }, {});
+    },
+
+    /**
+     * This computed value always contains an array of filtered item sections.
+     * It is used by the LeftNavigationBar to display all items by tab section,
+     * and by the MapArea to display the visible items in one layer per filter section.
+     * Some map Popup components also use this to display available items in popups.
+     */
+    allFilteredItems() {
+      let all_filter_groups = templates.get_filter_groups();
+      let filtered_item_groups: {}[] = [];
+
+      // set up tabs for the tabs bar so that they are shown even before items are loaded
+      for (let s_id in all_filter_groups) {
+        // two-stage filtering for computing hidden items per section:
+        let active_filters = this.filters[s_id].filter(f => f.active);
+        let section_filters = active_filters.filter(f => f.always_active);
+
+        // filter all items for this section:
+        let section_base_items = this.base_items.filter(base_item =>
+          section_filters.every(section_filter =>
+            this.matchesFilter(base_item, section_filter)
+          )
+        );
+
+        // filter additional items based on active filters:
+        let filtered_base_items = section_base_items.filter(base_item =>
+          active_filters.every(active_filter =>
+            this.matchesFilter(base_item, active_filter)
+          )
+        );
+
+        if (all_filter_groups[s_id].selectable_in_sidebar)
+          filtered_item_groups.push({
+            title: all_filter_groups[s_id].title,
+            base_items: filtered_base_items,
+            hidden_items:
+              section_base_items.length - filtered_base_items.length,
+          });
+      }
+      return filtered_item_groups;
+    },
+  },
+  watch: {
+    initial_replication_done: function() {
+      this.loadItems();
+    },
+    base_items: function() {
+      // only load positions after initial replication has really finished, or we'll not see all requested positions
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_oldest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_newest_date_iso: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
+    },
+    tracks_length_limit: function() {
+      if (this.initial_replication_done) this.loadPositionsForItems();
     },
   },
   methods: {
-    showItemDetails: () => {
-      this.itemid = 3;
+    loadItems() {
+      this.$db.getBaseItems().then(result => {
+        this.base_items = result.rows.map(item => item.doc);
+      });
     },
+    loadPositionsForItems() {
+      let positions_per_item = {};
+
+      let promises: Array<any> = this.base_items.map(base_item =>
+        base_item.identifier
+          ? this.$db
+              .getPositionsForItemPromise(
+                base_item.identifier,
+                this.tracks_length_limit,
+                this.tracks_newest_date_iso,
+                this.tracks_oldest_date_iso
+              )
+              .then(db_positions => {
+                positions_per_item[base_item.identifier] = db_positions;
+              })
+          : null
+      );
+
+      Promise.all(promises).then(() => {
+        this.positions_per_item = positions_per_item;
+      });
+    },
+    initTrackSettings() {
+      this.tracks_oldest_date_iso =
+        storage.get('settings_track_startdate') || this.tracks_oldest_date_iso;
+      this.tracks_newest_date_iso =
+        storage.get('settings_track_enddate') || this.tracks_newest_date_iso;
+      this.tracks_length_limit =
+        storage.get('settings_map_track_length') || this.tracks_length_limit;
+    },
+
+    /** Start of Item Filter functions */
+    initFilters() {
+      /** Get filters and set up their active state */
+      let all_filter_groups = templates.get_filter_groups();
+      let filters = [];
+      for (let section_index in all_filter_groups) {
+        filters[section_index] = all_filter_groups[section_index].filters.map(
+          filter => {
+            filter.active =
+              filter.always_active || filter.initially_active ? true : false;
+            return filter;
+          }
+        );
+      }
+      this.filters = filters;
+    },
+    matchesFilter(base_item, filter) {
+      let item_value = filter.field
+        .split('.')
+        .reduce((o, i) => o[i] || {}, base_item);
+      return filter.values.some(filter_value =>
+        this.fitsFilterValue(item_value, filter_value)
+      );
+    },
+    fitsFilterValue(item_value: string, filter_value: string) {
+      switch (filter_value[0]) {
+        case '$':
+          return this.evaluateComparisonFunction(item_value, filter_value);
+        case '!':
+          return item_value != filter_value.substring(1);
+        default:
+          return item_value == filter_value;
+      }
+    },
+    evaluateComparisonFunction(item_value: string, filter_value: string) {
+      // TODO: use simple regex to implement comparison function. Or Mango-style Query?
+      console.log('evaluateComparisonFunction not implemented yet!');
+      return item_value || filter_value || true;
+    },
+    /** End of Item Filter functions */
   },
+
   created: function() {
-    serverBus.$on('app_modus', app_modus => {
-      this.$data.modus = app_modus;
+    this.initTrackSettings();
+
+    serverBus.$on('show_login_screen', () => {
+      this.show_loadingscreen = false;
+      this.modal_data = {};
+      this.modal = 'login';
     });
 
-    serverBus.$on('modal_modus', (modal_modus, modal_data) => {
-      this.$data.modal = modal_modus;
-      if (modal_modus == 'login') this.$data.show_loadingscreen = false;
-      this.$data.modal_data = modal_data;
+    serverBus.$on('main_view', app_modus => {
+      this.main_view = app_modus;
     });
-    serverBus.$on('show_air', show_air => {
-      this.$data.show_air = show_air;
+    serverBus.$on('show_settings', () => {
+      console.log('ettings');
+      this.modal = 'settings';
+    });
+    serverBus.$on('create_item', (template_type, latlngs) => {
+      this.modal_data = {
+        given_template_type: template_type,
+        given_positions: latlngs,
+      };
+      this.modal = 'createItem';
+    });
+    // deprecated! Please use the specific signal directly.
+    // serverBus.$on('modal_modus', (modal_modus, modal_data) => {
+    //   this.$data.modal = modal_modus;
+    //   if (modal_modus == 'login') this.$data.show_loadingscreen = false;
+    //   this.$data.modal_data = modal_data;
+    // });
+    serverBus.$on('show_air', () => {
+      this.modal = 'showAir';
+    });
+    serverBus.$on('show_log', () => {
+      this.modal = 'showLog';
+    });
+    serverBus.$on('show_settings', () => {
+      this.modal_data = {};
+      this.modal = 'settings';
     });
     serverBus.$on('itemId', itemId => {
-      this.$data.itemId = itemId;
+      // deprecated. use the 'show_item' signal directly!
+      serverBus.$emit('show_item', itemId);
     });
-    serverBus.$on('exportItemId', itemId => {
+    serverBus.$on(
+      'show_item',
+      (item_id: String, positions: { lat: number; lon: number }[]) => {
+        if (item_id) {
+          this.modal_data = {
+            given_item_id: item_id,
+            given_positions: positions,
+          };
+          // this.itemId = item_id;
+          this.modal = 'showItem';
+        } else {
+          // this.itemId = false;
+          this.modal = '';
+          this.modal_data = {};
+        }
+      }
+    );
+    serverBus.$on('exportItemId', (itemId: String) => {
       this.$data.exportItemId = itemId;
     });
-    //let self = this;
+    serverBus.$on('close_modal', () => {
+      this.modal = '';
+      this.modal_data = {};
+    });
+
     //set on change listener on positions because its usually the largest database
-    let self = this;
     this.$db.setOnInitialReplicationDone(
       'positions',
       'hide_loadingscreen',
-      function() {
-        //reload vehicles if change is detected
-        self.show_loadingscreen = false;
+      () => {
+        this.show_loadingscreen = false;
+        this.initial_replication_done = true;
       }
     );
+    this.$db.setOnChange('items', 'base_items_change', () => {
+      //reload base_items if change is detected
+      this.loadItems();
+    });
+    this.$db.setOnChange('positions', 'base_positions_change', () => {
+      //reload positions if change is detected
+      this.loadPositionsForItems();
+    });
+
+    this.initFilters();
   },
 };
 </script>
@@ -187,6 +424,15 @@ body {
   background: var(--white);
 }
 
+.wide {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: var(--app-top);
+  bottom: 0px;
+  background: var(--white);
+}
+
 #chat {
   display: none; /* hide for now */
   position: fixed;
@@ -242,6 +488,7 @@ ul {
 .form-style-6 input[type='datetime-local'],
 .form-style-6 textarea,
 .form-style-6 select {
+  transition: all 0.3s ease-in-out;
   -webkit-transition: all 0.3s ease-in-out;
   -moz-transition: all 0.3s ease-in-out;
   -ms-transition: all 0.3s ease-in-out;
@@ -282,6 +529,7 @@ ul {
 }
 
 .form-style-6 input[type='submit'],
+.form-style-6 button,
 .form-style-6 input[type='button'] {
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
@@ -294,6 +542,7 @@ ul {
   border-right-style: none;
   border-left-style: none;
   color: #fff;
+  cursor: pointer;
 }
 .form-style-6 input[type='submit']:hover,
 .form-style-6 input[type='button']:hover {
@@ -345,6 +594,13 @@ ul {
   border: 1px solid #c9c9c9;
   margin-left: 10px;
   padding: 11px;
+}
+
+.save_cancel_buttons input {
+  width: 49% !important;
+}
+.save_cancel_buttons input[type='submit'] {
+  margin-right: 2%;
 }
 
 .tags-input-wrapper-default,

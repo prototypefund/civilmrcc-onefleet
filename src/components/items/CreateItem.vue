@@ -1,5 +1,5 @@
 <template>
-  <div class="background" v-on:click.self="closeModal">
+  <div class="background" v-on:click.self="closeModal()">
     <div class="form-style-6">
       <h1>Add new {{ form_data.template }}</h1>
       <form @submit="createItem">
@@ -23,106 +23,110 @@
         />
 
         <div id="position" v-if="template_data.add_initial_position">
-          <span>Latitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lat"
-            placeholder="Latitude"
-            v-model="position_data.positions[0].lat"
-          />
-
-          <span>Longitude</span>
-          <input
-            type="number"
-            step="any"
-            name="lon"
-            placeholder="Longitude"
-            v-model="position_data.positions[0].lon"
-          />
+          <position
+            :edit="true"
+            :position="position_data.positions[0]"
+          ></position>
         </div>
 
         <div v-for="field in template_data.fields" :key="field.name">
-          <span>{{ field.title }}</span>
+          <div v-if="!field.hidden">
+            <span>{{ field.title }}</span>
 
-          <!-- iconwrapper start -->
-          <div class="iconwrapper" v-if="field.type == 'icon'">
+            <!-- iconwrapper start -->
+            <div class="iconwrapper" v-if="field.type == 'icon'">
+              <input
+                v-model="form_data.properties[field.name]"
+                :name="field.name"
+                :placeholder="field.title"
+                type="text"
+                class="icon"
+              />
+              <span
+                class="preview-icon"
+                :class="'el-icon-' + form_data.properties[field.name]"
+                >&nbsp;</span
+              >
+            </div>
+            <!-- iconwrapper end -->
+
+            <!-- tags start -->
+            <tags-input
+              v-if="field.type == 'tag'"
+              element-id="tags"
+              v-model="form_data.properties[field.name]"
+              :existing-tags="
+                tags.getTagsForField(form_data.template, field.name)
+              "
+              :typeahead="true"
+              typeahead-style="dropdown"
+            ></tags-input>
+            <!-- tags end -->
+
             <input
+              v-if="field.type != 'select' && field.type != 'icon'"
               v-model="form_data.properties[field.name]"
               :name="field.name"
               :placeholder="field.title"
-              type="text"
-              class="icon"
+              :type="field.type"
+              :step="field.step"
             />
-            <span
-              class="preview-icon"
-              :class="'el-icon-' + form_data.properties[field.name]"
-              >&nbsp;</span
+
+            <select
+              v-if="field.type == 'select'"
+              class="select-css"
+              v-model="form_data.properties[field.name]"
             >
+              <option
+                v-for="(option_name, option) in field.options"
+                :key="option"
+                :value="option"
+              >
+                {{ option_name }}
+              </option>
+            </select>
           </div>
-          <!-- iconwrapper end -->
-
-          <!-- tags start -->
-          <tags-input
-            v-if="field.type == 'tag'"
-            element-id="tags"
-            v-model="form_data.properties[field.name]"
-            :existing-tags="
-              tags.getTagsForField(form_data.template, field.name)
-            "
-            :typeahead="true"
-            typeahead-style="dropdown"
-          ></tags-input>
-          <!-- tags end -->
-
-          <input
-            v-if="field.type != 'select' && field.type != 'icon'"
-            v-model="form_data.properties[field.name]"
-            :name="field.name"
-            :placeholder="field.title"
-            :type="field.type"
-            :step="field.step"
-          />
-          <select
-            v-if="field.type == 'select'"
-            class="select-css"
-            v-model="form_data.properties[field.name]"
-          >
-            <option
-              v-for="option in field.options"
-              :key="option"
-              :value="field.options[option]"
-              >{{ option }}</option
-            >
-          </select>
         </div>
-        <input type="submit" value="Send" />
+        <div class="save_cancel_buttons">
+          <input type="submit" value="Save" />
+          <input type="button" value="Cancel" @click="closeModal()" />
+        </div>
       </form>
-      <p>
-        {{ form_data.template }}
-      </p>
     </div>
   </div>
 </template>
-<script>
+<script lang="ts">
 import templates from './templates.js';
 import tags from './tags.js';
 import { serverBus } from '../../main';
+import Position from './Position.vue';
+// import { DbItem } from '../../types/db-item';
+
 export default {
   name: 'CreateItem',
   props: {
-    givenTemplate: {
+    given_template: {
       type: String,
       default: '',
     },
+    given_positions: {
+      type: Array,
+      default: () => [],
+    },
+  },
+  components: {
+    Position,
   },
   data: function() {
     return {
       template: '',
       vehicles: [],
-      form_data: { properties: {}, template: this.givenTemplate },
+      form_data: {
+        type: Object, // type: DbItem,
+        default: null,
+      },
       position_data: {
-        positions: [{}],
+        positions: [],
       },
       tags: tags,
     };
@@ -138,7 +142,22 @@ export default {
   },
 
   methods: {
+    prefillProperties() {
+      let random_color =
+        '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
+      // TODO: introduce common "display_settings.marker_color" field to all templates
+      if (this.given_template == 'case') return { boat_color: random_color };
+      else return { color: random_color };
+    },
     createItem: function(e) {
+      e.preventDefault();
+
+      // we must never create an item without a proper identifier:
+      if (!this.form_data.identifier || this.form_data.identifier.length <= 2) {
+        alert('please enter a valid Identifier');
+        return;
+      }
+
       var self = this;
 
       this.form_data._id = String(
@@ -146,8 +165,7 @@ export default {
       ).toUpperCase();
       if (
         this.template_data.add_initial_position == false ||
-        (this.position_data.positions[0].lat &&
-          this.position_data.positions[0].lon)
+        this.position_data.positions.length > 0
       ) {
         this.$db.createItem(this.form_data, function(err, result) {
           if (err) {
@@ -159,17 +177,19 @@ export default {
           } else if (result.ok == true) {
             alert('item created');
 
-            if (
-              self.position_data.positions[0].lat &&
-              self.position_data.positions[0].lon
-            ) {
+            if (self.position_data.positions.length > 0) {
+              let any_timestamp = self.position_data.positions[0].timestamp;
+              let time_isostring = (any_timestamp
+                ? new Date(any_timestamp)
+                : new Date()
+              ).toISOString();
               let position = {
-                _id: self.form_data.identifier + '_' + new Date().toISOString(),
+                _id: self.form_data.identifier + '_' + time_isostring,
                 lat: self.position_data.positions[0].lat,
                 lon: self.position_data.positions[0].lon,
                 item_identifier: self.form_data.identifier,
                 source: 'onefleet',
-                timestamp: new Date().toISOString(),
+                timestamp: time_isostring,
               };
               self.$db.createPosition(position, function(err, result) {
                 if (err) {
@@ -185,13 +205,25 @@ export default {
       } else {
         alert('please enter a valid position');
       }
-
-      e.preventDefault();
     },
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
+  },
+  created: function() {
+    // pre-fill form data:
+    this.form_data = {
+      properties: this.prefillProperties(),
+      template: this.given_template,
+    };
+
+    // pre-fill given position(s)
+    if (this.given_positions && this.given_positions.length > 0) {
+      this.position_data.positions = this.given_positions;
+    } else {
+      this.position_data.positions.push({ lat: 0, lon: 0 });
+    }
   },
 };
 </script>

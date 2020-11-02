@@ -4,7 +4,7 @@
       <h1>Settings</h1>
       <form v-on:submit.prevent="save">
         <h3>Map</h3>
-        <span>Tileset</span>
+        <span>Default Tileset</span>
         <select v-model="settings.maptiles">
           <option value="openlayers">OpenLayers (online)</option>
           <option value="onefleet">Onefleet (offline)</option>
@@ -86,7 +86,7 @@ export default {
   methods: {
     closeModal: function() {
       // Using the service bus
-      serverBus.$emit('modal_modus', '');
+      serverBus.$emit('close_modal');
     },
     save: function() {
       localStorage.settings_maptiles = this.settings.maptiles;

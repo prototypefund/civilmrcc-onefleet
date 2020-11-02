@@ -1,7 +1,7 @@
 <template>
   <div id="loadingscreen">
     <img src="@/assets/paper-boat.svg" alt="" id="paperboat" />
-    <p>loading</p>
+    <p class="loadingtext">loading</p>
     <div class="thingy"></div>
   </div>
 </template>
@@ -10,7 +10,7 @@ export default {
   name: 'Loadingscreen',
 };
 </script>
-<style>
+<style scoped>
 #loadingscreen {
   position: fixed;
   background: #17affa;
@@ -73,10 +73,10 @@ export default {
   }
 }
 
-p {
+.loadingtext {
   position: absolute;
 
-  bottom: 0;
+  top: 30vw;
   width: 200px;
   left: 50%;
   margin-left: -100px;

@@ -1,9 +1,12 @@
 import * as L from 'leaflet';
 import 'leaflet-draw';
+import 'leaflet-mouse-position';
 import { SARZones } from '../constants/sar-zones';
 import storage from './storageWrapper';
 import { SARZone } from '@/types/sar-zone';
 import { MapItem } from '../types/map-item';
+import { DbItem } from '@/types/db-item';
+import { DbPosition } from '@/types/db-position';
 
 /**
  * The mapWrapper is an abstraction layer from the underlying mapping backend. (Currently leaflet.js)
@@ -11,6 +14,7 @@ import { MapItem } from '../types/map-item';
  */
 class mapWrapper {
   public map!: L.Map;
+  public popup_contents!: any;
   public loaded_items: {
     [index: string]: {
       marker: L.Marker<any>;
@@ -20,11 +24,19 @@ class mapWrapper {
   } = {};
   public sarZoneLayerGroup = L.layerGroup();
   public sarZoneIsVisible = true;
+  // public markerGroup = L.layerGroup();
+  public drawnAreasAndMarkers = new L.FeatureGroup();
 
   /**
    * Initialises the map backend component.
+   * @param mapId The id of the div element that this map will be placed in
+   * @param popup_contents A callable that provides a div element for popups when requested.
+   * @memberof mapWrapper
    */
-  public init(mapId: string): void {
+  public init(mapId: string, popup_contents: any): void {
+    this.popup_contents = popup_contents;
+
+    /** Map Zoom and Center */
     let mapcenter: [number, number];
     let mapzoom: number;
     try {
@@ -32,64 +44,123 @@ class mapWrapper {
       mapcenter = JSON.parse(storage.get('mapcenter'));
     } catch (err) {
       console.error('could not load mapcenter and zoom from localstorage', err);
-      mapcenter = [38.575655, 10.710734];
+      mapcenter = [38.57, 10.7];
       mapzoom = 5;
     }
-
     if (!mapzoom) mapzoom = 5;
-    if (!mapcenter) mapcenter = [38.575655, 10.710734];
+    if (!mapcenter) mapcenter = [38.57, 10.7];
 
-    this.map = L.map(mapId).setView(mapcenter, mapzoom);
-
-    /** Tile setup */
-    let tile_url: string;
-    switch (localStorage.settings_maptiles) {
-      default:
-        tile_url = 'http://{s}.tile.osm.org/{z}/{x}/{y}.png';
-        break;
-      case 'onefleet':
-        tile_url = '/MapTiles/{z}/{x}/{y}.png';
-        break;
-    }
-
-    L.tileLayer(tile_url, {
+    /** prepare Tiles start */
+    let onefleet_tiles = L.tileLayer('/MapTiles/{z}/{x}/{y}.png', {
       attribution:
         'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-      maxZoom: 18,
+      maxZoom: 10, // onefleet map tiles don't exist above 10
       minZoom: 3,
       noWrap: true,
       id: 'groundtile',
-    }).addTo(this.map);
-
-    if (localStorage.settings_openseamap == 'true') {
-      L.tileLayer('http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
-        attribution: '',
+    });
+    let openstreetmap_tiles = L.tileLayer(
+      'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
+      {
+        attribution:
+          'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetzMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
         minZoom: 3,
         noWrap: true,
+        id: 'groundtile',
+      }
+    );
+    let seamap_tiles = L.tileLayer(
+      'http://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
+      {
+        attribution: '',
+        maxZoom: 18,
+        minZoom: 9, // seamap tiles don't exists below 9
+        noWrap: true,
         id: 'openseamap',
         accessToken: '',
-      }).addTo(this.map);
-    }
+      }
+    );
+    /** prepare Tiles end */
+
+    /* prepare LayerGroups start */
+    // var item_group_one = L.layerGroup([]); // placeholders
+    // var item_group_two = L.layerGroup([]);
+    // var item_group_three = L.layerGroup([]);
+    // var item_group_four = L.layerGroup([]);
+    /* prepare LayerGroups end */
+
+    var baseMaps = {
+      'Onefleet Map': onefleet_tiles,
+      OpenStreetMap: openstreetmap_tiles,
+    };
+    var overlayMaps = {
+      OpenSeamap: seamap_tiles,
+      // Cases: item_group_one,
+      // 'Civil Fleet': item_group_two,
+      // 'Other Actors': item_group_three,
+      // 'SAR Zones': item_group_four,
+    };
+    var startingMaps = [
+      localStorage.settings_maptiles == 'onefleet'
+        ? onefleet_tiles
+        : openstreetmap_tiles,
+      // item_group_one,
+    ];
+    if (localStorage.settings_openseamap == 'true')
+      startingMaps.push(seamap_tiles);
+
+    /** instantiate Map object start */
+    this.map = L.map(mapId, {
+      center: mapcenter,
+      zoom: mapzoom,
+      layers: startingMaps,
+    });
+    /** instantiate Map object end */
 
     /** Control setup */
+    L.control.layers(baseMaps, overlayMaps).addTo(this.map);
+
     L.control.scale({ imperial: false }).addTo(this.map);
+
+    /* Measurement Tools for measuringdistances and angles */
     (L.control as any)
       .polylineMeasure({
-        position: 'topleft',
+        // config follows https://developer.aliyun.com/mirror/npm/package/leaflet.polylinemeasure
+        position: 'topright',
         unit: 'nauticalmiles',
+        measureControlTitleOn: 'Measure Distances and Angles', // Title for the control going to be switched on
+        measureControlTitleOff: 'Clear Measurements', // Title for the control going to be switched off
+        measureControlLabel: '&#8614;', // HTML to place inside the control. Default: &#8614;
+        backgroundColor: '#8f8', // Background color for control when selected. Default: #8f8
         showBearings: true,
-        clearMeasurementsOnStop: false,
-        showClearControl: true,
-        showUnitControl: true,
+        // clearMeasurementsOnStop: false,
+        // showClearControl: true,
+        // showUnitControl: false,
       })
       .addTo(this.map);
 
-    //** SAR Zones setup */
-    this.createSarZoneFeatureGroup(SARZones);
+    /* Allows us to draw shapes on the map, including dropping markers and what to do when clicked. */
+    this._initShapeDrawing();
 
-    //** Init draws on the map after startup. */
-    this.initDraw();
+    //** SAR Zones setup (to be replaced with zones from database) */
+    this._initSarZones(SARZones);
+    this.map.addControl(this._createSarZoneToggleControl());
+
+    //** Add mouse coordinates */
+    L.control
+      .mousePosition({
+        position: 'bottomright',
+        emptyString: '',
+        formatter: (lng: number, lat: number) => {
+          return (
+            this.asDMS({ lat: lat, lon: lng }) +
+            ' | ' +
+            this.asDD({ lat: lat, lon: lng })
+          );
+        },
+      })
+      .addTo(this.map);
 
     this.map.on('move', () => {
       storage.set('mapzoom', (this.map as any)._zoom);
@@ -105,7 +176,7 @@ class mapWrapper {
   /**
    * Creates a featureGroup with polygons of each given SAR Zone from the parameter.
    */
-  public createSarZoneFeatureGroup(sarZones: SARZone[]): void {
+  private _initSarZones(sarZones: SARZone[]): void {
     this.map.addLayer(this.sarZoneLayerGroup);
 
     for (let sarZoneObject of sarZones) {
@@ -129,87 +200,11 @@ class mapWrapper {
     }
   }
 
-  /** Method calls the flyTo method from leaflet.js
-   * See also: https://leafletjs.com/reference-1.0.0.html
-   * Sets the view of the map (geographical center and zoom) performing a smooth pan-zoom animation.
-   * @param {[number, number]} positions The latitude/longitude coordinates.
-   */
-  public flyTo(positions: [number, number]) {
-    this.map.flyTo(positions);
-  }
-
-  // Truncate value based on number of decimals
-  private _round(num: number, len: number): number {
-    return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
-  }
-
-  // Helper method to format LatLng object (x.xxxxxx, y.yyyyyy)
-  private strLatLng(latlng): string {
-    return (
-      '(' + this._round(latlng.lat, 6) + ', ' + this._round(latlng.lng, 6) + ')'
-    );
-  }
-
-  // Generate popup content based on layer type
-  // - Returns HTML string, or null if unknown object
-  private getPopupContent(layer): string | null {
-    let latlngs, distance: number, area;
-    // Marker - add lat/long
-    if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-      return this.strLatLng(layer.getLatLng());
-      // Circle - lat/long, radius
-    } else if (layer instanceof L.Circle) {
-      var center = layer.getLatLng(),
-        radius = layer.getRadius();
-      return (
-        'Center: ' +
-        this.strLatLng(center) +
-        '<br />' +
-        'Radius: ' +
-        this._round(radius, 2) +
-        ' m'
-      );
-      // Rectangle/Polygon - area
-    } else if (layer instanceof L.Polygon) {
-      layer = layer as any;
-      (latlngs = layer._defaultShape
-        ? layer._defaultShape()
-        : layer.getLatLngs()),
-        (area = L.GeometryUtil.geodesicArea(latlngs));
-      let html =
-        '<a href="#">Get historic ais data for this area</a><br><a href="#">add sighting</a><br>';
-
-      return html + 'Area: ' + L.GeometryUtil.readableArea(area, true);
-      // Polyline - distance
-    } else if (layer instanceof L.Polyline) {
-      layer = layer as any;
-      (latlngs = layer._defaultShape
-        ? layer._defaultShape()
-        : layer.getLatLngs()),
-        (distance = 0);
-      if (latlngs.length < 2) {
-        return 'Distance: N/A';
-      } else {
-        for (var i = 0; i < latlngs.length - 1; i++) {
-          distance += latlngs[i].distanceTo(latlngs[i + 1]);
-        }
-        return 'Distance: ' + this._round(distance, 2) + ' m';
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Initialise the SAR-zone-toggle and popups and keep track of drawn items.
-   */
-  public initDraw(): void {
-    let drawnItems = new L.FeatureGroup();
-    this.map.addLayer(drawnItems);
-
-    //** Add a toggle for sar zones in map controls list */
+  //** Add a toggle for sar zones in map controls list */
+  private _createSarZoneToggleControl() {
     var toggleSarZoneControl = L.Control.extend({
       options: {
-        position: 'topleft',
+        position: 'topright',
       },
 
       onAdd: () => {
@@ -217,11 +212,6 @@ class mapWrapper {
           'div',
           'leaflet-bar leaflet-control leaflet-control-custom'
         );
-
-        container.style.backgroundColor = 'white';
-        container.style.backgroundSize = '30px 30px';
-        container.style.width = '30px';
-        container.style.height = '30px';
 
         let aTag = L.DomUtil.create(
           'a',
@@ -231,7 +221,7 @@ class mapWrapper {
         aTag.title = 'Turn on/off sar zones.';
         // Set icon
         L.DomUtil.addClass(aTag, 'polyline-measure-controlOnBgColor');
-        L.DomUtil.addClass(aTag, 'el-icon-close');
+        L.DomUtil.addClass(aTag, 'el-icon-view');
 
         // We must prevent the double click of the button, otherwise the map zoomes in if button is double clicked.
         container.ondblclick = e => e.stopImmediatePropagation();
@@ -246,58 +236,186 @@ class mapWrapper {
           if (this.map.hasLayer(this.sarZoneLayerGroup)) {
             this.map.removeLayer(this.sarZoneLayerGroup);
             L.DomUtil.removeClass(aTag, 'polyline-measure-controlOnBgColor');
-
-            // Change icon
-            L.DomUtil.addClass(aTag, 'el-icon-view');
-            L.DomUtil.removeClass(aTag, 'el-icon-close');
           } else {
             this.map.addLayer(this.sarZoneLayerGroup);
             L.DomUtil.addClass(aTag, 'polyline-measure-controlOnBgColor');
-
-            // Change icon
-            L.DomUtil.removeClass(aTag, 'el-icon-view');
-            L.DomUtil.addClass(aTag, 'el-icon-close');
           }
         };
 
         return container;
       },
     });
-    this.map.addControl(new toggleSarZoneControl());
+    return new toggleSarZoneControl();
+  }
+
+  /** Method calls the flyTo method from leaflet.js
+   * See also: https://leafletjs.com/reference-1.0.0.html
+   * Sets the view of the map (geographical center and zoom) performing a smooth pan-zoom animation.
+   * @param {[number, number]} positions The latitude/longitude coordinates.
+   */
+  public flyTo(positions: [number, number]) {
+    this.map.flyTo(positions);
+  }
+
+  // Truncate value based on number of decimals
+  private _round(num: number, len: number): number {
+    return Math.round(num * Math.pow(10, len)) / Math.pow(10, len);
+  }
+
+  private _getDms(val: number, is_lat: boolean): string {
+    let valDeg, valMin, valSec, hemi;
+
+    if (is_lat) hemi = val >= 0 ? 'N' : 'S';
+    else hemi = val >= 0 ? 'E' : 'W';
+
+    val = Math.abs(val);
+    valDeg = Math.floor(val);
+    valMin = Math.floor((val - valDeg) * 60);
+    valSec = Math.round((val - valDeg - valMin / 60) * 3600 * 10) / 10;
+    return valDeg + 'º ' + valMin + "' " + valSec + '" ' + hemi;
+  }
+
+  // Public helper method to format UI position objects
+  public asDMS(position: { lat: number; lon: number }): string {
+    if (!position) return 'No Position';
+    let latDms = this._getDms(position.lat, true);
+    let lngDms = this._getDms(position.lon, false);
+    return latDms + ', ' + lngDms;
+  }
+
+  // Public helper method to format UI position objects
+  public asDD(position: { lat: number; lon: number }): string {
+    if (!position) return 'No Position';
+    let len = 5;
+    return (
+      '' +
+      Math.round(position.lat * Math.pow(10, len)) / Math.pow(10, len) +
+      'º, ' +
+      Math.round(position.lon * Math.pow(10, len)) / Math.pow(10, len) +
+      'º'
+    );
+  }
+
+  // Generate popup content based on layer type
+  // - Returns HTML string, or null if unknown object
+  private _getDrawnShapePopupContent(layer): string | null | any {
+    let latlngs, distance: number, area;
+    if (
+      layer instanceof L.Marker ||
+      layer instanceof L.CircleMarker ||
+      layer instanceof L.Circle
+    )
+      // Marker - add lat/long
+      return map_object =>
+        this.popup_contents('drawn_marker_popup', {
+          position: {
+            lat: map_object.getLatLng().lat,
+            lon: map_object.getLatLng().lng,
+          },
+          // radius: map_object.getRadius ? map_object.getRadius() : 0,
+          item_id: '',
+          item_title: 'Unknown Item',
+        });
+    else if (layer instanceof L.Polygon)
+      // Rectangle/Polygon - area
+      return map_object => {
+        let area_positions = map_object._defaultShape
+          ? map_object._defaultShape()
+          : map_object.getLatLngs();
+        let area_geodesic = L.GeometryUtil.geodesicArea(area_positions);
+        let popup_data: {
+          area_readable: String;
+          positions: { lat: number; lon: number }[];
+        } = {
+          area_readable: L.GeometryUtil.readableArea(area_geodesic, true),
+          positions: this._convertPositionTypes(area_positions),
+        };
+        return this.popup_contents('drawn_area_popup', popup_data);
+      };
+    else if (layer instanceof L.Polyline)
+      // Polyline - distance
+      return map_object => {
+        let popup_data: {
+          distance_in_meters: number;
+          positions: { lat: number; lon: number }[];
+        } = {
+          distance_in_meters: -1,
+          positions: [],
+        };
+        layer = layer as any;
+        latlngs = layer._defaultShape
+          ? layer._defaultShape()
+          : layer.getLatLngs();
+        distance = 0;
+        if (latlngs.length > 1) {
+          for (var i = 0; i < latlngs.length - 1; i++) {
+            distance += latlngs[i].distanceTo(latlngs[i + 1]);
+          }
+          popup_data.distance_in_meters = distance;
+          popup_data.positions = this._convertPositionTypes(latlngs);
+        }
+        return this.popup_contents('drawn_track_popup', popup_data);
+      };
+    return null;
+  }
+
+  /**
+   * Converts leaflet LatLng objects to general objects.
+   * Note: `lng` gets changed to `lon` because the consuming code expects that.
+   */
+  private _convertPositionTypes(
+    latlngs: L.LatLng[]
+  ): { lat: number; lon: number }[] {
+    return latlngs.map(pos => ({ lat: pos.lat, lon: pos.lng }));
+  }
+
+  /**
+   * Sets up the ability to draw shapes on the map, including dropping markers and what to do when clicked.
+   */
+  private _initShapeDrawing(): void {
+    /* Add a layer for drawing shapes in. These can then be added to items as positions, areas, etc */
+    //let drawnAreasAndMarkers = new L.FeatureGroup();
+    this.map.addLayer(this.drawnAreasAndMarkers);
 
     //** Add the standard Map actions. */
-    this.map.addControl(
-      new L.Control.Draw({
-        edit: {
-          featureGroup: drawnItems,
-          poly: {
-            allowIntersection: true,
-          },
-        } as any,
-        draw: {
-          polygon: {
-            allowIntersection: true,
-            showArea: true,
-          },
+    let drawing_toolbar = new L.Control.Draw({
+      edit: {
+        featureGroup: this.drawnAreasAndMarkers,
+        poly: {
+          allowIntersection: true,
         },
-      })
-    );
+      } as any,
+      draw: {
+        polyline: {
+          metric: false,
+          feet: false,
+          nautic: true,
+        },
+        polygon: {
+          allowIntersection: true,
+          showArea: true,
+        },
+        circle: false,
+        circlemarker: false,
+      },
+    });
+    this.map.addControl(drawing_toolbar);
 
     // Object created - bind popup to layer, add to feature group
     this.map.on(L.Draw.Event.CREATED, event => {
       var layer = event.layer;
-      var content = this.getPopupContent(layer);
+      var content = this._getDrawnShapePopupContent(layer);
       if (content !== null) {
         layer.bindPopup(content);
       }
-      drawnItems.addLayer(layer);
+      this.drawnAreasAndMarkers.addLayer(layer);
     });
 
     // Object(s) edited - update popups
     this.map.on(L.Draw.Event.EDITED, event => {
       var layers = (event as any).layers;
       layers.eachLayer(layer => {
-        var content = this.getPopupContent(layer);
+        var content = this._getDrawnShapePopupContent(layer);
         if (content !== null) {
           layer.setPopupContent(content);
         }
@@ -310,8 +428,7 @@ class mapWrapper {
    * templates, defining icons, and cropping the loaded number of positions
    * to an amount that can be handled by interactive display.
    */
-  public loadTemplatedItem(item: MapItem): MapItem {
-    console.log('loadTemplatedItem');
+  public prepareTemplatedItem(item: MapItem): MapItem {
     let max_positions = localStorage.settings_map_track_length || 100;
     let max_track_type =
       localStorage.settings_max_track_type || 'number_of_positions';
@@ -342,23 +459,6 @@ class mapWrapper {
       });
     }
 
-    // Every item is based on one of the following base templates:
-    // point: a single point
-    // line: a series of n points
-    // track: series of n points with a main point
-    // polygon: series of points
-    switch (item.doc.template) {
-      case 'vehicle':
-        item.doc.base_template = 'line';
-        if (typeof item.doc.properties.icon !== 'undefined')
-          item.doc.properties.icon = './vehicle.png';
-        break;
-      case 'case':
-        //item.doc.template = 'point';
-        if (typeof item.doc.properties.icon !== 'undefined')
-          item.doc.properties.icon = './vehicle.png';
-        break;
-    }
     return item;
   }
 
@@ -372,11 +472,6 @@ class mapWrapper {
       i++;
     });
   }
-
-  /**
-   * Not implemented. But see src/components/items/ShowItem.vue
-   */
-  public showItem() {}
 
   /**
    * Implemented in src/components/MapArea.vue
@@ -423,173 +518,47 @@ class mapWrapper {
     item.positions.slice(-1 * max_length);*/
     var pointList: any = [];
     if (item.positions.length > 0) {
+      let lastKnownPosition = item.positions[item.positions.length - 1];
+
       for (var i in item.positions) {
         var v = item.positions[i];
         if (v.doc.lat && v.doc.lon) pointList.push([v.doc.lat, v.doc.lon]);
         //pointList.push()
       }
 
+      // color should always be defined: see this._buildMapItemFromDbItem()
+
       let color: string;
       if (typeof item.doc.properties.color != 'undefined')
         color = item.doc.properties.color;
       else
-        color = [
-          'AliceBlue',
-          'AntiqueWhite',
-          'Aqua',
-          'Aquamarine',
-          'Azure',
-          'Beige',
-          'Bisque',
-          'Black',
-          'BlanchedAlmond',
-          'Blue',
-          'BlueViolet',
-          'Brown',
-          'BurlyWood',
-          'CadetBlue',
-          'Chartreuse',
-          'Chocolate',
-          'Coral',
-          'CornflowerBlue',
-          'Cornsilk',
-          'Crimson',
-          'Cyan',
-          'DarkBlue',
-          'DarkCyan',
-          'DarkGoldenRod',
-          'DarkGray',
-          'DarkGrey',
-          'DarkGreen',
-          'DarkKhaki',
-          'DarkMagenta',
-          'DarkOliveGreen',
-          'DarkOrange',
-          'DarkOrchid',
-          'DarkRed',
-          'DarkSalmon',
-          'DarkSeaGreen',
-          'DarkSlateBlue',
-          'DarkSlateGray',
-          'DarkSlateGrey',
-          'DarkTurquoise',
-          'DarkViolet',
-          'DeepPink',
-          'DeepSkyBlue',
-          'DimGray',
-          'DimGrey',
-          'DodgerBlue',
-          'FireBrick',
-          'FloralWhite',
-          'ForestGreen',
-          'Fuchsia',
-          'Gainsboro',
-          'GhostWhite',
-          'Gold',
-          'GoldenRod',
-          'Gray',
-          'Grey',
-          'Green',
-          'GreenYellow',
-          'HoneyDew',
-          'HotPink',
-          'IndianRed',
-          'Indigo',
-          'Ivory',
-          'Khaki',
-          'Lavender',
-          'LavenderBlush',
-          'LawnGreen',
-          'LemonChiffon',
-          'LightBlue',
-          'LightCoral',
-          'LightCyan',
-          'LightGoldenRodYellow',
-          'LightGray',
-          'LightGrey',
-          'LightGreen',
-          'LightPink',
-          'LightSalmon',
-          'LightSeaGreen',
-          'LightSkyBlue',
-          'LightSlateGray',
-          'LightSlateGrey',
-          'LightSteelBlue',
-          'LightYellow',
-          'Lime',
-          'LimeGreen',
-          'Linen',
-          'Magenta',
-          'Maroon',
-          'MediumAquaMarine',
-          'MediumBlue',
-          'MediumOrchid',
-          'MediumPurple',
-          'MediumSeaGreen',
-          'MediumSlateBlue',
-          'MediumSpringGreen',
-          'MediumTurquoise',
-          'MediumVioletRed',
-          'MidnightBlue',
-          'MintCream',
-          'MistyRose',
-          'Moccasin',
-          'NavajoWhite',
-          'Navy',
-          'OldLace',
-          'Olive',
-          'OliveDrab',
-          'Orange',
-          'OrangeRed',
-          'Orchid',
-          'PaleGoldenRod',
-          'PaleGreen',
-          'PaleTurquoise',
-          'PaleVioletRed',
-          'PapayaWhip',
-          'PeachPuff',
-          'Peru',
-          'Pink',
-          'Plum',
-          'PowderBlue',
-          'Purple',
-          'RebeccaPurple',
-          'Red',
-          'RosyBrown',
-          'RoyalBlue',
-          'SaddleBrown',
-          'Salmon',
-          'SandyBrown',
-          'SeaGreen',
-          'SeaShell',
-          'Sienna',
-          'Silver',
-          'SkyBlue',
-          'SlateBlue',
-          'SlateGray',
-          'SlateGrey',
-          'Snow',
-          'SpringGreen',
-          'SteelBlue',
-          'Tan',
-          'Teal',
-          'Thistle',
-          'Tomato',
-          'Turquoise',
-          'Violet',
-          'Wheat',
-          'White',
-          'WhiteSmoke',
-          'Yellow',
-          'YellowGreen',
-        ][Math.floor(Math.random() * 148)];
+        color =
+          '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
 
-      return new L.Polyline(pointList, {
+      let track = new L.Polyline(pointList, {
         color: color,
         weight: 3,
-        opacity: 0.5,
+        opacity: 1,
         smoothFactor: 1,
       });
+
+      // Use the item's identifier (and its name if applicable) as Pop-up
+      let popuptitle = (item.doc.identifier || '').toString();
+      if (item.doc.properties.name) {
+        popuptitle = item.doc.properties.name;
+      } else {
+        popuptitle = item.id;
+      }
+      // bind the popup content to the marker. Used by openPopup() below
+      track.bindPopup(() =>
+        this.popup_contents('item_track_popup', {
+          item_id: item.id,
+          item_title: popuptitle,
+          latest_position: lastKnownPosition.doc,
+        })
+      );
+
+      return track;
     }
   }
 
@@ -648,6 +617,8 @@ class mapWrapper {
     iconimg.style.color = color;
     iconimg.style.width = size + 'pt';
     iconimg.style.textAlign = 'center';
+    // iconimg.style.webkitTextStrokeColor = 'black';
+    // iconimg.style.webkitTextStrokeWidth = '0.3px';
     iconhtml.appendChild(iconimg);
 
     if (caption) {
@@ -657,8 +628,50 @@ class mapWrapper {
       iconhtml.appendChild(span);
     }
 
-    iconhtml.style.marginLeft = '-12px';
-    iconhtml.style.marginTop = '-20px';
+    iconhtml.style.marginLeft = '-15px';
+    iconhtml.style.marginTop = '-22px';
+    return iconhtml.outerHTML;
+  }
+
+  /**
+   * Generate marker icon HTML content string, using any unicode character.
+   * @param character The unicode character to use as icon. Some rotation and scaling may be necessary.
+   * @param rotation The rotation of the icon. May consist of item's heading plus some constant rotation.
+   * @param size The size of the icon. Currently in unit 'pt', but may change.
+   * @param color The color for the icon. By using unicode characters, we can easily reflect boat color by icon color.
+   * @param caption The caption to display near the maker. May be an empty string.
+   * @returns A HTML String that can be given to a leaflet divIcon constructor.
+   */
+  private _createSVGMarkerHTML(
+    icon_type: string,
+    rotation: number,
+    size: number,
+    color: string,
+    caption: string
+  ): string {
+    let iconhtml = document.createElement('div');
+
+    let iconimg = document.createElement('div');
+    iconimg.className = 'fas fa-' + icon_type;
+    // iconimg.style.fontSize = size + 'pt';
+    iconimg.style.transform = 'rotate(' + rotation + 'deg)';
+    iconimg.style.color = color;
+    // iconimg.style.width = size + 'pt';
+    // iconimg.style.textAlign = 'center';
+    iconimg.style.strokeWidth = '1px';
+    iconimg.style.webkitTextStrokeColor = 'black';
+    iconimg.style.webkitTextStrokeWidth = '1px';
+    iconhtml.appendChild(iconimg);
+
+    if (caption) {
+      let span = document.createElement('span');
+      span.className = 'itemCaption';
+      span.append(caption);
+      iconhtml.appendChild(span);
+    }
+
+    iconhtml.style.marginLeft = '-7px';
+    iconhtml.style.marginTop = '-10px';
     return iconhtml.outerHTML;
   }
 
@@ -690,21 +703,31 @@ class mapWrapper {
       if (item.doc.properties.name) {
         caption = item.doc.properties.name;
       } else {
-        caption = item.id;
+        caption = item.doc.template + ' ' + item.doc.identifier;
       }
     }
 
     let icon;
     if (item.doc.properties.icon) {
       // use item-specific icon if given
+      // icon = L.divIcon({
+      //   className: 'vehicle-marker',
+      //   html:
+      //     '<div><span class="fas fa-' +
+      //     item.doc.properties.icon +
+      //     '"></span>' +
+      //     caption +
+      //     '</div>',
+      // });
       icon = L.divIcon({
         className: 'vehicle-marker',
-        html:
-          '<div><span class="el-icon-' +
-          item.doc.properties.icon +
-          '"></span>' +
-          caption +
-          '</div>',
+        html: this._createSVGMarkerHTML(
+          item.doc.properties.icon,
+          (lastKnownPosition.doc.heading || 0) - 90,
+          20,
+          item.doc.properties.color || 'black',
+          caption
+        ),
       });
     } else if (item.doc.template == 'case') {
       // set default case icon
@@ -714,7 +737,7 @@ class mapWrapper {
           '⊳', // unicode 0x22B3 / html &#8883;
           (lastKnownPosition.doc.heading || 0) - 90,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -726,7 +749,7 @@ class mapWrapper {
           '⟟', // unicode 0x27DF / html &#10207;
           lastKnownPosition.doc.heading || 0,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -738,7 +761,7 @@ class mapWrapper {
           '✈︎', // unicode 0x2708 / html &#9992;
           lastKnownPosition.doc.heading || 0,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -747,14 +770,13 @@ class mapWrapper {
       typeof item.doc.template === 'undefined' // TODO fix (vehicle) items by using classes
     ) {
       // set default vehicle icon
-      console.log('creating a new vehicle icon');
       icon = L.divIcon({
         className: 'vehicle-marker',
         html: this._createCharacterMarkerHTML(
           '⩥', // unicode 0x2A65 / html &#10853;
           (lastKnownPosition.doc.heading || 0) - 90,
           20,
-          item.doc.properties.boat_color || 'black',
+          item.doc.properties.color || 'black',
           caption
         ),
       });
@@ -768,30 +790,21 @@ class mapWrapper {
       [lastKnownPosition.doc.lat, lastKnownPosition.doc.lon],
       { icon: icon }
     );
-    // on click, call this mapWrapper's clickItem() function
-    // without overwriting its "this" module (?), but
-    // with binding its first parameter to the item's ID:
-    marker.on('click', (L as any).bind(this.clickItem, null, item.id));
     // Use the item's identifier (and its name if applicable) as Pop-up
-    let popupcontent = (item.doc.identifier || '').toString();
+    let popuptitle = (item.doc.identifier || '').toString();
     if (item.doc.properties.name) {
-      popupcontent = item.doc.properties.name;
+      popuptitle = item.doc.properties.name;
     } else {
-      popupcontent = item.id;
+      popuptitle = item.id;
     }
-    // bind the popupcontent to the marker. Used by openPopup() below
-    marker.bindPopup(popupcontent);
-    // on mouseover, the marker's openPopup() function shall be called
-    marker.on('mouseover', function() {
-      // call leaflet's Marker.openPopup() function, displaying the
-      // popupcontent that has been bound to this marker just above.
-      this.openPopup();
-    });
-    // on mouseout, the marker's closePopup() function shall be called
-    marker.on('mouseout', function() {
-      // call leaflet's Marker.closePopup() function
-      this.closePopup();
-    });
+    // bind the popup content to the marker. Used by openPopup() below
+    marker.bindPopup(() =>
+      this.popup_contents('item_marker_popup', {
+        item_id: item.id,
+        item_title: popuptitle,
+        latest_position: lastKnownPosition.doc,
+      })
+    );
     return marker;
   }
 
@@ -800,12 +813,12 @@ class mapWrapper {
    * The given item will be prepared and replaces any previous
    * instances of this item on the map.
    *
-   * @see this.loadTemplatedItem() Used to prepare item for display on map.
+   * @see this.prepareTemplatedItem() Used to prepare item for display on map.
    * @see this.generateLine() Used to generate a polyline for the item.
    * @see this.generateMarker() Used to generate a marker for the item
    */
   public addItemToMap(item: MapItem): void {
-    item = this.loadTemplatedItem(item);
+    item = this.prepareTemplatedItem(item);
 
     var line: L.Polyline | undefined,
       marker: L.Marker | undefined,
@@ -837,7 +850,7 @@ class mapWrapper {
           this.loaded_items[item.id].lineCaptions[i].addTo(this.map);
         }
       }
-      if (item.doc.base_template == 'line' && line) {
+      if (line) {
         this.loaded_items[item.id].line = line;
         this.loaded_items[item.id].line.addTo(this.map);
       }
@@ -851,8 +864,8 @@ class mapWrapper {
    * @returns {boolean} False if the item has no positions; undefined otherwise.
    */
   public updateItemPosition(item: MapItem): false | undefined {
-    console.log('updateItemPosition');
-    console.log(item);
+    // console.log('updateItemPosition');
+    // console.log(item)
     if (item.positions.length < 1) {
       return false;
     }
@@ -883,6 +896,69 @@ class mapWrapper {
         }
       }
     }
+  }
+
+  private _buildMapItemFromDbItem(
+    base_item: DbItem,
+    item_positions: Array<DbPosition>
+  ): MapItem {
+    return {
+      id: base_item._id,
+      doc: {
+        template: base_item.template,
+        identifier: base_item.identifier,
+        properties: {
+          name: base_item.properties.hasOwnProperty('name')
+            ? base_item.properties['name']
+            : base_item.template + ' ' + base_item.identifier,
+          color: base_item.properties.hasOwnProperty('color')
+            ? base_item.properties['color']
+            : base_item.properties.hasOwnProperty('boat_color')
+            ? base_item.properties['boat_color']
+            : 'Black',
+          icon:
+            base_item.properties['air'] == 'true'
+              ? 'plane'
+              : base_item.properties['icon'],
+        },
+      },
+      positions:
+        item_positions != undefined
+          ? item_positions.map(item => ({ doc: item })).reverse() // the old implementation assumes that the newest position is at the back of the array
+          : [],
+    };
+  }
+
+  /**
+   * Sets a map item's visibility and adds any new positions it might have gained
+   * If the item is not on the map yet, add it to the map.
+   */
+  public updateItemOnMap(
+    base_item: DbItem,
+    item_positions: Array<DbPosition>,
+    show_item: boolean
+  ): void {
+    if (show_item) {
+      // todo: only build this when really necessary
+      let map_item = this._buildMapItemFromDbItem(base_item, item_positions);
+      this.updateItemPosition(map_item);
+    } else this.hideItem(base_item._id);
+  }
+
+  /**
+   * Creates a marker at specific coordinates.
+   */
+  public addMarkerByCoordinates(lat: number, lon: number, show: number): void {
+    this.flyTo([lat, lon]);
+    let coords = new L.LatLng(lat, lon);
+    var marker = new L.Marker(coords);
+    var marker_id = this.drawnAreasAndMarkers.getLayerId(marker);
+    var layer = marker;
+    var content = this._getDrawnShapePopupContent(layer);
+    if (content !== null) {
+      layer.bindPopup(content);
+    }
+    this.drawnAreasAndMarkers.addLayer(layer);
   }
 
   /**

@@ -2,6 +2,8 @@ import Vue from 'vue';
 
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
+import lang from 'element-ui/lib/locale/lang/en';
+import locale from 'element-ui/lib/locale';
 
 import '@fortawesome/fontawesome-free/js/fontawesome';
 import '@fortawesome/fontawesome-free/js/solid';
@@ -25,11 +27,12 @@ import mapWrapper from './utils/mapWrapper';
 export const serverBus = new Vue();
 Vue.prototype.$db = new DbWrapper();
 Vue.prototype.$db.setLoginCallback(function() {
-  serverBus.$emit('modal_modus', 'login');
+  serverBus.$emit('show_login_screen');
 });
 
 Vue.prototype.$map = mapWrapper;
 
+locale.use(lang); // configure language of ElementUI
 Vue.use(ElementUI);
 
 new Vue({
