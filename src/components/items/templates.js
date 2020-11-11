@@ -225,7 +225,7 @@ export default {
             options: {
               yes: 'yes',
               no: 'no',
-              unknown: 'unknown', 
+              unknown: 'unknown',
             },
           },
           {
@@ -270,7 +270,7 @@ export default {
             options: {
               yes: 'yes',
               no: 'no',
-              no_involvement: 'no involvement', 
+              no_involvement: 'no involvement',
               unknown: 'unknown',
             },
           },
@@ -284,7 +284,7 @@ export default {
             title: 'Outcome',
             type: 'select',
             options: {
-              pos: 'Port of Safty', 
+              pos: 'Port of Safty',
               shipwreck: 'Shipwreck',
               arrived_on_its_own: 'Arrived on its own',
               intercepted: 'Intercepted',
@@ -317,7 +317,7 @@ export default {
               no_involvement: 'No involvement',
               unknown: 'unknown',
             },
-          }, 
+          },
           {
             name: 'authorities_alerted',
             title: 'authorities alerted: who & when',
