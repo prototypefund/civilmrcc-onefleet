@@ -216,11 +216,22 @@ export default {
               )
               .then(db_positions => {
                 positions_per_item[base_item.identifier] = db_positions;
+                return db_positions[0] ? db_positions[0].timestamp : null;
               })
           : null
       );
 
-      Promise.all(promises).then(() => {
+      Promise.all(promises).then(latest_position_timestamps => {
+        // tell TopNavigation the newest item position:
+        serverBus.$emit(
+          'last_position_date',
+          latest_position_timestamps
+            .sort()
+            .reverse()
+            .filter(timestamp => timestamp != null)[0] || null
+        );
+
+        // update all item positions for Vue components to use:
         this.positions_per_item = positions_per_item;
       });
     },

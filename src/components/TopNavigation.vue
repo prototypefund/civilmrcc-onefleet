@@ -3,12 +3,19 @@
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
       <div id="status-light">
-        <el-tooltip
-          content="Last sync with server: xx minutes ago \n cdfs"
-          placement="bottom"
-          effect="light"
-        >
-          <div class="circle yellow" alt="vfds" tooltip="vfds"></div>
+        <el-tooltip placement="bottom" effect="light">
+          <div slot="content">
+            Last new item position ({{
+              timeSince(status_light_data.last_new_position)
+            }}
+            ago): {{ status_light_data.last_new_position || 'never' }} <br />
+            Last sync with server ({{
+              timeSince(status_light_data.last_server_sync)
+            }}
+            ago):
+            {{ status_light_data.last_server_sync || 'never' }}
+          </div>
+          <div :class="'circle ' + status_light_data.status"></div>
         </el-tooltip>
       </div>
       <ul class="nav-actions">
@@ -98,7 +105,11 @@ export default {
     return {
       show_timeControl: false,
       username: '',
-      password: '',
+      status_light_data: {
+        status: 'grey', // grey, green, yellow, red
+        last_server_sync: null,
+        last_new_position: null,
+      },
     };
   },
   methods: {
@@ -111,6 +122,9 @@ export default {
     },
     openSettings() {
       serverBus.$emit('show_settings');
+    },
+    timeSince(date) {
+      return this.$map.timeSince(date);
     },
     toggleAir() {
       if (!this.showing_air) serverBus.$emit('show_air');
@@ -127,6 +141,17 @@ export default {
   },
   created: function() {
     this.username = localStorage.username || 'guest';
+
+    serverBus.$on('last_sync_date', sync_date => {
+      this.status_light_data.last_server_sync = sync_date
+        ? new Date(sync_date)
+        : null;
+    });
+    serverBus.$on('last_position_date', position_date => {
+      this.status_light_data.last_new_position = position_date
+        ? new Date(position_date)
+        : null;
+    });
   },
 };
 </script>
@@ -251,6 +276,11 @@ nav li:hover a {
 .circle.green {
   background-color: #2ecc71;
   box-shadow: 0 0 10px 2.5px #2ecc71;
+}
+
+.circle.grey {
+  background-color: #999;
+  box-shadow: 0 0 10px 2.5px #999;
 }
 </style>
 <style>
