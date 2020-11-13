@@ -72,11 +72,19 @@ import Settings from './components/Settings.vue';
 import Loadingscreen from './components/Loadingscreen.vue';
 
 // other imports
-import templates from './components/items/templates.js';
+import filter_settings from './constants/filter-settings';
 import { serverBus } from './main';
 import storage from './utils/storageWrapper';
-// import { DbItem } from '@/types/db-item';
-// import { DbPosition } from '@/types/db-position';
+// NOTE: Vue linter incorrectly thinks that these imports are unused
+/* eslint-disable no-unused-vars */
+import {
+  ItemFilter,
+  ItemFilterGroup,
+  FilteredItemSection,
+} from '@/types/item-filter';
+import { DbItem } from '@/types/db-item';
+import { DbPosition } from '@/types/db-position';
+/* eslint-enable no-unused-vars */
 
 export default {
   name: 'app',
@@ -129,28 +137,34 @@ export default {
      * and by the MapArea to display the visible items in one layer per filter section.
      * Some map Popup components also use this to display available items in popups.
      */
-    allFilteredItems() {
-      let all_filter_groups = templates.get_filter_groups();
-      let filtered_item_groups: {}[] = [];
+    allFilteredItems(): Array<FilteredItemSection> {
+      let all_filter_groups: Array<ItemFilterGroup> = filter_settings.get_filter_groups();
+      let filtered_item_groups: Array<FilteredItemSection> = [];
 
       // set up tabs for the tabs bar so that they are shown even before items are loaded
       for (let s_id in all_filter_groups) {
         // two-stage filtering for computing hidden items per section:
-        let active_filters = this.filters[s_id].filter(f => f.active);
-        let section_filters = active_filters.filter(f => f.always_active);
+        let active_filters: Array<ItemFilter> = this.filters[s_id].filter(
+          f => f.active
+        );
+        let section_filters: Array<ItemFilter> = active_filters.filter(
+          f => f.always_active
+        );
 
         // filter all items for this section:
-        let section_base_items = this.base_items.filter(base_item =>
-          section_filters.every(section_filter =>
-            this.matchesFilter(base_item, section_filter)
-          )
+        let section_base_items: Array<DbItem> = this.base_items.filter(
+          base_item =>
+            section_filters.every(section_filter =>
+              this.matchesFilter(base_item, section_filter)
+            )
         );
 
         // filter additional items based on active filters:
-        let filtered_base_items = section_base_items.filter(base_item =>
-          active_filters.every(active_filter =>
-            this.matchesFilter(base_item, active_filter)
-          )
+        let filtered_base_items: Array<DbItem> = section_base_items.filter(
+          base_item =>
+            active_filters.every(active_filter =>
+              this.matchesFilter(base_item, active_filter)
+            )
         );
 
         if (all_filter_groups[s_id].selectable_in_sidebar)
@@ -222,11 +236,11 @@ export default {
     /** Start of Item Filter functions */
     initFilters() {
       /** Get filters and set up their active state */
-      let all_filter_groups = templates.get_filter_groups();
-      let filters = [];
+      let all_filter_groups: Array<ItemFilterGroup> = filter_settings.get_filter_groups();
+      let filters: Array<any> = [];
       for (let section_index in all_filter_groups) {
         filters[section_index] = all_filter_groups[section_index].filters.map(
-          filter => {
+          (filter: ItemFilter) => {
             filter.active =
               filter.always_active || filter.initially_active ? true : false;
             return filter;
