@@ -3,5 +3,6 @@ export interface DbItem {
   _rev: string;
   identifier: string;
   template: string;
-  properties: Object;
+  properties: Map<string, string>;
+  soft_deleted?: boolean; // soft-delete of items should only be allowed if a duplicate exists
 }
