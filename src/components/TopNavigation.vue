@@ -5,17 +5,10 @@
       <div id="status-light">
         <el-tooltip placement="bottom" effect="light">
           <div slot="content">
-            Last new GPS position ({{
-              timeSince(status_light_data.last_new_position)
-            }}
-            ago): {{ status_light_data.last_new_position || 'never' }} <br />
-            Last sync with server ({{
-              timeSince(status_light_data.last_server_sync)
-            }}
-            ago):
-            {{ status_light_data.last_server_sync || 'never' }} <br />
+            {{ printLastGPSPosition }} <br />
+            {{ printLastServerSync }} <br />
             <br />
-            {{ positionLimitsText }}
+            {{ printPositionLimits }}
           </div>
           <div :class="'circle ' + statusLightColor"></div>
         </el-tooltip>
@@ -122,17 +115,49 @@ export default {
     };
   },
   computed: {
-    positionLimitsText() {
-      let newest_date = this.position_limits.tracks_newest_date_iso
-        ? this.formatTimeForStatus(this.position_limits.tracks_newest_date_iso)
-        : 'now';
-      let oldest_date = this.position_limits.tracks_oldest_date_iso
-        ? `between ${this.formatTimeForStatus(
-            this.position_limits.tracks_oldest_date_iso
-          )} and`
-        : 'until';
-      let num_positions = this.position_limits.tracks_length_limit;
-      return `Showing the ${num_positions} most recent positions ${oldest_date} ${newest_date}.`;
+    printLastGPSPosition() {
+      return `Last new GPS position (${this.timeSince(
+        this.status_light_data.last_new_position
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_new_position
+      ) || 'never'}`;
+    },
+    printLastServerSync() {
+      return `Last sync with server (${this.timeSince(
+        this.status_light_data.last_server_sync
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_server_sync
+      ) || 'never'}`;
+    },
+    printPositionLimits() {
+      let num_positions_text = `Showing the ${this.position_limits.tracks_length_limit} most recent positions`;
+      let oldest_datetime = this.position_limits.tracks_oldest_date_iso;
+      let newest_datetime = this.position_limits.tracks_newest_date_iso;
+      if (oldest_datetime && newest_datetime) {
+        let oldest_string = this.$map.formatTimestamp(
+          new Date(oldest_datetime),
+          new Date(newest_datetime)
+        );
+        let newest_string = this.$map.formatTimestamp(
+          new Date(newest_datetime),
+          null
+        );
+        return `${num_positions_text} between ${oldest_string} and ${newest_string}.`;
+      } else if (oldest_datetime) {
+        let oldest_string = this.$map.formatTimestamp(
+          new Date(oldest_datetime),
+          new Date()
+        );
+        return `${num_positions_text} between ${oldest_string} and now.`;
+      } else if (newest_datetime) {
+        let newest_string = this.$map.formatTimestamp(
+          new Date(newest_datetime),
+          null
+        );
+        return `${num_positions_text} before ${newest_string}.`;
+      } else {
+        return `${num_positions_text}.`;
+      }
     },
     statusLightColor() {
       // see CSS below for green, yellow, red, blue, grey:
@@ -155,10 +180,6 @@ export default {
     },
     timeSince(date) {
       return this.$map.timeSince(date, this.status_light_data.time_now);
-    },
-    formatTimeForStatus(date_iso) {
-      // TODO: reformat date string depending on how far it is away from now
-      return date_iso;
     },
     toggleAir() {
       if (!this.showing_air) serverBus.$emit('show_air');

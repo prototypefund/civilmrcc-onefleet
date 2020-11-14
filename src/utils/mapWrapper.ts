@@ -359,6 +359,30 @@ class mapWrapper {
     }
   }
 
+  public formatTimestamp(
+    the_datetime: Date | null | undefined,
+    reference_datetime: Date | null | undefined
+  ) {
+    if (!the_datetime) return null;
+    let time_string = the_datetime.toLocaleTimeString('default', {
+      hour: 'numeric',
+      minute: 'numeric',
+      timeZoneName: 'short',
+    });
+    let date_string = the_datetime.toLocaleDateString('default', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    if (
+      reference_datetime &&
+      the_datetime.toDateString() == reference_datetime.toDateString()
+    )
+      return time_string;
+    else return time_string + ` (${date_string})`;
+  }
+
   // Generate popup content based on layer type
   // - Returns HTML string, or null if unknown object
   private _getDrawnShapePopupContent(layer): string | null | any {
