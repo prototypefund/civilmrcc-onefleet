@@ -3,6 +3,7 @@
     <span class="latlng"> {{ popup_data.item_title }} </span> <br />
     Last known position: <br />
     {{ latestDMS }} <br />
+    at {{ latestTimestamp }} <br />
     <a href="#" @click="showItem()">Show Details...</a><br />
     <br />
     "{{ popup_data.item_title }} was here at time xxxz."
@@ -33,6 +34,11 @@ export default {
   computed: {
     latestDMS() {
       return this.$map.asDMS(this.popup_data.latest_position);
+    },
+    latestTimestamp() {
+      return this.$map.formatTimestamp(
+        this.popup_data.latest_position.timestamp
+      );
     },
   },
 

@@ -3,6 +3,7 @@
     <span class="latlng"> {{ popup_data.item_title }} </span> <br />
     Last known position: <br />
     {{ latestDMS }} <br />
+    at {{ latestTimestamp }} <br />
     <!-- <div v-if="this.popup_data.latest_position.heading > 0">
       (heading:
       <div :style="'rotation: ' + this.popup_data.latest_position.heading">
@@ -36,6 +37,14 @@ export default {
   computed: {
     latestDMS() {
       return this.$map.asDMS(this.popup_data.latest_position);
+    },
+    latestTimestamp() {
+      return this.$map.formatTimestamp(
+        this.popup_data.latest_position.timestamp
+      );
+    },
+    latestTimestampColor() {
+      return this.$map.colorSince(this.popup_data.latest_position.timestamp);
     },
   },
 

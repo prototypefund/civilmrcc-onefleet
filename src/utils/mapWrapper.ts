@@ -360,10 +360,11 @@ class mapWrapper {
   }
 
   public formatTimestamp(
-    the_datetime: Date | null | undefined,
-    reference_datetime: Date | null | undefined
+    the_datetime: Date | string | null | undefined,
+    reference_datetime: Date | string | null | undefined
   ) {
     if (!the_datetime) return null;
+    the_datetime = new Date(the_datetime);
     let time_string = the_datetime.toLocaleTimeString('default', {
       hour: 'numeric',
       minute: 'numeric',
@@ -377,7 +378,7 @@ class mapWrapper {
     });
     if (
       reference_datetime &&
-      the_datetime.toDateString() == reference_datetime.toDateString()
+      the_datetime.toDateString() == new Date(reference_datetime).toDateString()
     )
       return time_string;
     else return time_string + ` (${date_string})`;
