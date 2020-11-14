@@ -57,6 +57,7 @@
               :key="base_item._id"
               :base_item="base_item"
               :positions="itemPositions(base_item)"
+              :time_now="time_now"
             ></NavbarItem>
           </ul>
         </div>
@@ -82,6 +83,8 @@ export default {
   data: function() {
     return {
       selected_tab: '1',
+      intervalTimer: null,
+      time_now: null,
     };
   },
   computed: {
@@ -108,7 +111,11 @@ export default {
 
   mounted: function() {},
 
-  created: function() {},
+  created: function() {
+    this.intervalTimer = setInterval(() => {
+      this.time_now = new Date();
+    }, 1000);
+  },
 };
 </script>
 

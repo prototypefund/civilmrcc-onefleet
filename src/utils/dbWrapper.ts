@@ -59,8 +59,8 @@ export class DbWrapper extends PouchWrapper {
       .allDocs({
         include_docs: true,
         attachments: true,
-        startkey: identifier + '_' + newest_date_iso + '\ufff0', // start with the newest date, so that the newest position is always returned
-        endkey: identifier + '_' + oldest_date_iso + '\ufff0', // end with oldest date, which is ok to cut of if limit is reached
+        startkey: identifier + '_' + (newest_date_iso || '') + '\ufff0', // start with the newest date, so that the newest position is always returned
+        endkey: identifier + '_' + oldest_date_iso + '\ufff0', // end with oldest date, which is ok to cut off if limit is reached
         limit: Math.min(9999, count_limit), // fetch at most the XX most recent positions per item
         skip: 0,
         descending: true, // return latest positions first, so that the limit only cuts off older positions

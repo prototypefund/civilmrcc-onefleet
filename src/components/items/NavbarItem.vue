@@ -47,6 +47,9 @@ export default {
       type: Array, // DbPosition[]
       required: false,
     },
+    time_now: {
+      required: false,
+    },
   },
 
   data: function() {
@@ -120,20 +123,24 @@ export default {
     positionAgeText() {
       if (!this.positions) return 'loading positions...';
       else if (this.latestPosition)
-        return this.$map.timeSince(this.latestPosition.timestamp) + ' ago';
+        return (
+          this.$map.timeSince(this.latestPosition.timestamp, this.time_now) +
+          ' ago'
+        );
       else return 'no positions';
     },
     positionAgeType() {
-      if (this.latestPosition) {
-        let lastDate = new Date(this.latestPosition.timestamp);
-        let now = new Date();
-        let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
-        if (seconds > 0 && seconds <= 1800) return 'success';
-        else if (seconds > 1800 && seconds <= 86400) return 'warning';
-        else return 'danger';
-      } else {
-        return 'info';
-      }
+      let color = this.$map.colorSince(
+        (this.latestPosition || {}).timestamp,
+        this.time_now
+      );
+      return {
+        green: 'success',
+        yellow: 'warning',
+        red: 'danger',
+        blue: 'default',
+        grey: 'info',
+      }[color];
     },
   },
 

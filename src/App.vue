@@ -25,6 +25,7 @@
       :main_view="main_view"
       :showing_air="modal == 'showAir'"
       :showing_log="modal == 'showLog'"
+      :position_limits="position_limits"
     ></TopNavigation>
     <Air v-if="modal == 'showAir'"></Air>
     <Log v-if="modal == 'showLog'"></Log>
@@ -115,9 +116,11 @@ export default {
     positions_per_item: {},
     filters: [],
     initial_replication_done: false,
-    tracks_oldest_date_iso: new Date('2019-01-01').toISOString(),
-    tracks_newest_date_iso: new Date().toISOString(), // now
-    tracks_length_limit: 99, // may be overwritten by local storage below
+    position_limits: {
+      tracks_oldest_date_iso: new Date('2019-01-01').toISOString(),
+      tracks_newest_date_iso: null, // now
+      tracks_length_limit: 100, // may be overwritten by local storage below
+    },
   }),
   computed: {
     /**
@@ -186,15 +189,6 @@ export default {
       // only load positions after initial replication has really finished, or we'll not see all requested positions
       if (this.initial_replication_done) this.loadPositionsForItems();
     },
-    tracks_oldest_date_iso: function() {
-      if (this.initial_replication_done) this.loadPositionsForItems();
-    },
-    tracks_newest_date_iso: function() {
-      if (this.initial_replication_done) this.loadPositionsForItems();
-    },
-    tracks_length_limit: function() {
-      if (this.initial_replication_done) this.loadPositionsForItems();
-    },
   },
   methods: {
     loadItems() {
@@ -210,9 +204,9 @@ export default {
           ? this.$db
               .getPositionsForItemPromise(
                 base_item.identifier,
-                this.tracks_length_limit,
-                this.tracks_newest_date_iso,
-                this.tracks_oldest_date_iso
+                this.position_limits.tracks_length_limit,
+                this.position_limits.tracks_newest_date_iso,
+                this.position_limits.tracks_oldest_date_iso
               )
               .then(db_positions => {
                 positions_per_item[base_item.identifier] = db_positions;
@@ -236,12 +230,15 @@ export default {
       });
     },
     initTrackSettings() {
-      this.tracks_oldest_date_iso =
-        storage.get('settings_track_startdate') || this.tracks_oldest_date_iso;
-      this.tracks_newest_date_iso =
-        storage.get('settings_track_enddate') || this.tracks_newest_date_iso;
-      this.tracks_length_limit =
-        storage.get('settings_map_track_length') || this.tracks_length_limit;
+      this.position_limits.tracks_oldest_date_iso =
+        storage.get('settings_track_startdate') ||
+        this.position_limits.tracks_oldest_date_iso;
+      this.position_limits.tracks_newest_date_iso =
+        storage.get('settings_track_enddate') ||
+        this.position_limits.tracks_newest_date_iso;
+      this.position_limits.tracks_length_limit =
+        storage.get('settings_map_track_length') ||
+        this.position_limits.tracks_length_limit;
     },
 
     /** Start of Item Filter functions */
@@ -370,6 +367,7 @@ export default {
     this.$db.setOnChange('positions', 'base_positions_change', () => {
       //reload positions if change is detected
       this.loadPositionsForItems();
+      serverBus.$emit('last_sync_date', new Date());
     });
 
     this.initFilters();

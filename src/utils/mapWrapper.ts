@@ -296,10 +296,14 @@ class mapWrapper {
     );
   }
 
-  public timeSince(date: string | number | Date) {
+  /** Returns a textual representation of how much time has passed between two dates */
+  public timeSince(
+    date_past: string | number | Date,
+    date_now: string | number | Date | null | undefined
+  ) {
     //   date = new Date(date);
-    let lastDate = new Date(date);
-    let now = new Date();
+    let lastDate = new Date(date_past);
+    let now = date_now ? new Date(date_now) : new Date();
     let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
 
     let interval = Math.floor(seconds / 31536000);
@@ -323,6 +327,36 @@ class mapWrapper {
       return interval + ' minutes';
     }
     return Math.floor(seconds) + ' seconds';
+  }
+
+  /** Returns a status light color that depends on how much time has passed */
+  public colorSince(
+    date_past: string | number | Date | null | undefined,
+    date_now: string | number | Date | null | undefined
+  ) {
+    if (
+      date_now &&
+      Math.abs(new Date(date_now).getTime() - new Date().getTime()) > 60 * 1000 // more than a minute different from now
+    )
+      // we're looking into the past or future, so just show blue:
+      return 'blue';
+    else {
+      if (date_past) {
+        let now = date_now ? new Date(date_now) : new Date();
+        let seconds = Math.floor(
+          (now.getTime() - new Date(date_past).getTime()) / 1000
+        );
+        // less than 30 minutes:
+        if (seconds > 0 && seconds <= 1800) return 'green';
+        // less than 24 hours:
+        else if (seconds <= 86400) return 'yellow';
+        // more than 24 hours:
+        else return 'red';
+      } else {
+        // no old date given / does not apply:
+        return 'grey';
+      }
+    }
   }
 
   // Generate popup content based on layer type

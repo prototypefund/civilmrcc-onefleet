@@ -5,7 +5,7 @@
       <div id="status-light">
         <el-tooltip placement="bottom" effect="light">
           <div slot="content">
-            Last new item position ({{
+            Last new GPS position ({{
               timeSince(status_light_data.last_new_position)
             }}
             ago): {{ status_light_data.last_new_position || 'never' }} <br />
@@ -13,9 +13,11 @@
               timeSince(status_light_data.last_server_sync)
             }}
             ago):
-            {{ status_light_data.last_server_sync || 'never' }}
+            {{ status_light_data.last_server_sync || 'never' }} <br />
+            <br />
+            {{ positionLimitsText }}
           </div>
-          <div :class="'circle ' + status_light_data.status"></div>
+          <div :class="'circle ' + statusLightColor"></div>
         </el-tooltip>
       </div>
       <ul class="nav-actions">
@@ -100,17 +102,45 @@ export default {
     main_view: { type: String, default: 'list' },
     showing_air: { type: Boolean, default: false },
     showing_log: { type: Boolean, default: false },
+    position_limits: {
+      // prop object defaults:
+      tracks_oldest_date_iso: null,
+      tracks_newest_date_iso: null,
+      tracks_length_limit: -1,
+    },
   },
   data: function() {
     return {
       show_timeControl: false,
       username: '',
       status_light_data: {
-        status: 'grey', // grey, green, yellow, red
         last_server_sync: null,
         last_new_position: null,
+        time_now: new Date(),
+        intervalTimer: null,
       },
     };
+  },
+  computed: {
+    positionLimitsText() {
+      let newest_date = this.position_limits.tracks_newest_date_iso
+        ? this.formatTimeForStatus(this.position_limits.tracks_newest_date_iso)
+        : 'now';
+      let oldest_date = this.position_limits.tracks_oldest_date_iso
+        ? `between ${this.formatTimeForStatus(
+            this.position_limits.tracks_oldest_date_iso
+          )} and`
+        : 'until';
+      let num_positions = this.position_limits.tracks_length_limit;
+      return `Showing the ${num_positions} most recent positions ${oldest_date} ${newest_date}.`;
+    },
+    statusLightColor() {
+      // see CSS below for green, yellow, red, blue, grey:
+      return this.$map.colorSince(
+        this.status_light_data.last_server_sync,
+        this.status_light_data.time_now
+      );
+    },
   },
   methods: {
     changeModus(value) {
@@ -124,7 +154,11 @@ export default {
       serverBus.$emit('show_settings');
     },
     timeSince(date) {
-      return this.$map.timeSince(date);
+      return this.$map.timeSince(date, this.status_light_data.time_now);
+    },
+    formatTimeForStatus(date_iso) {
+      // TODO: reformat date string depending on how far it is away from now
+      return date_iso;
     },
     toggleAir() {
       if (!this.showing_air) serverBus.$emit('show_air');
@@ -152,6 +186,10 @@ export default {
         ? new Date(position_date)
         : null;
     });
+
+    this.status_light_data.intervalTimer = setInterval(() => {
+      this.status_light_data.time_now = new Date();
+    }, 1000);
   },
 };
 </script>
@@ -267,17 +305,18 @@ nav li:hover a {
   background-color: #c0392b;
   box-shadow: 0 0 10px 2.5px #c0392b;
 }
-
 .circle.yellow {
   background-color: #f1c40f;
   box-shadow: 0 0 10px 2.5px #f1c40f;
 }
-
 .circle.green {
   background-color: #2ecc71;
   box-shadow: 0 0 10px 2.5px #2ecc71;
 }
-
+.circle.blue {
+  background-color: rgb(0, 134, 243);
+  box-shadow: 0 0 10px 2.5px rgb(0, 134, 243);
+}
 .circle.grey {
   background-color: #999;
   box-shadow: 0 0 10px 2.5px #999;
