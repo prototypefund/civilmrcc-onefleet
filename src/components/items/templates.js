@@ -237,30 +237,35 @@ export default {
             name: 'pob_total',
             title: 'People On Board',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
             name: 'pob_women',
             title: 'Women On Board',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
             name: 'pob_men',
             title: 'Men On Board',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
             name: 'pob_minors',
             title: 'Minors On Board',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
             name: 'pob_medical_cases',
             title: 'Medical Cases On Board',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
@@ -298,12 +303,14 @@ export default {
             name: 'people_drowned',
             title: 'People Drowned',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
             name: 'people_missing',
             title: 'People Missing',
             type: 'number',
+            value: 0,
             step: 1,
           },
           {
@@ -320,7 +327,7 @@ export default {
           },
           {
             name: 'authorities_alerted',
-            title: 'authorities alerted: who & when',
+            title: 'Authorities Alerted: who & when',
             type: 'text',
           },
           {
@@ -330,7 +337,7 @@ export default {
           },
           {
             name: 'arrived_when_where',
-            title: 'Arrived: When & where',
+            title: 'Arrived: when & where',
             type: 'text',
           },
           {
