@@ -117,7 +117,7 @@ export default {
   components: {
     Position,
   },
-  data: function() {
+  data: function () {
     return {
       template: '',
       vehicles: [],
@@ -132,18 +132,21 @@ export default {
     };
   },
   computed: {
-    template_data: function() {
+    template_data: function () {
       // change (cached) template data whenever the selected template string in form_data changes
       return templates.get(this.form_data.template) || {};
     },
-    template_options: function() {
+    template_options: function () {
       return Object.keys(templates.get('all'));
     },
   },
 
   methods: {
     getValue(model, defaultValue) {
-      if (!model && defaultValue) return defaultValue;
+      defaultValue ? 0 : (defaultValue = '0');
+      if (!model && defaultValue) {
+        return defaultValue;
+      }
       return model;
     },
     prefillProperties() {
@@ -153,7 +156,7 @@ export default {
       if (this.given_template == 'case') return { boat_color: random_color };
       else return { color: random_color };
     },
-    createItem: function(e) {
+    createItem: function (e) {
       e.preventDefault();
 
       // we must never create an item without a proper identifier:
@@ -171,7 +174,7 @@ export default {
         this.template_data.add_initial_position == false ||
         this.position_data.positions.length > 0
       ) {
-        this.$db.createItem(this.form_data, function(err, result) {
+        this.$db.createItem(this.form_data, function (err, result) {
           if (err) {
             if (err.name == 'conflict')
               alert('The id is already taken, please choose another one');
@@ -195,7 +198,7 @@ export default {
                 source: 'onefleet',
                 timestamp: time_isostring,
               };
-              self.$db.createPosition(position, function(err, result) {
+              self.$db.createPosition(position, function (err, result) {
                 if (err) {
                   alert('error!');
                 } else {
@@ -210,12 +213,12 @@ export default {
         alert('please enter a valid position');
       }
     },
-    closeModal: function() {
+    closeModal: function () {
       // Using the service bus
       serverBus.$emit('close_modal');
     },
   },
-  created: function() {
+  created: function () {
     // pre-fill form data:
     this.form_data = {
       properties: this.prefillProperties(),
