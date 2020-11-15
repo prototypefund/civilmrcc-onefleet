@@ -47,6 +47,9 @@ export default {
       type: Array, // DbPosition[]
       required: false,
     },
+    time_now: {
+      required: false,
+    },
   },
 
   data: function() {
@@ -112,28 +115,32 @@ export default {
       return false;
     },
     latestPosition() {
-      // we assume that positions are already sorted by timestamp during the DB-fetch
-      if ((this.positions || []).length > 0)
-        return this.positions[this.positions.length - 1];
+      // We assume that positions are already sorted by timestamp during the DB-fetch,
+      //  and that position zero is the newest position:
+      if ((this.positions || []).length > 0) return this.positions[0];
       else return null;
     },
     positionAgeText() {
       if (!this.positions) return 'loading positions...';
       else if (this.latestPosition)
-        return this.timeSince(this.latestPosition.timestamp) + ' ago';
+        return (
+          this.$map.timeSince(this.latestPosition.timestamp, this.time_now) +
+          ' ago'
+        );
       else return 'no positions';
     },
     positionAgeType() {
-      if (this.latestPosition) {
-        let lastDate = new Date(this.latestPosition.timestamp);
-        let now = new Date();
-        let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
-        if (seconds > 0 && seconds <= 1800) return 'success';
-        else if (seconds > 1800 && seconds <= 86400) return 'warning';
-        else return 'danger';
-      } else {
-        return 'info';
-      }
+      let color = this.$map.colorSince(
+        (this.latestPosition || {}).timestamp,
+        this.time_now
+      );
+      return {
+        green: 'success',
+        yellow: 'warning',
+        red: 'danger',
+        blue: 'default',
+        grey: 'info',
+      }[color];
     },
   },
 
@@ -153,34 +160,6 @@ export default {
         this.positions,
         this.itemShowing
       );
-    },
-    timeSince: function(date) {
-      //   date = new Date(date);
-      let lastDate = new Date(date);
-      let now = new Date();
-      let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
-
-      let interval = Math.floor(seconds / 31536000);
-      if (interval > 1) {
-        return interval + ' years';
-      }
-      interval = Math.floor(seconds / 2592000);
-      if (interval > 1) {
-        return interval + ' months';
-      }
-      interval = Math.floor(seconds / 86400);
-      if (interval > 1) {
-        return interval + ' days';
-      }
-      interval = Math.floor(seconds / 3600);
-      if (interval > 1) {
-        return interval + ' hours';
-      }
-      interval = Math.floor(seconds / 60);
-      if (interval > 1) {
-        return interval + ' minutes';
-      }
-      return Math.floor(seconds) + ' seconds';
     },
   },
 

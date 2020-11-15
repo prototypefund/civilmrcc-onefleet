@@ -10,8 +10,9 @@
             :label="template_option"
             :name="template_option"
             :key="template_option"
-            >{{ template_option }}</option
           >
+            {{ template_option }}
+          </option>
         </select>
 
         <span>Identifier</span>
@@ -62,10 +63,9 @@
               typeahead-style="dropdown"
             ></tags-input>
             <!-- tags end -->
-
             <input
               v-if="field.type != 'select' && field.type != 'icon'"
-              v-model="form_data.properties[field.name]"
+              :value="getValue(form_data.properties[field.name], field.value)"
               :name="field.name"
               :placeholder="field.title"
               :type="field.type"
@@ -142,6 +142,10 @@ export default {
   },
 
   methods: {
+    getValue(model, defaultValue) {
+      if (!model && defaultValue) return defaultValue;
+      return model;
+    },
     prefillProperties() {
       let random_color =
         '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
@@ -178,11 +182,13 @@ export default {
             alert('item created');
 
             if (self.position_data.positions.length > 0) {
-              let time_isostring = new Date(
-                self.position_data.positions[0].timestamp || 'now'
+              let any_timestamp = self.position_data.positions[0].timestamp;
+              let time_isostring = (any_timestamp
+                ? new Date(any_timestamp)
+                : new Date()
               ).toISOString();
               let position = {
-                _id: self.form_data.identifier + '_' + new Date().toISOString(),
+                _id: self.form_data.identifier + '_' + time_isostring,
                 lat: self.position_data.positions[0].lat,
                 lon: self.position_data.positions[0].lon,
                 item_identifier: self.form_data.identifier,
