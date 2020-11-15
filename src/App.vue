@@ -367,7 +367,7 @@ export default {
     this.$db.setOnChange('positions', 'base_positions_change', () => {
       //reload positions if change is detected
       this.loadPositionsForItems();
-      serverBus.$emit('last_sync_date', new Date());
+      serverBus.$emit('last_change_date', new Date());
     });
 
     this.initFilters();

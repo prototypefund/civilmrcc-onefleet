@@ -5,8 +5,8 @@
       <div id="status-light">
         <el-tooltip placement="bottom" effect="light">
           <div slot="content">
+            {{ printLastServerChange }} <br />
             {{ printLastGPSPosition }} <br />
-            {{ printLastServerSync }} <br />
             <br />
             {{ printPositionLimits }}
           </div>
@@ -107,6 +107,7 @@ export default {
       show_timeControl: false,
       username: '',
       status_light_data: {
+        last_server_change: null,
         last_server_sync: null,
         last_new_position: null,
         time_now: new Date(),
@@ -120,6 +121,13 @@ export default {
         this.status_light_data.last_new_position
       )} ago): ${this.$map.formatTimestamp(
         this.status_light_data.last_new_position
+      ) || 'never'}`;
+    },
+    printLastServerChange() {
+      return `Last change from database (${this.timeSince(
+        this.status_light_data.last_server_change
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_server_change
       ) || 'never'}`;
     },
     printLastServerSync() {
@@ -162,7 +170,7 @@ export default {
     statusLightColor() {
       // see CSS below for green, yellow, red, blue, grey:
       return this.$map.colorSince(
-        this.status_light_data.last_server_sync,
+        this.status_light_data.last_server_change,
         this.status_light_data.time_now
       );
     },
@@ -200,6 +208,11 @@ export default {
     serverBus.$on('last_sync_date', sync_date => {
       this.status_light_data.last_server_sync = sync_date
         ? new Date(sync_date)
+        : null;
+    });
+    serverBus.$on('last_change_date', change_date => {
+      this.status_light_data.last_server_change = change_date
+        ? new Date(change_date)
         : null;
     });
     serverBus.$on('last_position_date', position_date => {
