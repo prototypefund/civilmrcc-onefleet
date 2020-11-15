@@ -365,12 +365,12 @@ class mapWrapper {
   ) {
     if (!the_datetime) return null;
     the_datetime = new Date(the_datetime);
-    let time_string = the_datetime.toLocaleTimeString('default', {
+    let time_string = the_datetime.toLocaleTimeString('en-GB', {
       hour: 'numeric',
       minute: 'numeric',
       timeZoneName: 'short',
     });
-    let date_string = the_datetime.toLocaleDateString('default', {
+    let date_string = the_datetime.toLocaleDateString('en-GB', {
       weekday: 'short',
       day: '2-digit',
       month: 'short',
