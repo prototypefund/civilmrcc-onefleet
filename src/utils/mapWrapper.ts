@@ -296,6 +296,94 @@ class mapWrapper {
     );
   }
 
+  /** Returns a textual representation of how much time has passed between two dates */
+  public timeSince(
+    date_past: string | number | Date,
+    date_now: string | number | Date | null | undefined
+  ) {
+    //   date = new Date(date);
+    let lastDate = new Date(date_past);
+    let now = date_now ? new Date(date_now) : new Date();
+    let seconds = Math.floor((now.getTime() - lastDate.getTime()) / 1000);
+
+    let interval = Math.floor(seconds / 31536000);
+    if (interval > 1) {
+      return interval + ' years';
+    }
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) {
+      return interval + ' months';
+    }
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) {
+      return interval + ' days';
+    }
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) {
+      return interval + ' hours';
+    }
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) {
+      return interval + ' minutes';
+    }
+    return Math.floor(seconds) + ' seconds';
+  }
+
+  /** Returns a status light color that depends on how much time has passed */
+  public colorSince(
+    date_past: string | number | Date | null | undefined,
+    date_now: string | number | Date | null | undefined
+  ) {
+    if (
+      date_now &&
+      Math.abs(new Date(date_now).getTime() - new Date().getTime()) > 60 * 1000 // more than a minute different from now
+    )
+      // we're looking into the past or future, so just show blue:
+      return 'blue';
+    else {
+      if (date_past) {
+        let now = date_now ? new Date(date_now) : new Date();
+        let seconds = Math.floor(
+          (now.getTime() - new Date(date_past).getTime()) / 1000
+        );
+        // less than 30 minutes:
+        if (seconds > 0 && seconds <= 1800) return 'green';
+        // less than 24 hours:
+        else if (seconds <= 86400) return 'yellow';
+        // more than 24 hours:
+        else return 'red';
+      } else {
+        // no old date given / does not apply:
+        return 'grey';
+      }
+    }
+  }
+
+  public formatTimestamp(
+    the_datetime: Date | string | null | undefined,
+    reference_datetime: Date | string | null | undefined
+  ) {
+    if (!the_datetime) return null;
+    the_datetime = new Date(the_datetime);
+    let time_string = the_datetime.toLocaleTimeString('default', {
+      hour: 'numeric',
+      minute: 'numeric',
+      timeZoneName: 'short',
+    });
+    let date_string = the_datetime.toLocaleDateString('default', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    if (
+      reference_datetime &&
+      the_datetime.toDateString() == new Date(reference_datetime).toDateString()
+    )
+      return time_string;
+    else return time_string + ` (${date_string})`;
+  }
+
   // Generate popup content based on layer type
   // - Returns HTML string, or null if unknown object
   private _getDrawnShapePopupContent(layer): string | null | any {

@@ -2,6 +2,17 @@
   <nav>
     <div style="display:flex;">
       <div id="brand">OneFleet</div>
+      <div id="status-light">
+        <el-tooltip placement="bottom" effect="light">
+          <div slot="content">
+            {{ printLastServerChange }} <br />
+            {{ printLastGPSPosition }} <br />
+            <br />
+            {{ printPositionLimits }}
+          </div>
+          <div :class="'circle ' + statusLightColor"></div>
+        </el-tooltip>
+      </div>
       <ul class="nav-actions">
         <li v-on:click="createItem()">
           <a>
@@ -52,8 +63,8 @@
       </li>
       <el-dropdown>
         <span class="el-dropdown-link">
-          <i class="fas fa-user"></i>
-          <span>
+          <span style="white-space:nowrap">
+            <i class="fas fa-user"></i>
             {{ username }}
             <i class="el-icon-arrow-down el-icon--left"></i>
           </span>
@@ -84,13 +95,85 @@ export default {
     main_view: { type: String, default: 'list' },
     showing_air: { type: Boolean, default: false },
     showing_log: { type: Boolean, default: false },
+    position_limits: {
+      // prop object defaults:
+      tracks_oldest_date_iso: null,
+      tracks_newest_date_iso: null,
+      tracks_length_limit: -1,
+    },
   },
   data: function() {
     return {
       show_timeControl: false,
       username: '',
-      password: '',
+      status_light_data: {
+        last_server_change: null,
+        last_server_sync: null,
+        last_new_position: null,
+        time_now: new Date(),
+        intervalTimer: null,
+      },
     };
+  },
+  computed: {
+    printLastGPSPosition() {
+      return `Last new GPS position (${this.timeSince(
+        this.status_light_data.last_new_position
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_new_position
+      ) || 'never'}`;
+    },
+    printLastServerChange() {
+      return `Last change from database (${this.timeSince(
+        this.status_light_data.last_server_change
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_server_change
+      ) || 'never'}`;
+    },
+    printLastServerSync() {
+      return `Last sync with server (${this.timeSince(
+        this.status_light_data.last_server_sync
+      )} ago): ${this.$map.formatTimestamp(
+        this.status_light_data.last_server_sync
+      ) || 'never'}`;
+    },
+    printPositionLimits() {
+      let num_positions_text = `Showing the ${this.position_limits.tracks_length_limit} most recent positions`;
+      let oldest_datetime = this.position_limits.tracks_oldest_date_iso;
+      let newest_datetime = this.position_limits.tracks_newest_date_iso;
+      if (oldest_datetime && newest_datetime) {
+        let oldest_string = this.$map.formatTimestamp(
+          new Date(oldest_datetime),
+          new Date(newest_datetime)
+        );
+        let newest_string = this.$map.formatTimestamp(
+          new Date(newest_datetime),
+          null
+        );
+        return `${num_positions_text} between ${oldest_string} and ${newest_string}.`;
+      } else if (oldest_datetime) {
+        let oldest_string = this.$map.formatTimestamp(
+          new Date(oldest_datetime),
+          new Date()
+        );
+        return `${num_positions_text} between ${oldest_string} and now.`;
+      } else if (newest_datetime) {
+        let newest_string = this.$map.formatTimestamp(
+          new Date(newest_datetime),
+          null
+        );
+        return `${num_positions_text} before ${newest_string}.`;
+      } else {
+        return `${num_positions_text}.`;
+      }
+    },
+    statusLightColor() {
+      // see CSS below for green, yellow, red, blue, grey:
+      return this.$map.colorSince(
+        this.status_light_data.last_server_change,
+        this.status_light_data.time_now
+      );
+    },
   },
   methods: {
     changeModus(value) {
@@ -102,6 +185,9 @@ export default {
     },
     openSettings() {
       serverBus.$emit('show_settings');
+    },
+    timeSince(date) {
+      return this.$map.timeSince(date, this.status_light_data.time_now);
     },
     toggleAir() {
       if (!this.showing_air) serverBus.$emit('show_air');
@@ -118,6 +204,26 @@ export default {
   },
   created: function() {
     this.username = localStorage.username || 'guest';
+
+    serverBus.$on('last_sync_date', sync_date => {
+      this.status_light_data.last_server_sync = sync_date
+        ? new Date(sync_date)
+        : null;
+    });
+    serverBus.$on('last_change_date', change_date => {
+      this.status_light_data.last_server_change = change_date
+        ? new Date(change_date)
+        : null;
+    });
+    serverBus.$on('last_position_date', position_date => {
+      this.status_light_data.last_new_position = position_date
+        ? new Date(position_date)
+        : null;
+    });
+
+    this.status_light_data.intervalTimer = setInterval(() => {
+      this.status_light_data.time_now = new Date();
+    }, 1000);
   },
 };
 </script>
@@ -142,6 +248,13 @@ nav #brand {
   align-items: center;
   color: var(--white);
   padding: 0 1em;
+}
+
+nav #status-light {
+  display: flex;
+  align-items: center;
+  color: var(--white);
+  cursor: pointer;
 }
 
 nav li {
@@ -197,6 +310,50 @@ nav li:hover a {
 }
 .el-dropdown-link span {
   display: block;
+}
+
+/* See https://morioh.com/p/651129a1cb72 for "traffic light" css effect */
+.circle {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 100%;
+  position: relative;
+  top: 1px;
+  left: 0px;
+  height: 10px;
+  width: 10px;
+  margin-right: 10px;
+}
+
+.circle::after {
+  border-right: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 100%;
+  content: ' ';
+  position: absolute;
+  top: 1px;
+  left: -1px;
+  width: 7.5px;
+  height: 7.5px;
+}
+
+.circle.red {
+  background-color: #c0392b;
+  box-shadow: 0 0 10px 2.5px #c0392b;
+}
+.circle.yellow {
+  background-color: #f1c40f;
+  box-shadow: 0 0 10px 2.5px #f1c40f;
+}
+.circle.green {
+  background-color: #2ecc71;
+  box-shadow: 0 0 10px 2.5px #2ecc71;
+}
+.circle.blue {
+  background-color: rgb(0, 134, 243);
+  box-shadow: 0 0 10px 2.5px rgb(0, 134, 243);
+}
+.circle.grey {
+  background-color: #999;
+  box-shadow: 0 0 10px 2.5px #999;
 }
 </style>
 <style>
