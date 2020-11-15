@@ -10,8 +10,9 @@
             :label="template_option"
             :name="template_option"
             :key="template_option"
-            >{{ template_option }}</option
           >
+            {{ template_option }}
+          </option>
         </select>
 
         <span>Identifier</span>
@@ -62,10 +63,9 @@
               typeahead-style="dropdown"
             ></tags-input>
             <!-- tags end -->
-
             <input
               v-if="field.type != 'select' && field.type != 'icon'"
-              v-model="form_data.properties[field.name]"
+              :value="getValue(form_data.properties[field.name], field.value)"
               :name="field.name"
               :placeholder="field.title"
               :type="field.type"
@@ -142,6 +142,10 @@ export default {
   },
 
   methods: {
+    getValue(model, defaultValue) {
+      if (!model && defaultValue) return defaultValue;
+      return model;
+    },
     prefillProperties() {
       let random_color =
         '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
