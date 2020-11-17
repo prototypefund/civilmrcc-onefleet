@@ -166,6 +166,29 @@ export class PouchWrapper {
       this.initDB(db_name, noprefix);
     }
     return this.databases[db_name][type];
+
+
+  }
+
+  public getSession() {
+    return new Promise((resolve,reject)=>{
+      this.getDB('items',true,'remote').getSession(function (err, response) {
+        if(err)
+          reject(err)
+        else
+          resolve(response)
+      });
+    });
+  }
+  public getUserRoles() {
+    return new Promise((resolve,reject)=>{
+      this.getSession().then((sessionInfo:any)=>{
+        console.log(sessionInfo);
+        resolve(sessionInfo.userCtx.roles);
+      }).catch((e)=>{
+        reject(e);
+      })
+    });
   }
 
   public showLogin() {
@@ -182,6 +205,7 @@ export class PouchWrapper {
   public login(username: string, password: string, db) {
     db.login(username, password)
       .then(function(res) {
+        console.log('login');
         console.log(res);
         localStorage.username = username;
         localStorage.password = password;

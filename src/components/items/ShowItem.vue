@@ -74,6 +74,9 @@
         </div>
         <a @click="showExportModal(itemId)">Export Locations</a>
         <div class="save_cancel_buttons">
+          <input type="button" value="Delete Item" @click="deleteItem()" style="width: 100%!important;margin-bottom: 5px;" />
+        </div>
+        <div class="save_cancel_buttons">
           <input type="submit" :value="'Save' + savePositionText" />
           <input type="button" value="Cancel" @click="closeModal()" />
           <br />
@@ -202,6 +205,9 @@ export default {
       serverBus.$emit('close_modal');
       serverBus.$emit('exportItemId', id);
     },
+    deleteItem: function(){
+      alert('implement me')
+    },
     storeItem: function(e) {
       e.preventDefault();
 
@@ -311,10 +317,19 @@ export default {
       }
     },
   },
+  mounted() {
+    console.log('userm');
 
-  mounted() {},
+    this.$db.getUserRoles().then((roles)=>{
+      console.log(roles);
+    }).catch((e)=>{
+      console.log(e);
+    });
+    
+  },
+  created() {
 
-  created() {},
+  }
 };
 </script>
 
