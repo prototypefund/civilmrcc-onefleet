@@ -196,7 +196,7 @@ nav .categories .item_name {
   border-bottom-style: solid;
 }
 .category_list li:hover {
-  cursor: pointer;
+  cursor: default;
   transition: ease-in-out 0.3s;
   background-color: var(--light-gray);
 }

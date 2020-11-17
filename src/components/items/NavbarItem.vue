@@ -1,9 +1,11 @@
 <template>
-  <li :class="itemLoadingClass" @click="flyToItem()">
+  <li :class="itemLoadingClass" @click.self="flyToItem()">
     <span>
-      <div class="item_name">{{ itemName }}</div>
+      <div class="item_name" @click="flyToItem()">
+        {{ itemName }}
+      </div>
       <el-switch v-model="itemShowing" :active-color="itemColor" />
-      <el-tag size="small" :type="positionAgeType">
+      <el-tag size="small" :type="positionAgeType" @click="flyToItem()">
         {{ positionAgeText }}
       </el-tag>
     </span>
