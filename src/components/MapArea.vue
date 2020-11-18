@@ -1,32 +1,25 @@
 <template>
   <div>
     <div id="mapArea"></div>
-    <button
-      class="btn"
-      title="Create new marker from location"
-      v-on:click="show_add_marker_box = !show_add_marker_box"
+    <div
+      id="addmarker"
+      ref="addmarker"
+      class="form-style-6"
+      v-if="showingPopup('addmarker') && show_add_marker_box == true"
     >
-      <i class="el-icon-location-outline" text-align="center;"></i>
-    </button>
-    <div id="addmarker" v-if="show_add_marker_box">
       <button
         id="close"
-        class="close"
         v-on:click="
-          show_add_marker_box = false;
+          show_add_marker_box = !show_add_marker_box;
           setCoordsToDefault();
         "
       >
         X
       </button>
-      <div class="form-style-6">
-        <Position
-          :edit="true"
-          :position="position_data.positions[0]"
-        ></Position>
-        <button id="addMarker" v-on:click="addmarker">Add Marker</button>
-      </div>
+      <Position :edit="true" :position="position_data.positions[0]"></Position>
+      <button id="addMarker" v-on:click="addmarker">Add Marker</button>
     </div>
+
     <div ref="drawn_area_popup" class="drawn_area_style">
       <DrawnAreaPopup
         v-if="showingPopup('drawn_area_popup')"
@@ -46,7 +39,6 @@
         :popup_data="popup_data"
       ></DrawnTrackPopup>
     </div>
-
     <div ref="item_marker_popup" class="item_marker_style">
       <ItemMarkerPopup
         v-if="showingPopup('item_marker_popup')"
@@ -99,7 +91,7 @@ export default {
       map_initialized: false,
       popup_modal: '',
       popup_data: {},
-      show_add_marker_box: false,
+      show_add_marker_box: true,
       position_data: {
         positions: [{}],
       },
@@ -145,9 +137,10 @@ export default {
   mounted: function() {
     var self = this;
 
-    this.$map.init('mapArea', (popup_ref, popup_data) => {
+    this.$map.init('mapArea', (popup_ref: string, popup_data: Object): any => {
       this.popup_data = popup_data;
       this.popup_modal = popup_ref;
+      this.show_add_marker_box = !this.show_add_marker_box;
       return this.$refs[popup_ref];
     });
 
@@ -241,43 +234,26 @@ export default {
 .item_track_style {
   width: 200px;
 }
-/* Custom button styling */
-.btn {
-  background-color: whitesmoke;
-  border: none;
-  text-align: center;
-  width: 26px;
-  height: 26px;
-  cursor: pointer;
-  z-index: 999;
-  position: absolute;
-  top: 257px;
-  left: 10px;
-  border-radius: 4px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-  pointer-events: auto;
-  outline: 0;
-}
 
-.close {
+#close {
   background-color: white;
+  color: black;
+  position: right;
   border: none;
   text-align: center;
   width: 26px;
   height: 26px;
   cursor: pointer;
   z-index: 999;
+  padding: 10px 10px 10px 10px;
   margin-top: 2px;
   margin-right: 2px;
+  margin-left: 2px;
+  margin-bottom: 2px;
   border-radius: 4px;
   float: right;
   pointer-events: auto;
   outline: 0;
-}
-
-/* Custom button darker background on mouse-over */
-.btn:hover {
-  background-color: rgba(245, 245, 245, 0.863);
 }
 
 #addmarker {
@@ -287,7 +263,7 @@ export default {
   top: 257px;
   left: 50px;
   width: 400px;
-  height: 350px;
+  height: 330px;
   z-index: 999;
   background: #fff;
   border-radius: 4px;

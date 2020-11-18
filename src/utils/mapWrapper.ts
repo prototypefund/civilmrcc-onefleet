@@ -147,6 +147,9 @@ class mapWrapper {
     this._initSarZones(SARZones);
     this.map.addControl(this._createSarZoneToggleControl());
 
+    /* Toggle to create extra control to add a custom marker by coordinates */
+    this.map.addControl(this.createCustomMarkerControl());
+
     //** Add mouse coordinates */
     L.control
       .mousePosition({
@@ -200,6 +203,39 @@ class mapWrapper {
     }
   }
 
+  //* Add a toggle to create a new custom marker */
+  private createCustomMarkerControl() {
+    var toggleCustomMarkerControl = L.Control.extend({
+      options: {
+        position: 'topleft',
+      },
+
+      onAdd: () => {
+        var container = L.DomUtil.create(
+          'div',
+          'leaflet-bar leaflet-control leaflet-control-custom'
+        );
+
+        let aTag = L.DomUtil.create(
+          'a',
+          'polyline-measure-unicode-icon',
+          container
+        );
+        aTag.title = 'Create a marker from a location.';
+        // Set icon
+        L.DomUtil.addClass(aTag, 'el-icon-location-outline');
+
+        // We must prevent the double click of the button, otherwise the map zoomes in if button is double clicked.
+        container.ondblclick = e => e.stopImmediatePropagation();
+
+        container.onclick = () => this.popup_contents('addmarker', {});
+
+        return container;
+      },
+    });
+    return new toggleCustomMarkerControl();
+  }
+
   //** Add a toggle for sar zones in map controls list */
   private _createSarZoneToggleControl() {
     var toggleSarZoneControl = L.Control.extend({
@@ -223,7 +259,7 @@ class mapWrapper {
         L.DomUtil.addClass(aTag, 'polyline-measure-controlOnBgColor');
         L.DomUtil.addClass(aTag, 'el-icon-view');
 
-        // We must prevent the double click of the button, otherwise the map zoomes in if button is double clicked.
+        // We must prevent the double click of the button, otherwise the map zooms in if button is double clicked.
         container.ondblclick = e => e.stopImmediatePropagation();
 
         // Toggles the sar zone group visibility.
