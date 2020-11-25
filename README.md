@@ -245,9 +245,7 @@ Overview of Branches:
 
 ## **Credits**
 
-Special thanks to everyone who already contributed to the project:
-(Here should be the names or the links to the profiles)
+Special thanks to everyone who already contributed to the project!
 
-```
-
-```
+Funded by
+![](https://prototypefund.de/wp-content/uploads/2020/05/prototypefund-social-2020.png)
